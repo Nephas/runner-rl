@@ -40,17 +40,17 @@ class Game:
     def run(self):
         if t.time() >= TIC_SIZE + self.lastTic:
             self.map.updatePhysics()
-            self.render.renderAll(self.map, self.gui)
 
             self.tic += 1
             self.lastTic = t.time()
             if self.input.actions > 0:
                 self.input.actions -= 1
+        self.render.renderAll(self.map, self.gui)
         self.input.handleEvents()
 
 game = Game()
 while True:
-    t.sleep(0.005)
+    t.sleep(0.001)
     if tdl.event.isWindowClosed() or game.input.quit:
         sys.exit()
     else:

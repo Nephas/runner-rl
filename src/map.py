@@ -5,7 +5,7 @@ import numpy as np
 import random as rd
 import itertools as it
 from room import Room, Rectangle
-from object import Object, Vent, Door, Obstacle
+from object import Object, Vent, Door, Obstacle, Lamp
 
 
 class Map:
@@ -63,6 +63,8 @@ class Map:
                 cell.wall = True
 
         # count dungeon metrics
+        self.updatePhysics()
+
         for tier in self.tier:
             for room in tier:
                 nRooms += 1
@@ -71,6 +73,7 @@ class Map:
                 if room.shape in ["corridor", "gallery"] and room.children == []:
                     nDeadend += 1
                 room.scatter(self, Obstacle(), rd.randint(1,5))
+                room.scatter(self, Lamp(), rd.randint(3,6))
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
@@ -88,15 +91,20 @@ class Map:
     def updatePhysics(self, x=[0, MAP[WIDTH]], y=[0, MAP[HEIGHT]]):
         for i in range(x[MIN], x[MAX]):
             for j in range(y[MIN], y[MAX]):
+                cell = self.tile[i][j]
+                cell.light = 2
+                cell.vision[LOS] = False
+
+        for i in range(x[MIN], x[MAX]):
+            for j in range(y[MIN], y[MAX]):
                 self.tile[i][j].updatePhysics()
 
     def updateRender(self, x=[0, MAP[WIDTH]], y=[0, MAP[HEIGHT]]):
+        self.castFov(self.parent.player.cell.pos)
+
         for i in range(x[MIN], x[MAX]):
             for j in range(y[MIN], y[MAX]):
                 self.tile[i][j].updateRender()
-                self.tile[i][j].vision[LOS] = False
-
-        self.castFov(self.parent.player.cell.pos)
 
     def carveTunnel(self, room1, room2, direction, tunnelTier=-1, door=False, vent=False):
         valid = True
@@ -192,6 +200,16 @@ class Map:
                         blockPoint = point
                         break
 
+    def castLight(self, pos):
+        self.getTile(pos).light = 16
+
+        for line in self.parent.render.lightmap:
+            for i, point in enumerate(line):
+                if not self.getTile(point + pos).block[LOS]:
+                    cell = self.getTile(point + pos)
+                    cell.light = min(cell.light + 8 - 2*i, 16)
+                else:
+                    break
 
 class Cell:
     def __init__(self, map, pos, wall=None):
@@ -199,6 +217,7 @@ class Cell:
         self.pos = np.array(pos)
         self.wall = wall
         self.tier = -1
+        self.light = 2
 
         # [MOVE, LOS]
         self.block = [False, False]
@@ -219,22 +238,23 @@ class Cell:
         if self.vision[EXP] == False:
             return
 
-        self.bg = (25, 25, 25)
+        self.bg = (10, 10, 10)
 
         if self.vision[LOS] == False:
-            self.fg = (50, 50, 50)
+            self.fg = (25, 25, 25)
             return
 
         self.char = ' '
-        if self.wall is not None and self.vision[LOS]:
-            self.bg = (40 * self.tier, 255 - 40 * self.tier, 255)
+        if self.vision[LOS]:
+            self.bg = tuple(self.light * TIERCOLOR[self.tier]/16)
             if self.tier == -1:
                 self.bg = (40, 40, 40)
 
         if self.wall:
             self.char = 203
-            self.fg = (50, 50, 50)
-            self.bg = (25, 25, 25)
+            if self.vision[LOS]:
+                self.fg = (85, 85, 85)
+            return
 
         for object in self.object:
             self.char = object.char
@@ -245,11 +265,12 @@ class Cell:
         if self.wall:
             self.block[MOVE] = True
             self.block[LOS] = True
-        for object in self.object:
-            if object.block[MOVE]:
+        for obj in self.object:
+            if obj.block[MOVE]:
                 self.block[MOVE] = True
-            if object.block[LOS]:
+            if obj.block[LOS]:
                 self.block[LOS] = True
+            obj.physics(self.map)
 
     def draw(self, window, pos):
         window.draw_char(pos[X], pos[Y], self.char, self.fg, self.bg)
