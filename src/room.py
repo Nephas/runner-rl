@@ -141,10 +141,12 @@ class Room:
         return np.array([x, y])
 
     def scatter(self, map, obj, n):
-        for i in range(n):
+        i = 0
+        while i < n:
             cell = map.getTile(self.randomSpot())
-            if not cell.wall:
+            if not cell.wall or cell.object != []:
                 cell.addObject(cp.copy(obj))
+                i += 1
 
     def carve(self, map):
         for x in range(self.rectangle.x[MIN], self.rectangle.x[MAX]):

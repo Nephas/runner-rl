@@ -10,6 +10,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
     TILESET = 'dejavu16x16.png'
 
+    MAPINSET = np.array([1,1])
+
     def __init__(self, parent):
         self.parent = parent
 
@@ -25,11 +27,12 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.back.clear(bg=[50, 50, 50])
 
         self.mapPanel = tdl.Window(
-            self.console, 1, 1, SEPARATOR[WIDTH] - 2, SEPARATOR[HEIGHT] - 2)
+            self.console, Render.MAPINSET[X], Render.MAPINSET[Y], SEPARATOR[WIDTH] - 2, SEPARATOR[HEIGHT] - 2)
         self.infoPanel = tdl.Window(
             self.console, SEPARATOR[WIDTH], 1, SCREEN[WIDTH] - SEPARATOR[WIDTH] - 1, SCREEN[HEIGHT] - 2)
 
         self.raymap = Render.rayMap(16,32)
+        self.lightmap = Render.rayMap(6,16)
 
 
     def renderAll(self, map, gui):
@@ -48,6 +51,10 @@ class Render:  # a rectangle on the map. used to characterize a room.
         mapX = [max(0, mapOffset[X]), min(mapOffset[X] + panelX, MAP[WIDTH])]
         mapY = [max(0, mapOffset[Y]), min(mapOffset[Y] + panelY, MAP[HEIGHT])]
         map.updateRender(mapX, mapY)
+
+        cursorTile = map.getTile(self.parent.gui.cursorPos)
+        if cursorTile.vision[LOS]:
+            cursorTile.bg = WHITE
 
         for x in range(mapX[MIN], mapX[MAX]):
             for y in range(mapY[MIN], mapY[MAX]):

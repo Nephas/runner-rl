@@ -4,26 +4,34 @@ import tdl
 
 
 class Input:
+
+    MOVEMAP = { 'w': np.array([0, -1]),
+                'a': np.array([-1, 0]),
+                's': np.array([0, 1]),
+                'd': np.array([1, 0]),
+                'q': np.array([-1, -1]),
+                'e': np.array([1, -1]),
+                'y': np.array([-1, 1]),
+                'c': np.array([1, 1])}
+
     def __init__(self, parent):
         self.parent = parent
         self.quit = False
-        self.active = True
         self.actions = 0
 
     def handleEvents(self):
-        event = None
         try:
-            event = tdl.event.get().next()
             while True:
-                tdl.event.get().next()
-        except:
-            if event is None:
-                return
+                event = tdl.event.get().next()
 
-        if event.type is 'KEYDOWN':
-            self.handleKey(event.key, event.char)
-        elif event.type is 'MOUSEUP':
-            self.handleMouse(event.cell)
+                if event.type is 'KEYDOWN':
+                    self.handleKey(event.key, event.char)
+                elif event.type is 'MOUSEUP':
+                    self.handleClick(event)
+                elif event.type is 'MOUSEMOTION':
+                    self.handleMouse(event.cell)
+        except:
+            pass
 
     def handleKey(self, key, char):
         if key == 'ESCAPE':
@@ -38,42 +46,38 @@ class Input:
             self.parent.gui.mapOffset[X] += 3
 
         elif key == 'CHAR' and self.actions == 0:
-            dir = [0, 0]
-            cost = 0
-            if char == 'w':
-                dir = [0, -1]
-                cost = 2
-            elif char == 'a':
-                dir = [-1, 0]
-                cost = 2
-            elif char == 's':
-                dir = [0, 1]
-                cost = 2
-            elif char == 'd':
-                dir = [1, 0]
-                cost = 2
-            elif char == 'q':
-                dir = [-1, -1]
-                cost = 3
-            elif char == 'e':
-                dir = [1, -1]
-                cost = 3
-            elif char == 'y':
-                dir = [-1, 1]
-                cost = 3
-            elif char == 'c':
-                dir = [1, 1]
-                cost = 3
+            dir = Input.MOVEMAP[char]
+            self.playerMovement(dir)
 
-            dir = np.array(dir)
+    def playerMovement(self, dir):
+        cost = np.abs(dir[X]) + np.abs(dir[Y]) + 1
 
-            if self.parent.player.moveDir(dir):
-                self.actions += cost
-                self.parent.gui.mapOffset = self.parent.gui.mapOffset + dir
-            else:
-                pos = self.parent.player.cell.pos + dir
-                for obj in self.parent.map.tile[pos[X]][pos[Y]].object:
-                    self.actions += obj.interact(dir)
+        if self.parent.player.moveDir(dir):
+            self.actions += cost
+            self.parent.gui.mapOffset = self.parent.gui.mapOffset + dir
+        else:
+            self.playerInteraction(dir)
 
-    def handleMouse(self, cell):
-        print(cell)
+    def playerInteraction(self, dir):
+        pos = self.parent.player.cell.pos + dir
+        for obj in self.parent.map.tile[pos[X]][pos[Y]].object:
+            self.actions += obj.interact(self.parent.player, dir)
+
+
+    def handleMouse(self, terminalPos):
+        mapPos = np.array(terminalPos) + self.parent.gui.mapOffset - self.parent.render.MAPINSET
+        self.parent.gui.cursorPos = mapPos
+        print(self.parent.map.getTile(mapPos).object)
+
+    def handleClick(self, event):
+        mapPos = np.array(event.cell) + self.parent.gui.mapOffset - self.parent.render.MAPINSET
+        self.parent.gui.cursorPos = mapPos
+
+        ray = mapPos - self.parent.player.cell.pos
+        dir = (ray/np.linalg.norm(ray)).round().astype('int')
+
+        if event.button is 'LEFT':
+            self.playerMovement(dir)
+
+        if event.button is 'RIGHT':
+            self.playerInteraction(dir)

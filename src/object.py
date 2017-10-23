@@ -2,7 +2,7 @@ from globals import *
 
 
 class Object:
-    def __init__(self, cell=None, char=None, color=[255, 255, 255]):
+    def __init__(self, cell=None, char=None, color=WHITE):
         self.cell = cell
         if cell is not None:
             self.cell.object.append(self)
@@ -23,12 +23,15 @@ class Object:
         targetPos = self.cell.pos + dir
         return self.moveTo(targetPos)
 
-    def interact(self, dir=None):
+    def interact(self, actor=None, dir=None):
         return 0
+
+    def physics(self, map):
+        pass
 
 class Player(Object):
     def __init__(self, cell=None, parent=None):
-        Object.__init__(self, cell, char='@', color=[255, 255, 255])
+        Object.__init__(self, cell, char='@')
 
         self.parent = parent
 
@@ -47,6 +50,9 @@ class Vent(Object):
 
         self.block = [False, True]
 
+    def interact(self,actor=None, dir=None):
+        return 10
+
 
 class Door(Object):
     def __init__(self, cell=None):
@@ -55,7 +61,7 @@ class Door(Object):
         self.closed = True
         self.block = [True, True]
 
-    def interact(self, dir=None):
+    def interact(self, actor=None,dir=None):
         self.block = [not self.closed, not self.closed]
         self.closed = not self.closed
 
@@ -69,10 +75,18 @@ class Door(Object):
 
 class Obstacle(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char='#', color=(200, 200, 200))
+        Object.__init__(self, cell, char=206, color=(200, 200, 200))
 
         self.block = [True, True]
 
-    def interact(self, dir):
+    def interact(self, actor, dir):
         self.moveDir(dir)
+        actor.moveDir(dir)
         return 5
+
+class Lamp(Object):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, char='*')
+
+    def physics(self, map):
+        map.castLight(self.cell.pos)
