@@ -11,20 +11,21 @@ from object import Object, Vent, Door, Obstacle, Lamp
 class Map:
     def __init__(self, parent=None):
         self.parent = parent
-        self.tile = []  # [[Cell() for i in range(MAP[HEIGHT])] for i in range(MAP[WIDTH])]
+        self.tile = [[Cell(self, [x, y]) for y in range(MAP[HEIGHT])]
+                     for x in range(MAP[WIDTH])]
+        self.tier = [[]]
+        self.updateRender()
 
     def getTile(self, pos):
         return self.tile[pos[X]][pos[Y]]
 
     def generateLevel(self):
-        self.tile = [[Cell(self, [x, y]) for y in range(MAP[HEIGHT])]
-                     for x in range(MAP[WIDTH])]
-        self.tier = [[]]
-
         # create boss room
         w = rd.randint(ROOM_SIZE[0][MIN], ROOM_SIZE[0][MAX])
         h = rd.randint(ROOM_SIZE[0][MIN], ROOM_SIZE[0][MAX])
-        pos = [rd.randint(0, MAP[WIDTH] - w), rd.randint(0, MAP[HEIGHT] - h)]
+        margin = 32
+        pos = [rd.randint(margin, MAP[WIDTH] - w - margin),
+               rd.randint(margin, MAP[HEIGHT] - h - margin)]
         self.tier[0].append(Room(0, None, Rectangle(pos, w, h)))
         self.tier[0][0].carve(self)
 
@@ -50,8 +51,19 @@ class Map:
                     if carved:
                         nVents += 1
 
+        # count dungeon metrics
+        for tier in self.tier:
+            for room in tier:
+                nRooms += 1
+                if room.shape in ["corridor", "gallery"]:
+                    nCorridor += 1
+                if room.shape in ["corridor", "gallery"] and room.children == []:
+                    nDeadend += 1
+        return {'ROOMS': nRooms, 'VENTS': nVents, 'CORRIDORS': nCorridor, 'DEADENDS': nDeadend}
+
+    def finalize(self, player):
         # smooth out level walls
-        for i in range(1, 5):
+        for i in range(1, 6):
             cells = []
             for x in range(0, MAP[WIDTH]):
                 for y in range(0, MAP[HEIGHT]):
@@ -62,31 +74,25 @@ class Map:
             for cell in cells:
                 cell.wall = True
 
-        # count dungeon metrics
         self.updatePhysics()
 
         for tier in self.tier:
             for room in tier:
-                nRooms += 1
-                if room.shape in ["corridor", "gallery"]:
-                    nCorridor += 1
-                if room.shape in ["corridor", "gallery"] and room.children == []:
-                    nDeadend += 1
-                room.scatter(self, Obstacle(), rd.randint(1,5))
-                room.scatter(self, Lamp(), rd.randint(3,6))
+                room.scatter(self, Obstacle(), rd.randint(1, 5))
+                room.distribute(self, Lamp(), rd.randint(
+                    3, 8), rd.randint(3, 8))
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
         start.function = "start"
-        if self.parent:
-            self.tile[int(start.rectangle.center[X])][int(start.rectangle.center[Y])].addObject(self.parent.player)
+        self.getTile(start.getCenter()).addObject(player)
         nExtraction = 3
         while nExtraction > 0:
             room = rd.choice(self.tier[-1])
             if room.function is None:
                 room.function = "extraction"
                 nExtraction -= 1
-        return [nRooms, nVents, nCorridor, nDeadend]
+
 
     def updatePhysics(self, x=[0, MAP[WIDTH]], y=[0, MAP[HEIGHT]]):
         for i in range(x[MIN], x[MAX]):
@@ -100,7 +106,8 @@ class Map:
                 self.tile[i][j].updatePhysics()
 
     def updateRender(self, x=[0, MAP[WIDTH]], y=[0, MAP[HEIGHT]]):
-        self.castFov(self.parent.player.cell.pos)
+        if self.parent.player is not None:
+            self.castFov(self.parent.player.cell.pos)
 
         for i in range(x[MIN], x[MAX]):
             for j in range(y[MIN], y[MAX]):
@@ -155,19 +162,32 @@ class Map:
                         for cell in self.getNeighborhood(pos):
                             cell.wall = False
                             cell.tier = room2.tier
+
+            # connect circular rooms
+            if room1.shape is "round" or room2.shape is "round":
+                for pos in positions:
+                    if not pos in room1.rectangle.border() or pos in room2.rectangle.border():
+                        for cell in self.getNeighborhood(pos):
+                            cell.wall = False
+                            cell.tier = room2.tier
+
             # place door
             for pos in positions:
                 if pos in room1.rectangle.border():
                     if vent:
                         self.tile[pos[X]][pos[Y]].addObject(Vent())
                     if door:
-                        self.tile[pos[X]][pos[Y]].addObject(Door())
+                        self.tile[pos[X]][pos[Y]].addObject(
+                            Door(tier=tunnelTier))
                 if pos in room2.rectangle.border():
                     if vent:
                         self.tile[pos[X]][pos[Y]].addObject(Vent())
                 for cell in self.getNeighborhood(pos):
                     if cell.wall is None:
                         cell.wall = True
+
+            room1.updateTier(self)
+            room2.updateTier(self)
         return valid
 
     def getNeighborhood(self, pos, shape=None):
@@ -183,10 +203,10 @@ class Map:
         return pos[X] in range(0, MAP[WIDTH]) and pos[Y] in range(0, MAP[HEIGHT])
 
     def castFov(self, pos):
-        self.getTile(pos).vision = [True,True]
+        self.getTile(pos).vision = [True, True]
 
         blockIndex = 0
-        blockPoint = [0,0]
+        blockPoint = [0, 0]
 
         for line in self.parent.render.raymap:
             if not all(line[blockIndex] == blockPoint):
@@ -194,7 +214,7 @@ class Map:
                     if not self.getTile(point + pos).block[LOS]:
                         for n in NEIGHBORHOOD:
                             cell = self.getTile(point + pos + n)
-                            cell.vision = [True,True]
+                            cell.vision = [True, True]
                     else:
                         blockIndex = i
                         blockPoint = point
@@ -207,9 +227,10 @@ class Map:
             for i, point in enumerate(line):
                 if not self.getTile(point + pos).block[LOS]:
                     cell = self.getTile(point + pos)
-                    cell.light = min(cell.light + 8 - 2*i, 16)
+                    cell.light = min(cell.light + 8 - 2 * i, 16)
                 else:
                     break
+
 
 class Cell:
     def __init__(self, map, pos, wall=None):
@@ -246,7 +267,7 @@ class Cell:
 
         self.char = ' '
         if self.vision[LOS]:
-            self.bg = tuple(self.light * TIERCOLOR[self.tier]/16)
+            self.bg = tuple(self.light * TIERCOLOR[self.tier] / 16)
             if self.tier == -1:
                 self.bg = (40, 40, 40)
 

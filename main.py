@@ -14,24 +14,27 @@ import tdl
 
 class Game:
     def __init__(self):
+        self.player = None
         self.render = Render(self)
         self.input = Input(self)
         self.gui = Gui(self)
         self.map = Map(self)
-        self.player = None
 
         self.lastTic = t.time()
         self.tic = 0
 
-        self.initialize()
-
     def initialize(self):
-        stats = [0, 0, 0]
-        # while not (stats[0] >= 30 and stats[1] >= 12 and stats[2] >= 6 and stats[3] <= 1):
+        self.render.renderStart()
+
+        stats = {'DEADENDS' : -1, 'VENTS' : - 1}
+        while stats['DEADENDS'] != 0 or stats['VENTS'] < 16:
+            self.map = Map(self)
+            stats = self.map.generateLevel()
+            print(stats)
+
         self.player = Player(None, self)
-        stats = self.map.generateLevel()
+        self.map.finalize(self.player)
         self.render.printImage(self.map, "levelgen.bmp")
-        print(stats)
 
         self.gui.mapOffset = self.player.cell.pos - (SEPARATOR / 2)
         self.map.updatePhysics()
@@ -43,12 +46,14 @@ class Game:
 
             self.tic += 1
             self.lastTic = t.time()
-            if self.input.actions > 0:
-                self.input.actions -= 1
+            if self.player.cooldown > 0:
+                self.player.cooldown -= 1
         self.render.renderAll(self.map, self.gui)
         self.input.handleEvents()
 
 game = Game()
+game.initialize()
+
 while True:
     t.sleep(0.001)
     if tdl.event.isWindowClosed() or game.input.quit:

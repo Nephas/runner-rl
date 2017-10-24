@@ -14,10 +14,9 @@ class Input:
                 'y': np.array([-1, 1]),
                 'c': np.array([1, 1])}
 
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, main):
+        self.main = main
         self.quit = False
-        self.actions = 0
 
     def handleEvents(self):
         try:
@@ -37,43 +36,43 @@ class Input:
         if key == 'ESCAPE':
             self.quit = True
         elif key == 'UP':
-            self.parent.gui.mapOffset[Y] -= 3
+            self.main.gui.mapOffset[Y] -= 3
         elif key == 'DOWN':
-            self.parent.gui.mapOffset[Y] += 3
+            self.main.gui.mapOffset[Y] += 3
         elif key == 'LEFT':
-            self.parent.gui.mapOffset[X] -= 3
+            self.main.gui.mapOffset[X] -= 3
         elif key == 'RIGHT':
-            self.parent.gui.mapOffset[X] += 3
+            self.main.gui.mapOffset[X] += 3
 
-        elif key == 'CHAR' and self.actions == 0:
+        elif key == 'CHAR' and self.main.player.cooldown == 0:
             dir = Input.MOVEMAP[char]
             self.playerMovement(dir)
 
     def playerMovement(self, dir):
         cost = np.abs(dir[X]) + np.abs(dir[Y]) + 1
 
-        if self.parent.player.moveDir(dir):
-            self.actions += cost
-            self.parent.gui.mapOffset = self.parent.gui.mapOffset + dir
+        if self.main.player.moveDir(dir):
+            self.main.player.cooldown += cost
+            self.main.gui.mapOffset = self.main.gui.mapOffset + dir
         else:
             self.playerInteraction(dir)
 
     def playerInteraction(self, dir):
-        pos = self.parent.player.cell.pos + dir
-        for obj in self.parent.map.tile[pos[X]][pos[Y]].object:
-            self.actions += obj.interact(self.parent.player, dir)
+        pos = self.main.player.cell.pos + dir
+        for obj in self.main.map.tile[pos[X]][pos[Y]].object:
+            self.main.player.cooldown += obj.interact(self.main.player, dir)
 
 
     def handleMouse(self, terminalPos):
-        mapPos = np.array(terminalPos) + self.parent.gui.mapOffset - self.parent.render.MAPINSET
-        self.parent.gui.cursorPos = mapPos
-        print(self.parent.map.getTile(mapPos).object)
+        mapPos = np.array(terminalPos) + self.main.gui.mapOffset - self.main.render.MAPINSET
+        self.main.gui.cursorPos = mapPos
+        print(self.main.map.getTile(mapPos).object)
 
     def handleClick(self, event):
-        mapPos = np.array(event.cell) + self.parent.gui.mapOffset - self.parent.render.MAPINSET
-        self.parent.gui.cursorPos = mapPos
+        mapPos = np.array(event.cell) + self.main.gui.mapOffset - self.main.render.MAPINSET
+        self.main.gui.cursorPos = mapPos
 
-        ray = mapPos - self.parent.player.cell.pos
+        ray = mapPos - self.main.player.cell.pos
         dir = (ray/np.linalg.norm(ray)).round().astype('int')
 
         if event.button is 'LEFT':

@@ -6,14 +6,14 @@ import random as rd
 import copy as cp
 from src.object import Obstacle
 
+
 class Rectangle:  # a rectangle on the map. used to characterize a room.
     def __init__(self, anchor, w, h):
-        self.anchor = anchor
-        self.size = [w, h]
+        self.anchor = np.array(anchor)
+        self.size = np.array([w, h])
         self.x = [anchor[X], anchor[X] + w]
         self.y = [anchor[Y], anchor[Y] + h]
-        self.center = [(self.x[MIN] + self.x[MAX]) / 2.,
-                       (self.y[MIN] + self.y[MAX]) / 2.]
+        self.center = (self.anchor + self.size / 2).round()
 
     def intersects(self, other):  # returns true if this rectangle intersects with another one
         return not (self.x[MAX] <= other.x[MIN] or other.x[MAX] <= self.x[MIN] or self.y[MAX] <= other.y[MIN] or
@@ -53,23 +53,20 @@ class Room:
         self.children = []
 
     def propagate(self, map, nChildren, size, shapeList):
+        # number of child rooms
         for i in range(rd.randint(nChildren[MIN], nChildren[MAX])):
-            rectangle = None
-            invalid = True
-            counter = 0
-            direction = 0
-            alignment = 0
-            while invalid:
-                direction = rd.randint(0, 3)
-                alignment = rd.randint(0, 1)
+            # number of tries to find a valid child
+            for i in range(100):
+                direction = rd.choice([UP, DOWN, LEFT, RIGHT])
+                alignment = rd.choice([MIN, MAX])
                 shape = rd.choice(shapeList)
 
-                w = rd.randint(size[MIN], size[MAX])
-                h = rd.randint(size[MIN], size[MAX])
+                w = rd.randint(*size)
+                h = rd.randint(*size)
                 if shape is "round" or shape is "square":
                     h = w
-                if shape is "corridor" or shape is "gallery":
-                    if direction is UP or direction is DOWN:
+                elif shape is "corridor" or shape is "gallery":
+                    if direction in [UP, DOWN]:
                         w = 5
                     else:
                         h = 5
@@ -97,18 +94,17 @@ class Room:
                     elif alignment is MAX:
                         offset = [-w, self.rectangle.size[Y] - h]
 
-                rectangle = Rectangle(add(self.rectangle.anchor, offset), w, h)
+                rectangle = Rectangle(
+                    self.rectangle.anchor + np.array(offset), w, h)
 
-                counter += 1
-                if counter >= 100:
-                    rectangle = None
-                    break
-
-                invalid = False
                 for tier in map.tier:
                     for room in tier:
-                        if rectangle.intersects(room.rectangle) or not rectangle.inmap():
-                            invalid = True
+                        if rectangle is not None:
+                            if rectangle.intersects(room.rectangle) or not rectangle.inmap():
+                                rectangle = None
+
+                if rectangle is not None:
+                    break
 
             if rectangle is not None:
                 if direction is UP or direction is DOWN:
@@ -126,12 +122,13 @@ class Room:
                 self.children.append(nextRoom)
                 map.tier[nextRoom.tier].append(nextRoom)
                 nextRoom.carve(map)
+
                 if not map.carveTunnel(nextRoom, self, tunnelDirection, self.tier, True):
                     map.carveTunnel(
                         nextRoom, self, not tunnelDirection, self.tier, True)
 
     def getCenter(self):
-        return [int(m.floor(self.rectangle.center[X])), int(m.floor(self.rectangle.center[Y]))]
+        return self.rectangle.center.astype('int')
 
     def randomSpot(self, margin=1):
         x = rd.randint(self.rectangle.x[MIN] +
@@ -148,11 +145,29 @@ class Room:
                 cell.addObject(cp.copy(obj))
                 i += 1
 
+    def distribute(self, map, obj, dx=5, dy=5, margin=1):
+        for x in range(self.rectangle.x[MIN] + margin, self.rectangle.x[MAX] - margin):
+            for y in range(self.rectangle.y[MIN] + margin, self.rectangle.y[MAX] - margin):
+                if (x % dx == 0) and (y % dy == 0):
+                    cell = map.tile[x][y]
+                    if not cell.wall or cell.object != []:
+                        cell.addObject(cp.copy(obj))
+
+    def updateTier(self, map):
+        for x in range(*self.rectangle.x):
+            for y in range(*self.rectangle.y):
+                cell = map.tile[x][y]
+                if not cell.wall:
+                    cell.tier = self.tier
+
     def carve(self, map):
+        # create a boundary wall
         for x in range(self.rectangle.x[MIN], self.rectangle.x[MAX]):
             for y in range(self.rectangle.y[MIN], self.rectangle.y[MAX]):
                 if map.tile[x][y].wall is None:
                     map.tile[x][y].wall = True
+
+        # carve basic rectangle or circle
         for x in range(self.rectangle.x[MIN] + 1, self.rectangle.x[MAX] - 1):
             for y in range(self.rectangle.y[MIN] + 1, self.rectangle.y[MAX] - 1):
                 if self.shape is not "round":
@@ -161,7 +176,23 @@ class Room:
                 elif distance([x, y], add([-0.5, -0.5], self.rectangle.center)) < self.rectangle.size[X] / 2.0 - 1:
                     map.tile[x][y].wall = False
                     map.tile[x][y].tier = self.tier
-        if self.shape is "gallery":
-            pos = self.getCenter()
-            map.tile[pos[X]][pos[Y]].tier = -1
-            map.tile[pos[X]][pos[Y]].wall = True
+
+        if self.shape is "corner":
+            cutLen = self.getCenter() - self.rectangle.anchor
+            cutLen[X] = rd.choice([0, cutLen[X] + 1])
+            cutLen[Y] = rd.choice([0, cutLen[Y] + 1])
+
+            cutStart = self.rectangle.anchor + cutLen
+            cutEnd = self.getCenter() + cutLen
+
+            for x in range(cutStart[X], cutEnd[X]):
+                for y in range(cutStart[Y], cutEnd[Y]):
+                    map.tile[x][y].wall = True
+                    map.tile[x][y].tier = -1
+
+#         if self.shape is "gallery":
+#             for x in range(self.rectangle.x[MIN] + 1, self.rectangle.x[MAX] - 1):
+#                 for y in range(self.rectangle.y[MIN] + 1, self.rectangle.y[MAX] - 1):
+# #                    if (x % 3 == 0) and (y % 3 == 0):
+#                     map.tile[x][y].wall = True
+#                     map.tile[x][y].tier = -1

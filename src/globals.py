@@ -22,7 +22,7 @@ SCREEN = np.array([70, 50])  # [WIDTH, HEIGHT]
 SEPARATOR = (3. / 4. * SCREEN).astype('int')
 
 LIMIT_FPS = 30
-TIC_SEC = 8
+TIC_SEC = 10
 TIC_SIZE = 1. / TIC_SEC
 
 # Map
@@ -31,8 +31,8 @@ MAP = [128, 128]  # [WIDTH, HEIGHT]
 ROOM_SIZE = [[10, 20], [5, 5], [10, 20], [
     15, 30], [20, 40], [10, 15], [10, 15]]
 N_CHILD = [[0, 0], [1, 1], [1, 1], [2, 3], [3, 5], [4, 6], [6, 10]]
-ROOM_TYPE = [["rectangle"], ["corridor"], ["corridor"], ["corridor"], [
-    "round", "rectangle", "corridor"], ["rectangle", "square"], ["rectangle"]]
+ROOM_TYPE = [["rectangle"], ["gallery"], ["corridor"], ["corridor"], [
+    "round", "rectangle", "corridor"], ["rectangle", "square", "corner"], ["rectangle"]]
 
 NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
 

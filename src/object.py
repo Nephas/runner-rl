@@ -9,7 +9,7 @@ class Object:
         self.block = [False, False]
 
         self.char = char
-        self.fg = color
+        self.fg = list(color)
 
     def moveTo(self, pos):
         if self.cell.map.tile[pos[X]][pos[Y]].block[MOVE]:
@@ -30,10 +30,11 @@ class Object:
         pass
 
 class Player(Object):
-    def __init__(self, cell=None, parent=None):
+    def __init__(self, cell=None, main=None):
         Object.__init__(self, cell, char='@')
 
-        self.parent = parent
+        self.main = main
+        self.cooldown = 0
 
     def moveTo(self, pos):
         if self.cell.map.tile[pos[X]][pos[Y]].block[MOVE]:
@@ -55,9 +56,10 @@ class Vent(Object):
 
 
 class Door(Object):
-    def __init__(self, cell=None):
-        Object.__init__(self, cell, char=225, color=[220, 220, 220])
+    def __init__(self, cell=None, tier = 0):
+        Object.__init__(self, cell, char=225, color=TIERCOLOR[tier])
 
+        self.tier = tier
         self.closed = True
         self.block = [True, True]
 
@@ -88,5 +90,12 @@ class Lamp(Object):
     def __init__(self, cell=None):
         Object.__init__(self, cell, char='*')
 
+        self.on = True
+
     def physics(self, map):
-        map.castLight(self.cell.pos)
+        if self.on:
+            map.castLight(self.cell.pos)
+
+    def interact(self, actor=None,dir=None):
+        self.on = not self.on
+        return 3

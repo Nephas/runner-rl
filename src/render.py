@@ -12,8 +12,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
     MAPINSET = np.array([1,1])
 
-    def __init__(self, parent):
-        self.parent = parent
+    def __init__(self, main):
+        self.main = main
 
         tdl.set_font(Render.GRAPHICSPATH + Render.TILESET,
                      greyscale=True, altLayout=True)
@@ -34,6 +34,14 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.raymap = Render.rayMap(16,32)
         self.lightmap = Render.rayMap(6,16)
 
+    def renderStart(self):
+        self.mapPanel.clear(bg=BLACK)
+        self.infoPanel.clear(bg=BLACK)        
+
+        self.console.blit(self.mapPanel, 1, 1)
+        self.console.blit(self.infoPanel, SEPARATOR[WIDTH], 1)
+
+        tdl.flush()
 
     def renderAll(self, map, gui):
         self.renderMap(map, gui.mapOffset)
@@ -45,14 +53,14 @@ class Render:  # a rectangle on the map. used to characterize a room.
         tdl.flush()
 
     def renderMap(self, map, mapOffset):
-        self.mapPanel.clear(bg=[0, 0, 0])
+        self.mapPanel.clear(bg=BLACK)
         (panelX, panelY) = self.mapPanel.get_size()
 
         mapX = [max(0, mapOffset[X]), min(mapOffset[X] + panelX, MAP[WIDTH])]
         mapY = [max(0, mapOffset[Y]), min(mapOffset[Y] + panelY, MAP[HEIGHT])]
         map.updateRender(mapX, mapY)
 
-        cursorTile = map.getTile(self.parent.gui.cursorPos)
+        cursorTile = map.getTile(self.main.gui.cursorPos)
         if cursorTile.vision[LOS]:
             cursorTile.bg = WHITE
 
@@ -62,14 +70,11 @@ class Render:  # a rectangle on the map. used to characterize a room.
                     self.mapPanel, np.array([x, y]) - mapOffset)
 
     def renderInfo(self):
-        self.infoPanel.clear(bg=[0, 0, 0])
-        for i in range(1 + (self.parent.tic % TIC_SEC)):
+        self.infoPanel.clear(bg = BLACK)
+        for i in range(1 + (self.main.tic % TIC_SEC)):
             self.infoPanel.draw_str(1 + i, 1, "o")
-        for i in range(self.parent.input.actions):
+        for i in range(self.main.player.cooldown):
             self.infoPanel.draw_str(1 + i, 3, "o")
-
-    def updateFov(self):
-        pass
 
     @staticmethod
     def rayCast(start, end):
