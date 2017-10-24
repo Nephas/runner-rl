@@ -10,4 +10,14 @@ placement of progressively strong enemies, items and key finding 'puzzles.
 
 The outer tiers are interconnected via airducts to mix up the boring tree structure.
 
-![alt text](https://github.com/Nephas/runner-rl/blob/master/levelgen.bmp?raw=true)
+<p align="left">
+  <img src="https://github.com/Nephas/runner-rl/blob/master/levelgen.bmp" width="250"/>
+</p>
+
+Other features implemented so far:
+
+* basic rendering
+* player character movement and field of view
+* simple world interactions (door opening, pushing)
+* light sources
+* mouse movement
