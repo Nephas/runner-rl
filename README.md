@@ -1,7 +1,7 @@
 # runner-rl
 Game Prototype: a cyberpunk roguelike of stealth, hacking and evil megacorps
 
-At the moment there is:
+At the moment there is mostly a 'physics engine':
 
 A level generator:
 It produces levels as abstract tree of rooms at different tiers. The player starts on 
