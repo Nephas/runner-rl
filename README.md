@@ -21,3 +21,10 @@ Other features implemented so far:
 * simple world interactions (door opening, pushing)
 * light sources
 * mouse movement
+
+Light and shadows are completely dynamic and interact with changes in the environment like 
+opening doors and moving scenery.
+
+<p align="left">
+  <img src="https://github.com/Nephas/runner-rl/blob/master/screen.png" width="750"/>
+</p>
