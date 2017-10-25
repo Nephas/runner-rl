@@ -22,8 +22,9 @@ SCREEN = np.array([70, 50])  # [WIDTH, HEIGHT]
 SEPARATOR = (3. / 4. * SCREEN).astype('int')
 
 LIMIT_FPS = 30
-TIC_SEC = 10
+TIC_SEC = 5
 TIC_SIZE = 1. / TIC_SEC
+FRAME_LENGTH = 1. / LIMIT_FPS
 
 # Map
 MAP = [128, 128]  # [WIDTH, HEIGHT]
@@ -37,16 +38,8 @@ ROOM_TYPE = [["rectangle"], ["gallery"], ["corridor"], ["corridor"], [
 NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
 
 TIERCOLOR = [np.array([40 * i, 255 - 40 * i, 255]) for i in range(10)]
-WHITE = (255,255,255)
-BLACK = (0,0,0)
-#np.array([[0,0],[1,0],[0,1],[-1,0],[0,-1]])
-
-def add(x1, x2):
-    return [x1[X] + x2[X], x1[Y] + x2[Y]]
-
-
-def distance(x1, x2):
-    return ((x1[X] - x2[X])**2 + (x1[Y] - x2[Y])**2)**0.5
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
 
 
 def timing(f):
@@ -54,6 +47,6 @@ def timing(f):
         time1 = t.time()
         ret = f(*args)
         time2 = t.time()
-        print '%s function took %0.3f ms' % (f.func_name, (time2-time1)*1000.0)
+        print '%s function took %0.3f ms' % (f.func_name, (time2 - time1) * 1000.0)
         return ret
     return wrap

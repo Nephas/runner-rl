@@ -26,23 +26,11 @@ class Object:
     def interact(self, actor=None, dir=None):
         return 0
 
+    def describe(self):
+        return "something"
+
     def physics(self, map):
         pass
-
-class Player(Object):
-    def __init__(self, cell=None, main=None):
-        Object.__init__(self, cell, char='@')
-
-        self.main = main
-        self.cooldown = 0
-
-    def moveTo(self, pos):
-        if self.cell.map.tile[pos[X]][pos[Y]].block[MOVE]:
-            return False
-        self.cell.object.remove(self)
-        self.cell = self.cell.map.tile[pos[X]][pos[Y]]
-        self.cell.map.tile[pos[X]][pos[Y]].object.append(self)
-        return True
 
 
 class Vent(Object):
@@ -51,33 +39,66 @@ class Vent(Object):
 
         self.block = [False, True]
 
-    def interact(self,actor=None, dir=None):
+    def interact(self, actor=None, dir=None):
+        self.cell.object.remove(self)
         return 10
+
+    def describe(self):
+        return "Vent"
 
 
 class Door(Object):
-    def __init__(self, cell=None, tier = 0):
-        Object.__init__(self, cell, char=225, color=TIERCOLOR[tier])
+    def __init__(self, cell=None, tier=0):
+        Object.__init__(self, cell, char=177, color=TIERCOLOR[tier])
 
         self.tier = tier
         self.closed = True
         self.block = [True, True]
 
-    def interact(self, actor=None,dir=None):
-        self.block = [not self.closed, not self.closed]
-        self.closed = not self.closed
+    def open(self):
+        self.closed = False
+        self.block = [False, False]
+        self.char = 95
 
+    def close(self):
+        self.closed = True
+        self.block = [True, True]
+        self.char = 177
+
+    def interact(self, actor=None, dir=None):
         if self.closed:
-            self.char = 225
+            self.open()
         else:
-            self.char = 224
+            self.close()
+        return 3
 
-        return 5
+    def describe(self):
+        return "Door ({:})".format(self.tier)
+
+
+class AutoDoor(Door):
+    def __init__(self, cell=None, tier=0):
+        Door.__init__(self, cell, tier=tier)
+
+    def physics(self, map):
+        obj = 0
+        for cell in map.getNeighborhood(self.cell.pos) + [self.cell]:
+            obj += len(cell.object)
+        if obj > 1:
+            self.open()
+        else:
+            self.close()
+
+    def interact(self, actor=None, dir=None):
+        return 0
+
+    def describe(self):
+        return "Autodoor ({:})".format(self.tier)
 
 
 class Obstacle(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char=206, color=(200, 200, 200))
+        Object.__init__(self, cell, char=10, color=(200, 200, 200))
 
         self.block = [True, True]
 
@@ -86,9 +107,13 @@ class Obstacle(Object):
         actor.moveDir(dir)
         return 5
 
+    def describe(self):
+        return "Chest"
+
+
 class Lamp(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char='*')
+        Object.__init__(self, cell, char=7)
 
         self.on = True
 
@@ -96,6 +121,20 @@ class Lamp(Object):
         if self.on:
             map.castLight(self.cell.pos)
 
-    def interact(self, actor=None,dir=None):
+    def interact(self, actor=None, dir=None):
         self.on = not self.on
         return 3
+
+    def describe(self):
+        return "Lamp"
+
+
+class Terminal(Object):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, char=20)
+
+        self.on = True
+        self.connections = []
+
+    def describe(self):
+        return "Terminal"

@@ -5,14 +5,14 @@ import tdl
 
 class Input:
 
-    MOVEMAP = { 'w': np.array([0, -1]),
-                'a': np.array([-1, 0]),
-                's': np.array([0, 1]),
-                'd': np.array([1, 0]),
-                'q': np.array([-1, -1]),
-                'e': np.array([1, -1]),
-                'y': np.array([-1, 1]),
-                'c': np.array([1, 1])}
+    MOVEMAP = {'w': np.array([0, -1]),
+               'a': np.array([-1, 0]),
+               's': np.array([0, 1]),
+               'd': np.array([1, 0]),
+               'q': np.array([-1, -1]),
+               'e': np.array([1, -1]),
+               'y': np.array([-1, 1]),
+               'c': np.array([1, 1])}
 
     def __init__(self, main):
         self.main = main
@@ -49,7 +49,7 @@ class Input:
             self.playerMovement(dir)
 
     def playerMovement(self, dir):
-        cost = np.abs(dir[X]) + np.abs(dir[Y]) + 1
+        cost = np.abs(dir[X]) + np.abs(dir[Y])
 
         if self.main.player.moveDir(dir):
             self.main.player.cooldown += cost
@@ -62,18 +62,12 @@ class Input:
         for obj in self.main.map.tile[pos[X]][pos[Y]].object:
             self.main.player.cooldown += obj.interact(self.main.player, dir)
 
-
     def handleMouse(self, terminalPos):
-        mapPos = np.array(terminalPos) + self.main.gui.mapOffset - self.main.render.MAPINSET
-        self.main.gui.cursorPos = mapPos
-        print(self.main.map.getTile(mapPos).object)
+        self.main.gui.updateCursor(terminalPos)
 
     def handleClick(self, event):
-        mapPos = np.array(event.cell) + self.main.gui.mapOffset - self.main.render.MAPINSET
-        self.main.gui.cursorPos = mapPos
-
-        ray = mapPos - self.main.player.cell.pos
-        dir = (ray/np.linalg.norm(ray)).round().astype('int')
+        ray = self.main.gui.cursorPos - self.main.player.cell.pos
+        dir = (ray / np.linalg.norm(ray)).round().astype('int')
 
         if event.button is 'LEFT':
             self.playerMovement(dir)

@@ -4,11 +4,12 @@ import numpy as np
 import copy as cp
 import tdl
 import tcod
+import time as t
 
 
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
-    TILESET = 'dejavu16x16.png'
+    TILESET = 'extended16x16.png'
 
     MAPINSET = np.array([1,1])
 
@@ -16,7 +17,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.main = main
 
         tdl.set_font(Render.GRAPHICSPATH + Render.TILESET,
-                     greyscale=True, altLayout=True)
+                     greyscale=True)
         tdl.setFPS(LIMIT_FPS)
 
         self.console = tdl.init(
@@ -36,7 +37,9 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
     def renderStart(self):
         self.mapPanel.clear(bg=BLACK)
-        self.infoPanel.clear(bg=BLACK)        
+        self.infoPanel.clear(bg=BLACK)
+
+        self.mapPanel.draw_str(2,2, "Generating Level")
 
         self.console.blit(self.mapPanel, 1, 1)
         self.console.blit(self.infoPanel, SEPARATOR[WIDTH], 1)
@@ -75,6 +78,15 @@ class Render:  # a rectangle on the map. used to characterize a room.
             self.infoPanel.draw_str(1 + i, 1, "o")
         for i in range(self.main.player.cooldown):
             self.infoPanel.draw_str(1 + i, 3, "o")
+
+        self.infoPanel.draw_str(1, 5, '{:5}'.format(t.time()))
+
+        cursorTile = self.main.map.getTile(self.main.gui.cursorPos)
+        for i, obj in enumerate(cursorTile.object):
+            self.infoPanel.draw_str(1, 7 + 2*i, obj.describe())
+        # for i in range(255):
+        #     self.infoPanel.draw_str(2 + 6 * int(i / 32), i % 32, str(i))
+        #     self.infoPanel.draw_char(6 + 6 * int(i / 32), i % 32, i)
 
     @staticmethod
     def rayCast(start, end):

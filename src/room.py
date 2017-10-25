@@ -141,7 +141,7 @@ class Room:
         i = 0
         while i < n:
             cell = map.getTile(self.randomSpot())
-            if not cell.wall or cell.object != []:
+            if cell.isEmpty():
                 cell.addObject(cp.copy(obj))
                 i += 1
 
@@ -165,16 +165,16 @@ class Room:
         for x in range(self.rectangle.x[MIN], self.rectangle.x[MAX]):
             for y in range(self.rectangle.y[MIN], self.rectangle.y[MAX]):
                 if map.tile[x][y].wall is None:
-                    map.tile[x][y].wall = True
+                    map.tile[x][y].makeWall()
 
         # carve basic rectangle or circle
         for x in range(self.rectangle.x[MIN] + 1, self.rectangle.x[MAX] - 1):
             for y in range(self.rectangle.y[MIN] + 1, self.rectangle.y[MAX] - 1):
                 if self.shape is not "round":
-                    map.tile[x][y].wall = False
+                    map.tile[x][y].removeWall()
                     map.tile[x][y].tier = self.tier
-                elif distance([x, y], add([-0.5, -0.5], self.rectangle.center)) < self.rectangle.size[X] / 2.0 - 1:
-                    map.tile[x][y].wall = False
+                elif np.linalg.norm([x, y] - (self.rectangle.center - np.array([0.5, 0.5]))) < self.rectangle.size[X] / 2.0 - 1:
+                    map.tile[x][y].removeWall()
                     map.tile[x][y].tier = self.tier
 
         if self.shape is "corner":
@@ -196,3 +196,40 @@ class Room:
 # #                    if (x % 3 == 0) and (y % 3 == 0):
 #                     map.tile[x][y].wall = True
 #                     map.tile[x][y].tier = -1
+
+
+class Wall:
+    ALIGNMAP = {'ffff': 206,
+                'tttt': 206,
+                'tftf': 186,
+                'ftft': 205,
+                'ttff': 200,
+                'fftt': 187,
+                'fttf': 201,
+                'tfft': 188,
+                'tfff': 186,
+                'ftff': 205,
+                'fftf': 186,
+                'ffft': 205,
+                'fttt': 203,
+                'tftt': 185,
+                'ttft': 202,
+                'tttf': 204}
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def getChar(pos, tileMap):
+        align = ''
+        neighborhood = tileMap.getNeighborhood(pos)
+
+        if len(neighborhood) == 4:
+            for cell in neighborhood:
+                if cell.wall is not None and cell.wall:
+                    align += 't'
+                else:
+                    align += 'f'
+            return Wall.ALIGNMAP[align]
+        else:
+            return 0
