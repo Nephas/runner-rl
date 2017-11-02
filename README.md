@@ -1,7 +1,7 @@
 # runner-rl
 Game Prototype: a cyberpunk roguelike of stealth, hacking and evil megacorps
 
-At the moment there is:
+At the moment there is mostly a 'physics engine':
 
 A level generator:
 It produces levels as abstract tree of rooms at different tiers. The player starts on 
@@ -21,3 +21,10 @@ Other features implemented so far:
 * simple world interactions (door opening, pushing)
 * light sources
 * mouse movement
+
+Light and shadows are completely dynamic and interact with changes in the environment like 
+opening doors and moving scenery.
+
+<p align="left">
+  <img src="https://github.com/Nephas/runner-rl/blob/master/screen.png" width="750"/>
+</p>
