@@ -146,12 +146,16 @@ class Room:
                 i += 1
 
     def distribute(self, map, obj, dx=5, dy=5, margin=1):
+        count = 0
         for x in range(self.rectangle.x[MIN] + margin, self.rectangle.x[MAX] - margin):
             for y in range(self.rectangle.y[MIN] + margin, self.rectangle.y[MAX] - margin):
                 if (x % dx == 0) and (y % dy == 0):
                     cell = map.tile[x][y]
                     if not cell.wall or cell.object != []:
                         cell.addObject(cp.copy(obj))
+                        count += 1
+        return count
+
 
     def updateTier(self, map):
         for x in range(*self.rectangle.x):

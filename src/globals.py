@@ -21,8 +21,8 @@ HEIGHT = 1
 SCREEN = np.array([70, 50])  # [WIDTH, HEIGHT]
 SEPARATOR = (3. / 4. * SCREEN).astype('int')
 
-LIMIT_FPS = 30
-TIC_SEC = 5
+LIMIT_FPS = 24
+TIC_SEC = 8
 TIC_SIZE = 1. / TIC_SEC
 FRAME_LENGTH = 1. / LIMIT_FPS
 

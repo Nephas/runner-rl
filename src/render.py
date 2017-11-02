@@ -11,7 +11,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
     TILESET = 'extended16x16.png'
 
-    MAPINSET = np.array([1,1])
+    MAPINSET = np.array([1, 1])
 
     def __init__(self, main):
         self.main = main
@@ -32,14 +32,14 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.infoPanel = tdl.Window(
             self.console, SEPARATOR[WIDTH], 1, SCREEN[WIDTH] - SEPARATOR[WIDTH] - 1, SCREEN[HEIGHT] - 2)
 
-        self.raymap = Render.rayMap(16,32)
-        self.lightmap = Render.rayMap(6,16)
+        self.raymap = Render.rayMap(24, 32)
+        self.lightmap = Render.rayMap(8, 32)
 
     def renderStart(self):
         self.mapPanel.clear(bg=BLACK)
         self.infoPanel.clear(bg=BLACK)
 
-        self.mapPanel.draw_str(2,2, "Generating Level")
+        self.mapPanel.draw_str(2, 2, "Generating Level")
 
         self.console.blit(self.mapPanel, 1, 1)
         self.console.blit(self.infoPanel, SEPARATOR[WIDTH], 1)
@@ -57,23 +57,19 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
     def renderMap(self, map, mapOffset):
         self.mapPanel.clear(bg=BLACK)
-        (panelX, panelY) = self.mapPanel.get_size()
 
-        mapX = [max(0, mapOffset[X]), min(mapOffset[X] + panelX, MAP[WIDTH])]
-        mapY = [max(0, mapOffset[Y]), min(mapOffset[Y] + panelY, MAP[HEIGHT])]
-        map.updateRender(mapX, mapY)
+        for cell in self.main.gui.mapCells:
+            cell.draw(self.mapPanel, cell.pos - mapOffset)
 
-        cursorTile = map.getTile(self.main.gui.cursorPos)
-        if cursorTile.vision[LOS]:
-            cursorTile.bg = WHITE
+#        cell = map.getTile(self.main.gui.cursorPos)
+#        cell.drawHighlight(self.mapPanel, cell.pos - mapOffset)
 
-        for x in range(mapX[MIN], mapX[MAX]):
-            for y in range(mapY[MIN], mapY[MAX]):
-                map.tile[x][y].draw(
-                    self.mapPanel, np.array([x, y]) - mapOffset)
+        cell = map.getTile(self.main.player.cell.pos + self.main.gui.cursorDir)
+        cell.drawHighlight(self.mapPanel, cell.pos - mapOffset)
+
 
     def renderInfo(self):
-        self.infoPanel.clear(bg = BLACK)
+        self.infoPanel.clear(bg=BLACK)
         for i in range(1 + (self.main.tic % TIC_SEC)):
             self.infoPanel.draw_str(1 + i, 1, "o")
         for i in range(self.main.player.cooldown):
@@ -83,10 +79,19 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
         cursorTile = self.main.map.getTile(self.main.gui.cursorPos)
         for i, obj in enumerate(cursorTile.object):
-            self.infoPanel.draw_str(1, 7 + 2*i, obj.describe())
+            self.infoPanel.draw_str(1, 7 + 2 * i, obj.describe())
         # for i in range(255):
         #     self.infoPanel.draw_str(2 + 6 * int(i / 32), i % 32, str(i))
         #     self.infoPanel.draw_char(6 + 6 * int(i / 32), i % 32, i)
+
+    @staticmethod
+    def inMap(terminalPos):
+        if terminalPos[X] < Render.MAPINSET[X] or terminalPos[Y] < Render.MAPINSET[Y]:
+            return False
+        elif terminalPos[X] >= SEPARATOR[X] - 1 or terminalPos[Y] >= SEPARATOR[Y] - 1:
+            return False
+        else:
+            return True
 
     @staticmethod
     def rayCast(start, end):
@@ -105,7 +110,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
     def rayMap(r, num):
         lines = []
         start = np.array([0., 0.])
-        for phi in np.linspace(0., 2. * np.pi, num):
+        phi0 =  2*np.pi* np.random.random()
+        for phi in np.linspace(phi0, phi0+ 2. * np.pi, num):
             end = r * np.array([np.cos(phi), np.sin(phi)])
             lines.append(Render.rayCast(start, end)[1:int(r)])
         return lines

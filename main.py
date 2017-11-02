@@ -33,23 +33,26 @@ class Game:
         stats = self.map.generateLevel()
         print(stats)
 
-        self.player = Player(None, self)
+        self.player = Player(self.map.tile[0][0], self)
         self.map.finalize(self.player)
         self.render.printImage(self.map, "levelgen.bmp")
 
-        self.gui.mapOffset = self.player.cell.pos - (SEPARATOR / 2)
+        self.gui.moveOffset(self.player.cell.pos - (SEPARATOR / 2))
+        self.gui.updateCursor()
         self.map.updatePhysics()
         self.map.updateRender()
 
     def run(self):
         while True:
-            t.sleep(0.0001)
+#            t.sleep(0.00001)
             if tdl.event.isWindowClosed() or game.input.quit:
                 sys.exit()
             if t.time() >= TIC_SIZE + self.lastTic:
                 self.map.updatePhysics()
                 for actor in self.actor:
                     actor.act(self.map)
+                self.map.updateRender()
+
                 self.tic += 1
                 self.lastTic = t.time()
             if t.time() >= FRAME_LENGTH + self.lastTic:

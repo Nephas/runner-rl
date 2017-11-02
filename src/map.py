@@ -79,8 +79,10 @@ class Map:
 
         for tier in self.tier:
             for room in tier:
-                room.distribute(self, Lamp(), rd.randint(
-                    3, 8), rd.randint(3, 8))
+                count = room.distribute(self, Lamp(), rd.randint(8, 16), rd.randint(8, 16))
+                if count == 0:
+                    self.getTile(room.randomSpot()).addObject(Lamp())
+
                 room.scatter(self, Obstacle(), rd.randint(1, 5))
                 self.getTile(room.randomSpot()).addObject(
                     Actor(None, self.main))
@@ -95,23 +97,19 @@ class Map:
         for i in range(3):
             exRooms.pop().function = "extraction"
 
-    def updatePhysics(self, x=[0, MAP[WIDTH]], y=[0, MAP[HEIGHT]]):
-        for i in range(x[MIN], x[MAX]):
-            for j in range(y[MIN], y[MAX]):
-                cell = self.tile[i][j]
-                cell.light = 2
-                cell.vision[LOS] = False
+    def updatePhysics(self):
+        for cell in self.main.gui.mapCells:
+            cell.light = 2
+            cell.vision[LOS] = False
 
-        for i in range(x[MIN], x[MAX]):
-            for j in range(y[MIN], y[MAX]):
-                self.tile[i][j].updatePhysics()
-
-    def updateRender(self, x=[0, MAP[WIDTH]], y=[0, MAP[HEIGHT]]):
         self.castFov(self.main.player.cell.pos)
 
-        for i in range(x[MIN], x[MAX]):
-            for j in range(y[MIN], y[MAX]):
-                self.tile[i][j].updateRender()
+        for cell in self.main.gui.mapCells:
+            cell.updatePhysics()
+
+    def updateRender(self):
+        for cell in self.main.gui.mapCells:
+            cell.updateRender()
 
     def carveTunnel(self, room1, room2, direction, tunnelTier=-1, door=False, vent=False):
         positions = []
@@ -179,15 +177,12 @@ class Map:
                      pos + np.array([0, 1]), pos + np.array([-1, 0])]
         return map(lambda p: self.getTile(p), filter(lambda p: self.contains(p), positions))
 
-        # positions = [add(pos, [0, -1]), add(pos, [0, 1]),
-        #              add(pos, [-1, 0]), add(pos, [1, 0])]
-        # return filter(lambda p: self.contains(p), positions)
-
     def contains(self, pos):
         return pos[X] in range(0, MAP[WIDTH]) and pos[Y] in range(0, MAP[HEIGHT])
 
     def castFov(self, pos):
-        self.getTile(pos).vision = [True, True]
+        for n in NEIGHBORHOOD:
+            self.getTile(pos + n).vision = [True, True]
 
         blockIndex = 0
         blockPoint = [0, 0]
@@ -197,8 +192,7 @@ class Map:
                 for i, point in enumerate(line):
                     if not self.getTile(point + pos).block[LOS]:
                         for n in NEIGHBORHOOD:
-                            cell = self.getTile(point + pos + n)
-                            cell.vision = [True, True]
+                            self.getTile(point + pos + n).vision = [True, True]
                     else:
                         blockIndex = i
                         blockPoint = point
@@ -209,9 +203,9 @@ class Map:
 
         for line in self.main.render.lightmap:
             for i, point in enumerate(line):
-                if not self.getTile(point + pos).block[LOS]:
-                    cell = self.getTile(point + pos)
-                    cell.light = min(cell.light + 8 - 2 * i, 16)
+                cell = self.getTile(point + pos)
+                if not cell.block[LOS]:
+                    cell.light = max(16 - 2*i, cell.light)
                 else:
                     break
 
@@ -293,5 +287,12 @@ class Cell:
     def draw(self, window, pos):
         if self.vision[EXP]:
             window.draw_char(pos[X], pos[Y], self.char, self.fg, self.bg)
+
+    def drawHighlight(self, window, pos, color=WHITE):
+        if self.vision[EXP]:
+            window.draw_char(pos[X], pos[Y], self.char, self.fg, color)
+        else:
+            window.draw_char(pos[X], pos[Y], ' ', self.fg, color)
+
 #        elif self.wall is None:
 #            window.draw_char(pos[X], pos[Y], self.fog, self.fg, BLACK)

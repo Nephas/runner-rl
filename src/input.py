@@ -17,6 +17,7 @@ class Input:
     def __init__(self, main):
         self.main = main
         self.quit = False
+        self.actions = []
 
     def handleEvents(self):
         try:
@@ -36,41 +37,42 @@ class Input:
         if key == 'ESCAPE':
             self.quit = True
         elif key == 'UP':
-            self.main.gui.mapOffset[Y] -= 3
+            self.main.gui.moveOffset(np.array([0, -3]))
         elif key == 'DOWN':
-            self.main.gui.mapOffset[Y] += 3
+            self.main.gui.moveOffset(np.array([0, 3]))
         elif key == 'LEFT':
-            self.main.gui.mapOffset[X] -= 3
+            self.main.gui.moveOffset(np.array([-3, 0]))
         elif key == 'RIGHT':
-            self.main.gui.mapOffset[X] += 3
+            self.main.gui.moveOffset(np.array([3, 0]))
 
-        elif key == 'CHAR' and self.main.player.cooldown == 0:
-            dir = Input.MOVEMAP[char]
-            self.playerMovement(dir)
+        elif key == 'CHAR' and len(self.actions) < 2:
+            self.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[char]})
 
-    def playerMovement(self, dir):
-        cost = np.abs(dir[X]) + np.abs(dir[Y])
+        elif key == 'SPACE' and len(self.actions) < 2:
+            ray = self.main.gui.cursorPos - self.main.player.cell.pos
+            dir = (ray / np.linalg.norm(ray)).round().astype('int')
+            self.actions.append({'TYPE': 'USE', 'DIR': dir})
 
-        if self.main.player.moveDir(dir):
-            self.main.player.cooldown += cost
-            self.main.gui.mapOffset = self.main.gui.mapOffset + dir
-        else:
-            self.playerInteraction(dir)
-
-    def playerInteraction(self, dir):
-        pos = self.main.player.cell.pos + dir
-        for obj in self.main.map.tile[pos[X]][pos[Y]].object:
-            self.main.player.cooldown += obj.interact(self.main.player, dir)
+    #
+    # def playerMovement(self, dir):
+    #     cost = np.abs(dir[X]) + np.abs(dir[Y])
+    #
+    #     if self.main.player.moveDir(dir):
+    #         self.main.player.cooldown += cost
+    #         self.main.gui.mapOffset = self.main.gui.mapOffset + dir
+    #     else:
+    #         self.playerInteraction(dir)
+    #
+    # def playerInteraction(self, dir):
+    #     pos = self.main.player.cell.pos + dir
+    #     for obj in self.main.map.tile[pos[X]][pos[Y]].object:
+    #         self.main.player.cooldown += obj.interact(self.main.player, dir)
 
     def handleMouse(self, terminalPos):
         self.main.gui.updateCursor(terminalPos)
 
     def handleClick(self, event):
-        ray = self.main.gui.cursorPos - self.main.player.cell.pos
-        dir = (ray / np.linalg.norm(ray)).round().astype('int')
-
-        if event.button is 'LEFT':
-            self.playerMovement(dir)
-
-        if event.button is 'RIGHT':
-            self.playerInteraction(dir)
+        if event.button is 'LEFT' and len(self.actions) < 2:
+            self.actions.append({'TYPE': 'MOVE', 'DIR': self.main.gui.cursorDir})
+        elif event.button is 'RIGHT' and len(self.actions) < 2:
+            self.actions.append({'TYPE': 'USE', 'DIR': self.main.gui.cursorDir})

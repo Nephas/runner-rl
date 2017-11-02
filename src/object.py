@@ -1,5 +1,6 @@
 from globals import *
-
+from render import Render
+import random as rd
 
 class Object:
     def __init__(self, cell=None, char=None, color=WHITE):
@@ -103,23 +104,37 @@ class Obstacle(Object):
         self.block = [True, True]
 
     def interact(self, actor, dir):
-        self.moveDir(dir)
-        actor.moveDir(dir)
-        return 5
+        if self.moveDir(dir):
+            actor.moveDir(dir)
+            return 3
+        else:
+            return 0
 
     def describe(self):
         return "Chest"
 
 
 class Lamp(Object):
-    def __init__(self, cell=None):
+    def __init__(self, cell=None, brightness=8):
         Object.__init__(self, cell, char=7)
 
         self.on = True
+        self.brightness = brightness
+        self.lightmap = Render.rayMap(brightness, 32)
 
     def physics(self, map):
         if self.on:
-            map.castLight(self.cell.pos)
+            self.castLight(map)
+
+    def castLight(self, map):
+        self.cell.light = 2*self.brightness
+        for line in self.lightmap:
+            for i, point in enumerate(line):
+                cell = map.getTile(point + self.cell.pos)
+                if not cell.block[LOS]:
+                    cell.light = max(2*(self.brightness - i), cell.light)
+                else:
+                    break
 
     def interact(self, actor=None, dir=None):
         self.on = not self.on
