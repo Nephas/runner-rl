@@ -1,5 +1,6 @@
 from globals import *
 from object import Object
+from item import Item, Key
 
 import random as rd
 
@@ -41,6 +42,7 @@ class Actor(Object):
         self.cell.object.remove(self)
         self.main.actor.remove(self)
         Corpse(self.cell, self)
+        self.main.gui.pushMessage(self.describe() + " dies")
 
     def interactDir(self, map, dir):
         tile = map.getTile(self.cell.pos + dir)
@@ -61,6 +63,7 @@ class Player(Actor):
         Actor.__init__(self, cell, main, char='@')
 
         self.fg = [225, 200, 100]
+        self.inventory = [Item(), Key(tier=5)]
 
     def act(self, tileMap=None):
         actions = self.main.input.actions

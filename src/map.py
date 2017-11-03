@@ -5,7 +5,9 @@ import numpy as np
 import random as rd
 import itertools as it
 from room import Room, Rectangle, Wall
-from object import Object, Vent, Door, AutoDoor, Obstacle, Lamp
+from object import Object, Obstacle, Lamp
+from door import Vent, SecDoor, AutoDoor
+from item import Item, Key
 from actor import Actor
 
 
@@ -79,13 +81,16 @@ class Map:
 
         for tier in self.tier:
             for room in tier:
-                count = room.distribute(self, Lamp(), rd.randint(8, 16), rd.randint(8, 16))
+                count = room.distribute(self, Lamp(), rd.randint(12, 20), rd.randint(12, 20))
                 if count == 0:
                     self.getTile(room.randomSpot()).addObject(Lamp())
 
                 room.scatter(self, Obstacle(), rd.randint(1, 5))
+                room.scatter(self, Key(tier=rd.randint(3,5)), 1)
                 self.getTile(room.randomSpot()).addObject(
                     Actor(None, self.main))
+            room = rd.choice(tier)
+            room.scatter(self, Key(tier=room.tier-1), 1)
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
@@ -157,8 +162,7 @@ class Map:
                 if vent and cell.isEmpty():
                     cell.addObject(Vent())
                 if door:
-                    cell.addObject(
-                        rd.choice([Door(tier=tunnelTier), AutoDoor(tier=tunnelTier)]))
+                    cell.addObject(SecDoor(tier=tunnelTier))
             if pos in room2.rectangle.border():
                 if vent and cell.isEmpty():
                     cell.addObject(Vent())

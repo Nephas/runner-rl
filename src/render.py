@@ -9,7 +9,7 @@ import time as t
 
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
-    TILESET = 'extended16x16.png'
+    TILESET = 'tileset16x16.png'
 
     MAPINSET = np.array([1, 1])
 
@@ -31,6 +31,10 @@ class Render:  # a rectangle on the map. used to characterize a room.
             self.console, Render.MAPINSET[X], Render.MAPINSET[Y], SEPARATOR[WIDTH] - 2, SEPARATOR[HEIGHT] - 2)
         self.infoPanel = tdl.Window(
             self.console, SEPARATOR[WIDTH], 1, SCREEN[WIDTH] - SEPARATOR[WIDTH] - 1, SCREEN[HEIGHT] - 2)
+        self.messagePanel = tdl.Window(
+            self.console, Render.MAPINSET[X], SEPARATOR[HEIGHT], SEPARATOR[WIDTH] - 2, SCREEN[HEIGHT] - SEPARATOR[HEIGHT] - 1)
+
+
 
         self.raymap = Render.rayMap(24, 32)
         self.lightmap = Render.rayMap(8, 32)
@@ -38,6 +42,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
     def renderStart(self):
         self.mapPanel.clear(bg=BLACK)
         self.infoPanel.clear(bg=BLACK)
+        self.messagePanel.clear(bg=BLACK)
 
         self.mapPanel.draw_str(2, 2, "Generating Level")
 
@@ -48,11 +53,11 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
     def renderAll(self, map, gui):
         self.renderMap(map, gui.mapOffset)
-        self.renderInfo()
+        gui.renderInfo(self.infoPanel)
+        gui.renderMessage(self.messagePanel)
 
         self.console.blit(self.mapPanel, 1, 1)
         self.console.blit(self.infoPanel, SEPARATOR[WIDTH], 1)
-
         tdl.flush()
 
     def renderMap(self, map, mapOffset):
@@ -68,21 +73,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
         cell.drawHighlight(self.mapPanel, cell.pos - mapOffset)
 
 
-    def renderInfo(self):
-        self.infoPanel.clear(bg=BLACK)
-        for i in range(1 + (self.main.tic % TIC_SEC)):
-            self.infoPanel.draw_str(1 + i, 1, "o")
-        for i in range(self.main.player.cooldown):
-            self.infoPanel.draw_str(1 + i, 3, "o")
 
-        self.infoPanel.draw_str(1, 5, '{:5}'.format(t.time()))
 
-        cursorTile = self.main.map.getTile(self.main.gui.cursorPos)
-        for i, obj in enumerate(cursorTile.object):
-            self.infoPanel.draw_str(1, 7 + 2 * i, obj.describe())
-        # for i in range(255):
-        #     self.infoPanel.draw_str(2 + 6 * int(i / 32), i % 32, str(i))
-        #     self.infoPanel.draw_char(6 + 6 * int(i / 32), i % 32, i)
 
     @staticmethod
     def inMap(terminalPos):

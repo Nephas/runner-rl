@@ -18,7 +18,7 @@ HEIGHT = 1
 
 
 # Graphics
-SCREEN = np.array([70, 50])  # [WIDTH, HEIGHT]
+SCREEN = np.array([80, 40])  # [WIDTH, HEIGHT]
 SEPARATOR = (3. / 4. * SCREEN).astype('int')
 
 LIMIT_FPS = 24

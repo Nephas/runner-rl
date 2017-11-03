@@ -45,13 +45,17 @@ class Input:
         elif key == 'RIGHT':
             self.main.gui.moveOffset(np.array([3, 0]))
 
-        elif key == 'CHAR' and len(self.actions) < 2:
-            self.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[char]})
-
         elif key == 'SPACE' and len(self.actions) < 2:
             ray = self.main.gui.cursorPos - self.main.player.cell.pos
             dir = (ray / np.linalg.norm(ray)).round().astype('int')
             self.actions.append({'TYPE': 'USE', 'DIR': dir})
+
+        if key == 'CHAR' and char == 'r':
+            self.main.gui.pushMessage("Waiting")
+            self.main.player.cooldown += 2
+
+        elif key == 'CHAR' and len(self.actions) < 2:
+            self.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[char]})
 
     #
     # def playerMovement(self, dir):
