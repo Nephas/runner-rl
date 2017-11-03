@@ -57,26 +57,13 @@ class Input:
         elif key == 'CHAR' and len(self.actions) < 2:
             self.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[char]})
 
-    #
-    # def playerMovement(self, dir):
-    #     cost = np.abs(dir[X]) + np.abs(dir[Y])
-    #
-    #     if self.main.player.moveDir(dir):
-    #         self.main.player.cooldown += cost
-    #         self.main.gui.mapOffset = self.main.gui.mapOffset + dir
-    #     else:
-    #         self.playerInteraction(dir)
-    #
-    # def playerInteraction(self, dir):
-    #     pos = self.main.player.cell.pos + dir
-    #     for obj in self.main.map.tile[pos[X]][pos[Y]].object:
-    #         self.main.player.cooldown += obj.interact(self.main.player, dir)
-
     def handleMouse(self, terminalPos):
         self.main.gui.updateCursor(terminalPos)
 
     def handleClick(self, event):
         if event.button is 'LEFT' and len(self.actions) < 2:
-            self.actions.append({'TYPE': 'MOVE', 'DIR': self.main.gui.cursorDir})
+            self.actions.append(
+                {'TYPE': 'MOVE', 'DIR': self.main.gui.cursorDir})
         elif event.button is 'RIGHT' and len(self.actions) < 2:
-            self.actions.append({'TYPE': 'USE', 'DIR': self.main.gui.cursorDir})
+            self.actions.append(
+                {'TYPE': 'USE', 'DIR': self.main.gui.cursorDir})

@@ -1,7 +1,8 @@
 from globals import *
-from render import Render
 import numpy as np
 
+from render import Render
+from map import Map
 
 class Gui:
     def __init__(self, main):
@@ -9,16 +10,17 @@ class Gui:
         self.mapOffset = np.array([0, 0])
         self.cursorPos = np.array([64, 64])
         self.cursorDir = np.array([1, 1])
-        self.mapRange = [[0, MAP[WIDTH]], [0, MAP[HEIGHT]]]
+        self.mapRange = [[0, Map.WIDTH], [0, Map.HEIGHT]]
         self.mapCells = []
 
         self.messages = ['test1', 'test2']
 
-    def updateCursor(self, terminalPos=np.array([8,8])):
+    def updateCursor(self, terminalPos=np.array([8, 8])):
         if not Render.inMap(terminalPos):
             return
 
-        mapPos = np.array(terminalPos) + self.mapOffset - self.main.render.MAPINSET
+        mapPos = np.array(terminalPos) + self.mapOffset - \
+            self.main.render.MAPINSET
         if self.main.map.contains(mapPos):
             self.cursorPos = mapPos
 
@@ -31,9 +33,9 @@ class Gui:
         self.mapOffset += dir
         (panelX, panelY) = self.main.render.mapPanel.get_size()
         self.mapRange[X] = [max(0, self.mapOffset[X]), min(
-            self.mapOffset[X] + panelX, MAP[WIDTH])]
+            self.mapOffset[X] + panelX, Map.WIDTH)]
         self.mapRange[Y] = [max(0, self.mapOffset[Y]), min(
-            self.mapOffset[Y] + panelY, MAP[HEIGHT])]
+            self.mapOffset[Y] + panelY, Map.HEIGHT)]
 
         self.mapCells = []
         for i in range(*self.mapRange[X]):
@@ -45,7 +47,7 @@ class Gui:
 
     def renderInfo(self, panel):
         panel.clear(bg=BLACK)
-        for i in range(1 + (self.main.tic % TIC_SEC)):
+        for i in range(1 + (self.main.tic % self.main.TIC_SEC)):
             panel.draw_str(1 + i, 1, "o")
         for i in range(self.main.player.cooldown):
             panel.draw_str(1 + i, 3, "o")
@@ -62,7 +64,7 @@ class Gui:
     def renderMessage(self, panel):
         panel.clear(bg=BLACK)
         for i, line in enumerate(self.messages):
-            pos = 1 + 2*i
+            pos = 1 + 2 * i
             if pos >= panel.height:
                 break
             panel.draw_str(1, pos, line)

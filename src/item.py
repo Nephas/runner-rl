@@ -1,8 +1,9 @@
 from globals import *
 from object import Object
 
+
 class Item(Object):
-    def __init__(self, cell=None, carrier = None, char='i', color=WHITE):
+    def __init__(self, cell=None, carrier=None, char='i', color=WHITE):
         Object.__init__(self, cell, char=char, color=color)
 
         self.carrier = None
@@ -33,7 +34,7 @@ class Item(Object):
 
 
 class Key(Item):
-    def __init__(self, cell=None, carrier = None, tier = 0):
+    def __init__(self, cell=None, carrier=None, tier=0):
         Object.__init__(self, cell, char='$', color=TIERCOLOR[tier])
 
         self.tier = tier

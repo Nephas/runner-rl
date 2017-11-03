@@ -4,6 +4,7 @@ from item import Item, Key
 
 import random as rd
 
+
 class AI:
     def __init__(self):
         pass
@@ -14,6 +15,7 @@ class AI:
 #            return 2
 #        else:
 #            return 0
+
 
 class Actor(Object):
     def __init__(self, cell=None, main=None, char='@'):
@@ -73,7 +75,7 @@ class Player(Actor):
         elif len(actions) > 0:
             if actions[0]['TYPE'] is 'MOVE':
                 dir = sum(map(lambda a: a['DIR'], actions))
-                for coord in [X,Y]:
+                for coord in [X, Y]:
                     if np.abs(dir[coord]) > 1:
                         dir[coord] /= np.abs(dir[coord])
                 self.cooldown += self.moveDir(dir)
@@ -88,7 +90,7 @@ class Player(Actor):
             self.main.gui.moveOffset(dir)
             return np.abs(dir[X]) + np.abs(dir[Y]) + 1
         else:
-            return self.interactDir(self.main.map,dir)
+            return self.interactDir(self.main.map, dir)
 
     def describe(self):
         return "You"

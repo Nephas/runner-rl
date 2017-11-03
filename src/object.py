@@ -2,6 +2,7 @@ from globals import *
 from render import Render
 import random as rd
 
+
 class Object:
     def __init__(self, cell=None, char=None, color=WHITE):
         self.cell = cell
@@ -64,12 +65,12 @@ class Lamp(Object):
             self.castLight(map)
 
     def castLight(self, map):
-        self.cell.light = 2*self.brightness
+        self.cell.light = 2 * self.brightness
         for line in self.lightmap:
             for i, point in enumerate(line):
                 cell = map.getTile(point + self.cell.pos)
                 if not cell.block[LOS]:
-                    cell.light = max(2*(self.brightness - i), cell.light)
+                    cell.light = max(2 * (self.brightness - i), cell.light)
                 else:
                     break
 
