@@ -3,12 +3,12 @@ from render import Render
 import random as rd
 
 
-class Object:
-    def __init__(self, cell=None, char=None, color=WHITE):
+class Object(object):
+    def __init__(self, cell=None, char=None, color=COLOR['WHITE']):
         self.cell = cell
         if cell is not None:
             self.cell.object.append(self)
-        self.block = [False, False]
+        self.block = [False, False]  # [MOVE, LOS]
 
         self.char = char
         self.fg = list(color)
@@ -25,7 +25,10 @@ class Object:
         targetPos = self.cell.pos + dir
         return self.moveTo(targetPos)
 
-    def interact(self, actor=None, dir=None):
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
         return 0
 
     def describe(self):
@@ -34,6 +37,26 @@ class Object:
     def physics(self, map):
         pass
 
+    def destroy(self):
+        self.cell.object.remove(self)
+        Debris(self.cell, self)
+
+
+class Debris(Object):
+    def __init__(self, cell=None, obj=None):
+        Object.__init__(self, cell, char='%', color=(200, 200, 200))
+
+        self.block = [False, False]
+        self.obj = obj
+
+    def interact(self, actor=None, dir=None, type=None):
+        #        self.moveDir(dir)
+        #        actor.moveDir(dir)
+        return 0
+
+    def describe(self):
+        return "Destroyed " + self.obj.describe()
+
 
 class Obstacle(Object):
     def __init__(self, cell=None):
@@ -41,8 +64,11 @@ class Obstacle(Object):
 
         self.block = [True, True]
 
-    def interact(self, actor, dir):
-        if self.moveDir(dir):
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+        elif self.moveDir(dir):
             actor.moveDir(dir)
             return 3
         else:
@@ -74,9 +100,13 @@ class Lamp(Object):
                 else:
                     break
 
-    def interact(self, actor=None, dir=None):
-        self.on = not self.on
-        return 3
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+        else:
+            self.on = not self.on
+            return 3
 
     def describe(self):
         return "Lamp"
@@ -84,10 +114,29 @@ class Lamp(Object):
 
 class Terminal(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char=20)
+        Object.__init__(self, cell, char=20, color=COLOR['MEDIUMGREEN'])
 
         self.on = True
-        self.connections = []
+        self.connection = []
+
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+
+        for obj in self.connection:
+            obj.interact(actor)
+        return 3
 
     def describe(self):
         return "Terminal"
+
+    def connect(self, obj):
+        self.connection.append(obj)
+        if isinstance(obj, Terminal):
+            obj.connection.append(self)
+
+    def disconnect(self, obj):
+        self.connection.remove(obj)
+        if isinstance(obj, Terminal):
+            obj.connection.remove(self)

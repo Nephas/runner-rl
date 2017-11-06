@@ -36,9 +36,12 @@ class Actor(Object):
         else:
             return 0
 
-    def interact(self, actor=None, dir=None):
-        self.die()
-        return 10
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.die()
+            return 10
+        else:
+            return 0
 
     def die(self):
         self.cell.object.remove(self)
@@ -46,10 +49,10 @@ class Actor(Object):
         Corpse(self.cell, self)
         self.main.gui.pushMessage(self.describe() + " dies")
 
-    def interactDir(self, map, dir):
+    def interactDir(self, map, dir, type=None):
         tile = map.getTile(self.cell.pos + dir)
         if len(tile.object) > 0:
-            return tile.object[0].interact(self, dir)
+            return tile.object[0].interact(self, dir, type)
         else:
             return 0
 
@@ -81,7 +84,10 @@ class Player(Actor):
                 self.cooldown += self.moveDir(dir)
             elif actions[0]['TYPE'] is 'USE':
                 dir = actions[0]['DIR']
-                self.cooldown += self.interactDir(tileMap, dir)
+                self.cooldown += self.interactDir(tileMap, dir, 'USE')
+            elif actions[0]['TYPE'] is 'ATTACK':
+                dir = actions[0]['DIR']
+                self.cooldown += self.interactDir(tileMap, dir, 'ATTACK')
             self.main.input.actions = []
 
     def moveDir(self, dir):
@@ -96,13 +102,18 @@ class Player(Actor):
         return "You"
 
 
+class Guard(Actor):
+    def __init__(self, cell=None, main=None):
+        Actor.__init__(self, cell, main, char='G')
+
+
 class Corpse(Object):
     def __init__(self, cell=None, actor=None):
         Object.__init__(self, cell, char='%', color=(150, 150, 150))
 
         self.actor = actor
 
-    def interact(self, actor, dir):
+    def interact(self, actor, dir, type):
         self.moveDir(dir)
         actor.moveDir(dir)
         return 3

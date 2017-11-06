@@ -31,9 +31,13 @@ class Map:
         for cell in self.main.gui.mapCells:
             cell.updateRender()
 
-    def getNeighborhood(self, pos, shape=None):
-        positions = [pos + np.array([0, -1]), pos + np.array([1, 0]),
-                     pos + np.array([0, 1]), pos + np.array([-1, 0])]
+    def getNeighborhood(self, pos, shape=4):
+        if shape == 4:
+            offsets = np.array([[0, -1], [1, 0], [0, 1], [-1, 0]])
+        if shape == 8:
+            offsets = [np.array([i, j]) for i in [-1, 0, 1]
+                       for j in [-1, 0, 1]]
+        positions = map(lambda off: off + pos, offsets)
         return map(lambda p: self.getTile(p), filter(lambda p: self.contains(p), positions))
 
     def contains(self, pos):
@@ -58,13 +62,13 @@ class Map:
                         break
 
     def castLight(self, pos):
-        self.getTile(pos).light = 16
+        self.getTile(pos).light = MAX_LIGHT
 
         for line in self.main.render.lightmap:
             for i, point in enumerate(line):
                 cell = self.getTile(point + pos)
                 if not cell.block[LOS]:
-                    cell.light = max(16 - 2 * i, cell.light)
+                    cell.light = max(MAX_LIGHT - 2 * i, cell.light)
                 else:
                     break
 
@@ -85,8 +89,8 @@ class Cell:
 
         # graphics attributes
         self.char = ' '
-        self.bg = BLACK
-        self.fg = WHITE
+        self.bg = COLOR['BLACK']
+        self.fg = COLOR['WHITE']
 
     def addObject(self, obj):
         self.object.append(obj)
@@ -146,7 +150,7 @@ class Cell:
         if self.vision[EXP]:
             window.draw_char(pos[X], pos[Y], self.char, self.fg, self.bg)
 
-    def drawHighlight(self, window, pos, color=WHITE):
+    def drawHighlight(self, window, pos, color=COLOR['WHITE']):
         if self.vision[EXP]:
             window.draw_char(pos[X], pos[Y], self.char, self.fg, color)
         else:

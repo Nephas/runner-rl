@@ -3,13 +3,18 @@ from globals import *
 from object import Object
 from item import Key
 
+
 class Vent(Object):
     def __init__(self, cell=None):
         Object.__init__(self, cell, char='#', color=(100, 100, 100))
 
         self.block = [False, True]
 
-    def interact(self, actor=None, dir=None):
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+
         self.cell.object.remove(self)
         return 10
 
@@ -35,7 +40,7 @@ class Door(Object):
         self.block = [True, True]
         self.char = 178
 
-    def interact(self, actor=None, dir=None):
+    def interact(self, actor=None, dir=None, type=None):
         if self.closed:
             self.open()
         else:
@@ -44,6 +49,7 @@ class Door(Object):
 
     def describe(self):
         return "Door ({:})".format(self.tier)
+
 
 class SecDoor(Door):
     def __init__(self, cell=None, tier=0):
@@ -69,7 +75,7 @@ class SecDoor(Door):
         actor.main.gui.pushMessage("Access denied")
         return False
 
-    def interact(self, actor=None, dir=None):
+    def interact(self, actor=None, dir=None, type=None):
         if self.closed:
             self.open(actor)
         else:
@@ -93,7 +99,7 @@ class AutoDoor(Door):
         else:
             self.close()
 
-    def interact(self, actor=None, dir=None):
+    def interact(self, actor=None, dir=None, type=None):
         return 0
 
     def describe(self):

@@ -18,6 +18,13 @@ HEIGHT = 1
 
 NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
 
+MAX_LIGHT = 16
+
+COLOR = {
+    'BLACK': (0, 0, 0),
+    'RED': (255, 0, 0),
+    'GREEN': (0, 255, 0),
+    'MEDIUMGREEN': (0, 128, 0),
+    'BLUE': (0, 0, 255),
+    'WHITE': (255, 255, 255)}
 TIERCOLOR = [np.array([40 * i, 255 - 40 * i, 255]) for i in range(10)]
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)

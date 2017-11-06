@@ -12,7 +12,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
     TILESET = 'tileset16x16.png'
 
     SCREEN = np.array([80, 40])  # [WIDTH, HEIGHT]
-    SEPARATOR = (3. / 4. * SCREEN).astype('int')
+    SEPARATOR = (5. / 8. * SCREEN).astype('int')
     MAPINSET = np.array([1, 1])
 
     def __init__(self, main):
@@ -39,9 +39,9 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.lightmap = Render.rayMap(8, 32)
 
     def renderStart(self):
-        self.mapPanel.clear(bg=BLACK)
-        self.infoPanel.clear(bg=BLACK)
-        self.messagePanel.clear(bg=BLACK)
+        self.mapPanel.clear(bg=COLOR['BLACK'])
+        self.infoPanel.clear(bg=COLOR['BLACK'])
+        self.messagePanel.clear(bg=COLOR['BLACK'])
 
         self.mapPanel.draw_str(2, 2, "Generating Level")
 
@@ -60,7 +60,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
         tdl.flush()
 
     def renderMap(self, map, mapOffset):
-        self.mapPanel.clear(bg=BLACK)
+        self.mapPanel.clear(bg=COLOR['BLACK'])
 
         for cell in self.main.gui.mapCells:
             cell.draw(self.mapPanel, cell.pos - mapOffset)

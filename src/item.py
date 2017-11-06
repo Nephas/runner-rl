@@ -3,14 +3,14 @@ from object import Object
 
 
 class Item(Object):
-    def __init__(self, cell=None, carrier=None, char='i', color=WHITE):
+    def __init__(self, cell=None, carrier=None, char='i', color=COLOR['WHITE']):
         Object.__init__(self, cell, char=char, color=color)
 
         self.carrier = None
         if carrier is not None:
             self.take(carrier)
 
-    def interact(self, actor=None, dir=None):
+    def interact(self, actor=None, dir=None, type=None):
         self.take(actor)
         return 1
 

@@ -7,7 +7,7 @@ import copy as cp
 import itertools as it
 
 from map import Map
-from object import Object, Obstacle, Lamp
+from object import Object, Obstacle, Lamp, Terminal
 from door import Vent, SecDoor, AutoDoor
 from item import Item, Key
 from actor import Actor
@@ -15,10 +15,10 @@ from actor import Actor
 
 class Level(Map):
     ROOM_SIZE = [[10, 20], [5, 5], [10, 20], [
-    15, 30], [20, 40], [10, 15], [10, 15]]
+        15, 30], [20, 40], [10, 15], [10, 15]]
     N_CHILD = [[0, 0], [1, 1], [1, 1], [2, 3], [3, 5], [4, 6], [6, 10]]
     ROOM_TYPE = [["rectangle"], ["gallery"], ["corridor"], ["corridor"], [
-    "round", "rectangle", "corridor"], ["rectangle", "square", "corner"], ["rectangle"]]
+        "round", "rectangle", "corridor"], ["rectangle", "square", "corner"], ["rectangle"]]
 
     def __init__(self, main=None):
         Map.__init__(self, main)
@@ -41,7 +41,8 @@ class Level(Map):
         for i in range(1, len(Level.ROOM_SIZE)):
             self.tier.append([])
             for room in self.tier[i - 1]:
-                room.propagate(self, Level.N_CHILD[i], Level.ROOM_SIZE[i], Level.ROOM_TYPE[i])
+                room.propagate(
+                    self, Level.N_CHILD[i], Level.ROOM_SIZE[i], Level.ROOM_TYPE[i])
 
         # carve vents
         for pair in it.combinations(self.tier[-1], 2):
@@ -142,7 +143,7 @@ class Level(Map):
         # carve wide tunnels for corridors and circular rooms
         if (room1.shape in ["corridor", "gallery"] and room2.shape in ["corridor", "gallery"]) or room1.shape is "round" or room2.shape is "round":
             for pos in positions:
-                if not pos in room1.border() or pos in room2.border():
+                if pos not in room1.border() or pos in room2.border():
                     for cell in self.getNeighborhood(pos):
                         cell.removeWall()
                         cell.tier = room2.tier
@@ -154,7 +155,14 @@ class Level(Map):
                 if vent and cell.isEmpty():
                     cell.addObject(Vent())
                 if door:
-                    cell.addObject(SecDoor(tier=tunnelTier))
+                    sec = SecDoor(tier=tunnelTier)
+                    cell.addObject(sec)
+                    for neighbor in self.getNeighborhood(cell.pos, shape=8):
+                        if neighbor.isEmpty() and np.linalg.norm(neighbor.pos - cell.pos) > 1:
+                            term = Terminal()
+                            neighbor.addObject(term)
+                            term.connect(sec)
+                            break
             if pos in room2.border():
                 if vent and cell.isEmpty():
                     cell.addObject(Vent())
@@ -193,6 +201,10 @@ class Rectangle:  # a rectangle on the map. used to characterize a room.
             positions.append([self.x[MIN], y])
             positions.append([self.x[MAX] - 1, y])
         return positions
+
+    def drawFrame(self, map, color):
+        for pos in self.border():
+            map.getTile().bg = color
 
     def tiles(self):
         positions = []
@@ -280,7 +292,8 @@ class Room(Rectangle):
                     else:
                         tunnelDirection = "vertical"
 
-                nextRoom = Room(self.tier + 1, self, rectangle.pos, rectangle.size[X], rectangle.size[Y], shape)
+                nextRoom = Room(self.tier + 1, self, rectangle.pos,
+                                rectangle.size[X], rectangle.size[Y], shape)
                 self.children.append(nextRoom)
                 map.tier[nextRoom.tier].append(nextRoom)
                 nextRoom.carve(map)

@@ -48,7 +48,7 @@ class Input:
         elif key == 'SPACE' and len(self.actions) < 2:
             ray = self.main.gui.cursorPos - self.main.player.cell.pos
             dir = (ray / np.linalg.norm(ray)).round().astype('int')
-            self.actions.append({'TYPE': 'USE', 'DIR': dir})
+            self.actions.append({'TYPE': 'ATTACK', 'DIR': dir})
 
         if key == 'CHAR' and char == 'r':
             self.main.gui.pushMessage("Waiting")

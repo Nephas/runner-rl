@@ -4,6 +4,7 @@ import numpy as np
 from render import Render
 from map import Map
 
+
 class Gui:
     def __init__(self, main):
         self.main = main
@@ -13,7 +14,8 @@ class Gui:
         self.mapRange = [[0, Map.WIDTH], [0, Map.HEIGHT]]
         self.mapCells = []
 
-        self.messages = ['test1', 'test2']
+    self.messages = [
+        'The hum from the vents reminds you of a TV tuned to a dead channel.']
 
     def updateCursor(self, terminalPos=np.array([8, 8])):
         if not Render.inMap(terminalPos):
@@ -46,13 +48,24 @@ class Gui:
         self.messages.insert(0, string)
 
     def renderInfo(self, panel):
-        panel.clear(bg=BLACK)
-        for i in range(1 + (self.main.tic % self.main.TIC_SEC)):
-            panel.draw_str(1 + i, 1, "o")
-        for i in range(self.main.player.cooldown):
-            panel.draw_str(1 + i, 3, "o")
+        panel.clear(bg=COLOR['BLACK'])
 
-        panel.draw_str(1, 5, '{:5}'.format(t.time()))
+        # action point counter
+        actions = ''
+        for i in range(1 + (self.main.tic % self.main.TIC_SEC)):
+            actions += '>'
+        actions += ' '
+        for i in range(self.main.player.cooldown):
+            actions += '-'
+        panel.draw_str(1, 1, actions)
+
+        # lighting bar
+        for i in range(6):
+            panel.draw_char(1 + i, 5, 7)
+        for i in range(int(float(self.main.player.cell.light) / MAX_LIGHT * 6)):
+            panel.draw_char(1 + i, 5, 15)
+
+#        panel.draw_str(1, 7, '{:5}'.format(t.time()))
 
         cursorTile = self.main.map.getTile(self.cursorPos)
         for i, obj in enumerate(cursorTile.object):
@@ -62,9 +75,18 @@ class Gui:
             panel.draw_str(1, 20 + 2 * i, item.describe(), item.fg)
 
     def renderMessage(self, panel):
-        panel.clear(bg=BLACK)
-        for i, line in enumerate(self.messages):
-            pos = 1 + 2 * i
-            if pos >= panel.height:
+        panel.clear(bg=COLOR['BLACK'])
+        pos = 0
+
+        for string in self.messages:
+            # line wrapping in list comprehension
+            block = [string[i:i + panel.width - 2] for i in range(0, len(string), panel.width - 2)]
+            for line in block:
+                pos += 1
+                if pos >= panel.height - 1:
+                    break
+                panel.draw_str(1, pos, line, COLOR['WHITE'])
+
+            pos += 1
+            if pos >= panel.height - 1:
                 break
-            panel.draw_str(1, pos, line)
