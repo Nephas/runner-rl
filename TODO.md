@@ -1,0 +1,47 @@
+Corporate Generator:
+    + Names:
+        * Tyrell
+        * Weyland
+        * Yutani
+        * Thyssen
+        * Yamaha
+        * Intel
+        * Exxon
+    + Sectors:
+        1. Aerospace
+        2. Defense
+        3. Bio-Tech
+        4. Medicare
+        5. Nutrition
+        6. Electronics
+        7. Robotics
+        8. Data Services
+        9. Logistics
+    + Places:
+        * Server Farm: 1, 2, 3, 8
+        * Hangar: 1, 9
+        * Greenhouse: 3, 5
+        * Fish-tank: 5
+        * Reactor: 2
+        * Assembly Hall: 1, 2, 3, 6, 7
+        * Storage: 2, 6, 7, 9
+        * CEO Office: 1 - 9
+    + People:
+        * Business Man: 1, 2, 3, 8, 9
+        * Researcher: 1, 2, 3, 8
+        * Robot: 1, 2, 6, 7, 9
+        * Worker: 1, 2, 3, 5, 6, 7, 9
+        * Guard: 1 - 9
+        * Patient: 3, 4
+    + Tasks:
+        * Data
+        * Prototype
+        * Bounty
+        * Sabotage
+
+Player Class:
+    * Judge
+    * Cyberpunk
+    * Hitman
+    * Guerilla
+    * MAL(function)

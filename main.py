@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from src.globals import *
-from src.level import Level
+from src.level.level import Level
 from src.input import Input
 from src.gui import Gui
 from src.render import Render
@@ -40,9 +40,7 @@ class Game:
             stats = self.map.generate()
             print(stats)
 
-        self.player = Player(self.map.tile[0][0], self)
-        self.map.finalize(self.player)
-        Render.printImage(self.map, "levelgen.bmp")
+        self.map.finalize()
 
         self.gui.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
         self.gui.updateCursor()

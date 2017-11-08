@@ -1,4 +1,4 @@
-from globals import *
+from src.globals import *
 
 import math as m
 import numpy as np
@@ -9,6 +9,8 @@ import itertools as it
 class Map:
     WIDTH = 128
     HEIGHT = 128
+
+    FOV_NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
 
     PHYSICSRANGE = np.array([24, 24])
 
@@ -29,7 +31,7 @@ class Map:
                          Map.PHYSICSRANGE, *(2 * Map.PHYSICSRANGE))
 
         for cell in rect.getCells(self):
-            cell.light = 2
+            cell.light = BASE_LIGHT
             cell.vision[LOS] = False
 
         self.castFov(self.main.player.cell.pos)
@@ -74,27 +76,17 @@ class Map:
         blockIndex = 0
         blockPoint = [0, 0]
 
-        for line in self.main.render.raymap:
-            if not all(line[blockIndex] == blockPoint):
+        for baseLine in self.main.render.raymap:
+            if not all(baseLine[blockIndex] == blockPoint):
+                line = baseLine + pos
                 for i, point in enumerate(line):
-                    if not self.getTile(point + pos).block[LOS]:
-                        for n in NEIGHBORHOOD:
-                            self.getTile(point + pos + n).vision = [True, True]
+                    if not self.getTile(point).block[LOS]:
+                        for neighbor in Map.FOV_NEIGHBORHOOD + point:
+                            self.getTile(neighbor).vision = [True, True]
                     else:
                         blockIndex = i
-                        blockPoint = point
+                        blockPoint = baseLine[i]
                         break
-
-    def castLight(self, pos):
-        self.getTile(pos).light = MAX_LIGHT
-
-        for line in self.main.render.lightmap:
-            for i, point in enumerate(line):
-                cell = self.getTile(point + pos)
-                if not cell.block[LOS]:
-                    cell.light = max(MAX_LIGHT - 2 * i, cell.light)
-                else:
-                    break
 
 
 class Rectangle:  # a rectangle on the map. used to characterize a room or a window
@@ -143,7 +135,7 @@ class Cell:
         self.pos = np.array(pos)
         self.wall = wall
         self.tier = -1
-        self.light = 2
+        self.light = BASE_LIGHT
         self.grid = None
 
         # [MOVE, LOS]
@@ -179,7 +171,8 @@ class Cell:
             return
 
         self.char = ' '
-        self.bg = tuple(self.light * TIERCOLOR[self.tier] / 16)
+        self.bg = tuple(self.light * TIERCOLOR[self.tier] / MAX_LIGHT)
+
         if self.tier == -1:
             self.bg = (40, 40, 40)
 
@@ -215,12 +208,12 @@ class Cell:
         if self.vision[EXP]:
             window.draw_char(pos[X], pos[Y], self.char, self.fg, self.bg)
 
-    def drawTier(self, window, pos):
+    def drawNet(self, window, pos):
         if self.grid is None:
             window.draw_char(pos[X], pos[Y], ' ', self.fg,
                              list(TIERCOLOR[self.tier]))
         elif not self.grid:
-            window.draw_char(pos[X], pos[Y], 197,
+            window.draw_char(pos[X], pos[Y], 254,
                              COLOR['GREEN'], list(TIERCOLOR[self.tier]))
         elif self.grid:
             window.draw_char(pos[X], pos[Y], ' ', list(
@@ -261,7 +254,7 @@ class Wall:
 
         if len(neighborhood) == 4:
             for cell in neighborhood:
-                if cell.wall is not None and cell.wall:
+                if cell.wall is None or cell.wall:
                     align += 't'
                 else:
                     align += 'f'

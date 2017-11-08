@@ -41,6 +41,9 @@ class Door(Object):
         self.char = 178
 
     def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
         if self.closed:
             self.open()
         else:
@@ -72,10 +75,13 @@ class SecDoor(Door):
             if isinstance(item, Key) and item.tier == self.tier:
                 actor.main.gui.pushMessage("Access granted")
                 return True
-        actor.main.gui.pushMessage("Access denied")
+        actor.main.gui.pushMessage("Access denied", COLOR['RED'])
         return False
 
     def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
         if self.closed:
             self.open(actor)
         else:

@@ -78,42 +78,8 @@ class Obstacle(Object):
         return "Chest"
 
 
-class Lamp(Object):
-    def __init__(self, cell=None, brightness=8):
-        Object.__init__(self, cell, char=7)
-
-        self.on = True
-        self.brightness = brightness
-        self.lightmap = Render.rayMap(brightness, 32)
-
-    def physics(self, map):
-        if self.on:
-            self.castLight(map)
-
-    def castLight(self, map):
-        self.cell.light = 2 * self.brightness
-        for line in self.lightmap:
-            for i, point in enumerate(line):
-                cell = map.getTile(point + self.cell.pos)
-                if not cell.block[LOS]:
-                    cell.light = max(2 * (self.brightness - i), cell.light)
-                else:
-                    break
-
-    def interact(self, actor=None, dir=None, type=None):
-        if type is 'ATTACK':
-            self.destroy()
-            return 5
-        else:
-            self.on = not self.on
-            return 3
-
-    def describe(self):
-        return "Lamp"
-
-
 class Terminal(Object):
-    def __init__(self, cell=None):
+    def __init__(self, cell):
         Object.__init__(self, cell, char=20, color=COLOR['MEDIUMGREEN'])
 
         self.on = True
@@ -142,3 +108,28 @@ class Terminal(Object):
         self.connection.remove(obj)
         if isinstance(obj, Terminal):
             obj.connection.remove(self)
+
+
+class Server(Terminal):
+    def __init__(self, cell):
+        Terminal.__init__(self, cell)
+
+        self.char = 19
+        self.fg = COLOR['GREEN']
+        self.block = [True, True]
+
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+
+        for obj in self.connection:
+            obj.cell.vision = [True, True]
+            actor.main.gui.pushMessage(obj.describe(), obj.fg)
+        return 5
+
+    def physics(self, map):
+        self.fg = rd.choice([COLOR['GREEN'], COLOR['DARKGRAY']])
+
+    def describe(self):
+        return "Server"

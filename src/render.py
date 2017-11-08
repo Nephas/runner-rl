@@ -37,7 +37,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
         self.mapLayer = 0
 
-        self.raymap = Render.rayMap(24, 32)
+        self.raymap = Render.rayMap(20, 32)
         self.lightmap = Render.rayMap(8, 32)
 
     def renderStart(self):
@@ -69,7 +69,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
                 cell.drawMap(self.mapPanel, cell.pos - mapOffset)
         elif self.mapLayer == 1:
             for cell in self.main.gui.getCells(map):
-                cell.drawTier(self.mapPanel, cell.pos - mapOffset)
+                cell.drawNet(self.mapPanel, cell.pos - mapOffset)
 
         cell = map.getTile(self.main.player.cell.pos + self.main.gui.cursorDir)
         cursorPos = cell.pos - mapOffset
@@ -104,6 +104,16 @@ class Render:  # a rectangle on the map. used to characterize a room.
         start = np.array([0., 0.])
         phi0 = 2 * np.pi * np.random.random()
         for phi in np.linspace(phi0, phi0 + 2. * np.pi, num):
+            end = r * np.array([np.cos(phi), np.sin(phi)])
+            lines.append(Render.rayCast(start, end)[1:int(r)])
+        return lines
+
+    @staticmethod
+    def coneMap(r, num, angle):
+        lines = []
+        start = np.array([0., 0.])
+        phi0 = 2 * np.pi * np.random.random()
+        for phi in np.linspace(phi0, phi0 + angle, num):
             end = r * np.array([np.cos(phi), np.sin(phi)])
             lines.append(Render.rayCast(start, end)[1:int(r)])
         return lines

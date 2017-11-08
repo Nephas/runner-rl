@@ -18,6 +18,7 @@ HEIGHT = 1
 NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
 
 MAX_LIGHT = 16
+BASE_LIGHT = 2
 
 COLOR = {'BLACK': (0, 0, 0),
          'WHITE': (255, 255, 255),

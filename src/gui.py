@@ -1,8 +1,8 @@
 from globals import *
 import numpy as np
 
-from render import Render
-from map import Map, Rectangle
+from src.render import Render
+from src.level.map import Map, Rectangle
 
 
 class Gui:
@@ -11,10 +11,10 @@ class Gui:
         self.mapOffset = np.array([0, 0])
         self.cursorPos = np.array([64, 64])
         self.cursorDir = np.array([1, 1])
-        self.mapRange = [[0, Map.WIDTH], [0, Map.HEIGHT]]
         self.mapRectangle = Rectangle(self.mapOffset, 0, 0)
 
-        self.messages = ['The hum from the vents reminds you of a TV tuned to a dead channel.']
+        self.messages = [
+            ('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
 
     def updateCursor(self, terminalPos=np.array([8, 8])):
         if not Render.inMap(terminalPos):
@@ -38,8 +38,8 @@ class Gui:
     def getCells(self, map):
         return self.mapRectangle.getCells(map)
 
-    def pushMessage(self, string):
-        self.messages.insert(0, string)
+    def pushMessage(self, string, color=COLOR['WHITE']):
+        self.messages.insert(0, (string, color))
 
     def renderInfo(self, panel):
         panel.clear(bg=COLOR['BLACK'])
@@ -55,11 +55,9 @@ class Gui:
 
         # lighting bar
         for i in range(6):
-            panel.draw_char(1 + i, 5, 7)
+            panel.draw_char(1 + i, 3, 7, self.main.player.cell.bg)
         for i in range(int(float(self.main.player.cell.light) / MAX_LIGHT * 6)):
-            panel.draw_char(1 + i, 5, 15)
-
-#        panel.draw_str(1, 7, '{:5}'.format(t.time()))
+            panel.draw_char(1 + i, 3, 15)
 
         cursorTile = self.main.map.getTile(self.cursorPos)
         for i, obj in enumerate(cursorTile.object):
@@ -72,14 +70,15 @@ class Gui:
         panel.clear(bg=COLOR['BLACK'])
         pos = 0
 
-        for string in self.messages:
+        for string, color in self.messages:
             # line wrapping in list comprehension
-            block = [string[i:i + panel.width - 2] for i in range(0, len(string), panel.width - 2)]
+            block = [string[i:i + panel.width - 2]
+                     for i in range(0, len(string), panel.width - 2)]
             for line in block:
                 pos += 1
                 if pos >= panel.height - 1:
                     break
-                panel.draw_str(1, pos, line, COLOR['WHITE'])
+                panel.draw_str(1, pos, line, color)
 
             pos += 1
             if pos >= panel.height - 1:
