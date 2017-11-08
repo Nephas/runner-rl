@@ -9,9 +9,11 @@ the outermost tier of the tree and moves towards a central 'goal room' which wil
 placement of progressively strong enemies, items and key finding 'puzzles.
 
 The outer tiers are interconnected via airducts to mix up the boring tree structure.
+Levels are scattered with interconnected Servers and Terminals which will later on interact 
+with the level objects.
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/levelgen.bmp" width="250"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/levelgen.bmp" width="600"/>
 </p>
 
 Other features implemented so far:
