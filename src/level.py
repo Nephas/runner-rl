@@ -15,14 +15,14 @@ from actor import Actor
 
 
 class Level(Map):
-    ROOM_SIZE = [[10, 20], [10, 15], [20, 40], [20, 30], [7, 15]]
-    N_CHILD = [[0, 0], [1, 1], [1, 2], [2, 3], [3, 4]]
-    ROOM_TYPE = [['Room'], ['Corridor'], ['Corridor'], ['Dome'], ['Room']]
+    ROOM_SIZE = [[10, 20], [5, 15], [20, 40], [20, 30], [10, 20], [7, 15]]
+    N_CHILD = [[0, 0], [1, 1], [2, 3], [2, 3], [3, 4], [4, 6]]
+    ROOM_TYPE = [['Room'], ['Corridor'], ['Corridor'], ['Corridor', 'Dome', 'Hall'], ['Corridor', 'Room'], ['Room']]
 
     def __init__(self, main=None):
         Map.__init__(self, main)
 
-        self.tier = [[]]*len(Level.ROOM_TYPE)
+        self.tier = [[]]
         self.forbidden = []
 
     def contains(self, target):
@@ -91,14 +91,25 @@ class Level(Map):
     def generateRooms(self):
         """Propagate every single room according to the N_CHILD and ROOM_SIZE specifications. If a corridor produces
         a dead end, generation breaks."""
-        for i in range(len(self.tier)):
-            print i
-            for room in self.tier[i]:
-                room.propagate(self, Level.N_CHILD[i+1], Level.ROOM_SIZE[i+1], Level.ROOM_TYPE[i+1])
-
+        # recursively spread room
+        for i in range(1, len(Level.ROOM_TYPE)):
+            self.tier.append([])
+            for room in self.tier[i - 1]:
+                room.propagate(self, Level.N_CHILD[i], Level.ROOM_SIZE[i], Level.ROOM_TYPE[i])
                 Render.printImage(self, "levelgen.bmp")
+
+        # extend boss room
         self.tier[0][0].propagate(self, [2, 4], [7, 10], ['Room'])
         Render.printImage(self, "levelgen.bmp")
+
+        # remove deadends
+        for tier in reversed(self.tier):
+            for room in tier:
+                if room.__class__.__name__ is 'Corridor' and room.children == []:
+                    room.fill(self)
+                    tier.remove(room)
+        Render.printImage(self, "levelgen.bmp")
+
 
     def generateVents(self):
         for pair in it.combinations(self.tier[-1] + self.tier[-2], 2):
@@ -108,41 +119,24 @@ class Level(Map):
                         self.carveVent(pair[0], pair[1], False)
 
     def countMetrics(self):
-        stats = {'ROOMS': 0, 'VENTS': 0, 'CORRIDORS': 0, 'DEADENDS': 0}
+        stats = {'ROOMS': 0, 'VENTS': 0, 'CORRIDORS': 0}
         stats['VENTS'] = len(self.getAll('Vent')) / 2
         for tier in self.tier:
             for room in tier:
                 stats['ROOMS'] += 1
                 if room.__class__.__name__ is 'Corridor':
                     stats['CORRIDORS'] += 1
-                if room.__class__.__name__ is 'Corridor' and room.children == []:
-                    stats['DEADENDS'] += 1
         return stats
 
     def finalize(self, player):
         for x in range(0, Map.WIDTH):
             for y in range(0, Map.HEIGHT):
                 if self.contains([x, y]) and not self.tile[x][y].wall is False:
-                    self.tile[x][y].wall = True
-
-        for x in range(0, Map.WIDTH):
-            for y in range(0, Map.HEIGHT):
-                if self.tile[x][y].wall:
                     self.tile[x][y].makeWall()
 
         for tier in self.tier:
             for room in tier:
-                count = room.distribute(
-                    self, Lamp(), rd.randint(8, 16), rd.randint(8, 16), 5)
-                if count == 0:
-                    self.getTile(room.randomSpot()).addObject(Lamp())
-
-                room.scatter(self, Obstacle(), rd.randint(1, 5))
-                room.scatter(self, Key(tier=rd.randint(3, 5)),
-                             rd.randint(0, 1))
-                self.getTile(room.randomSpot()).addObject(
-                    Actor(None, self.main))
-                room.updateTier(self)
+                room.generateContent(self)
             room = rd.choice(tier)
             room.scatter(self, Key(tier=room.tier - 1), 1)
 
@@ -183,22 +177,20 @@ class Level(Map):
     def carveDoorway(self, room1, room2, tunnelTier=-1, horizontal=True):
         positions = self.getConnection(room1.center, room2.center, horizontal)
 
-        # carve connection
-        for cell in map(lambda p: self.getTile(p), positions):
-            cell.removeWall()
-            cell.tier = tunnelTier
-
         # carve wide tunnels for corridors and circular rooms
-        if (room1.__class__.__name__ is 'Corridor' and room2.__class__.__name__ is 'Corridor') or room1.__class__.__name__ is 'Dome' or room2.__class__.__name__ is 'Dome':
+        if room1.__class__.__name__ in ['Corridor', 'Dome'] or room2.__class__.__name__  in ['Corridor', 'Dome']:
             for pos in positions:
                 if pos not in room1.border() or pos in room2.border():
-                    for cell in self.getNeighborhood(pos):
-                        cell.removeWall()
-                        cell.tier = room2.tier
+                    for cell in self.getNeighborhood(pos, shape=8):
+                        if list(cell.pos) not in room1.border():
+                            cell.removeWall()
+                            cell.tier = room2.tier
 
         # place doors
         for pos in positions:
             cell = self.getTile(pos)
+            cell.removeWall()
+            cell.tier = tunnelTier
             if pos in room1.border():
                 cell.addObject(SecDoor(tier=tunnelTier))
         return True
@@ -275,9 +267,9 @@ class Room(Rectangle):
                 if shape is 'Corridor':
                     if direction in [UP, DOWN]:
                         w = 5
-                        h = rd.randint(*size)
+                        h = int(1.5*rd.randint(*size))
                     else:
-                        w = rd.randint(*size)
+                        w = int(1.5*rd.randint(*size))
                         h = 5
 
                 if shape is 'Dome':
@@ -308,7 +300,6 @@ class Room(Rectangle):
                     map.carveDoorway(nextRoom, self, self.tier, not rect.size[X] < self.size[X])
                 elif direction in (LEFT, RIGHT):
                     map.carveDoorway(nextRoom, self, self.tier, rect.size[Y] < self.size[Y])
-
         return self.children
 
     def getOffset(self, direction, alignment, w, h):
@@ -331,16 +322,28 @@ class Room(Rectangle):
 
     def carve(self, map):
         # create a boundary wall
-        for x in range(self.x[MIN], self.x[MAX]):
-            for y in range(self.y[MIN], self.y[MAX]):
-                if map.tile[x][y].wall is None:
-                    map.tile[x][y].makeWall()
+        for cell in self.getCells(map):
+            if cell.wall is None:
+                cell.makeWall()
 
         # carve basic rectangle
         for x in range(self.x[MIN] + 1, self.x[MAX] - 1):
             for y in range(self.y[MIN] + 1, self.y[MAX] - 1):
                 map.tile[x][y].removeWall()
                 map.tile[x][y].tier = self.tier
+
+    def fill(self, map):
+        for cell in self.getCells(map):
+            cell.makeWall()
+
+    def generateContent(self, map):
+        count = self.distribute(map, Lamp(), rd.randint(8, 16), rd.randint(8, 16), 5)
+        if count == 0:
+            map.getTile(self.randomSpot()).addObject(Lamp())
+
+        self.scatter(map, Obstacle(), rd.randint(1, 5))
+        self.scatter(map, Key(tier=rd.randint(3, 5)), rd.randint(0, 1))
+        self.updateTier(map)
 
     def randomSpot(self, margin=1):
         x = rd.randint(self.x[MIN] +
@@ -369,6 +372,7 @@ class Room(Rectangle):
         return count
 
     def updateTier(self, map):
+        self.carve(map)
         for cell in self.getCells(map):
             if not cell.wall:
                 cell.tier = self.tier
@@ -377,19 +381,46 @@ class Corridor(Room):
     def __init__(self, tier, parent, pos, w, h):
         Room.__init__(self, tier, parent, pos, w, h)
 
+    def carve(self, map):
+        pass
+
+class Hall(Room):
+    def __init__(self, tier, parent, pos, w, h):
+        Room.__init__(self, tier, parent, pos, w, h)
+
+    def carve(self, map):
+        # create a boundary wall
+        for cell in self.getCells(map):
+            if cell.wall is None:
+                cell.makeWall()
+
+        # carve basic rectangle
+        for x in range(self.x[MIN] + 1, self.x[MAX] - 1):
+            for y in range(self.y[MIN] + 1, self.y[MAX] - 1):
+                map.tile[x][y].removeWall()
+                map.tile[x][y].tier = self.tier
+
+        offset = (self.center - self.pos)//2
+
+        for x in range(self.x[MIN] + 3, self.x[MAX] - 3):
+            for y in range(self.y[MIN] + 3, self.y[MAX] - 3):
+                if (x - self.pos[X]) % offset[X] == 0 and (y - self.pos[Y]) % offset[Y] == 0:
+                    map.tile[x][y].makeWall()
+
 
 class Dome(Room):
     def __init__(self, tier, parent, pos, w, h):
         Room.__init__(self, tier, parent, pos, w, h)
 
-
     def carve(self, map):
-        print(self.x,self.y)
+        # create a boundary wall
+        for cell in self.getCells(map):
+            if cell.wall is None:
+                cell.makeWall()
+
         # carve basic rectangle or circle
         for x in range(self.x[MIN] + 1, self.x[MAX] - 1):
             for y in range(self.y[MIN] + 1, self.y[MAX] - 1):
                 if np.linalg.norm([x, y] - (self.center - np.array([0.5, 0.5]))) < self.size[X] / 2.0 - 1:
                     map.tile[x][y].removeWall()
                     map.tile[x][y].tier = self.tier
-                else:
-                    map.tile[x][y].makeWall()

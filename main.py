@@ -35,7 +35,7 @@ class Game:
         self.render.renderStart()
 
         stats = {'DEADENDS': -1, 'VENTS': - 1}
-        while stats['DEADENDS'] > 0 or stats['VENTS'] < 5 or stats['ROOMS'] < 10:
+        while stats['VENTS'] < 5 or stats['ROOMS'] < 10:
             self.map = Level(self)
             stats = self.map.generate()
             print(stats)
