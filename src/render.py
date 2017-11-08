@@ -35,6 +35,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.messagePanel = tdl.Window(
             self.console, self.MAPINSET[X], self.SEPARATOR[Y], self.SEPARATOR[X] - 2, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
 
+        self.mapLayer = 0
+
         self.raymap = Render.rayMap(24, 32)
         self.lightmap = Render.rayMap(8, 32)
 
@@ -62,14 +64,17 @@ class Render:  # a rectangle on the map. used to characterize a room.
     def renderMap(self, map, mapOffset):
         self.mapPanel.clear(bg=COLOR['BLACK'])
 
-        for cell in self.main.gui.mapCells:
-            cell.draw(self.mapPanel, cell.pos - mapOffset)
-
-#        cell = map.getTile(self.main.gui.cursorPos)
-#        cell.drawHighlight(self.mapPanel, cell.pos - mapOffset)
+        if self.mapLayer == 0:
+            for cell in self.main.gui.getCells(map):
+                cell.drawMap(self.mapPanel, cell.pos - mapOffset)
+        elif self.mapLayer == 1:
+            for cell in self.main.gui.getCells(map):
+                cell.drawTier(self.mapPanel, cell.pos - mapOffset)
 
         cell = map.getTile(self.main.player.cell.pos + self.main.gui.cursorDir)
-        cell.drawHighlight(self.mapPanel, cell.pos - mapOffset)
+        cursorPos = cell.pos - mapOffset
+        if Render.inMap(cursorPos):
+            cell.drawHighlight(self.mapPanel, cursorPos)
 
     @staticmethod
     def inMap(terminalPos):
@@ -105,28 +110,51 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
     @staticmethod
     def printImage(map, fileName):
-        img = Image.new('RGB', [map.WIDTH, map.HEIGHT], "black")  # create a new black image
+        # create a new black image
+        img = Image.new('RGB', [3 * map.WIDTH, 3 * map.HEIGHT], "black")
         pixels = img.load()  # create the pixel map
         for x in range(map.WIDTH):    # for every pixel:
             for y in range(map.HEIGHT):
+                tile = [[i, j] for i in range(3 * x, 3 * x + 3)
+                        for j in range(3 * y, 3 * y + 3)]
+
                 if map.tile[x][y].wall is False:
                     # set the colour accordingly
-                    pixels[x, y] = (40 * map.tile[x][y].tier,
-                                    255 - 40 * map.tile[x][y].tier, 255)
+                    for p in tile:
+                        pixels[p[X], p[Y]] = tuple(
+                            TIERCOLOR[map.tile[x][y].tier])
                 elif map.tile[x][y].wall is True:
-                    pixels[x, y] = (25, 25, 25)  # set the colour accordingly
+                    for p in tile:
+                        # set the colour accordingly
+                        pixels[p[X], p[Y]] = COLOR['DARKGRAY']
                 elif map.tile[x][y].wall is None:
-                    pixels[x, y] = (0, 0, 0)  # set the colour accordingly
+                    for p in tile:
+                        # set the colour accordingly
+                        pixels[p[X], p[Y]] = COLOR['BLACK']
 
-                if map.tile[x][y].tier == -2:
-                    pixels[x, y] = (55, 55, 55)  # set the colour accordingly
+                if map.tile[x][y].grid is False:
+                    # set the colour accordingly
+                    pixels[3 * x + 1, 3 * y + 1] = COLOR['GREEN']
+                elif map.tile[x][y].grid is True:
+                    for p in tile:
+                        # set the colour accordingly
+                        pixels[p[X], p[Y]] = COLOR['MEDIUMGREEN']
 
         for room in map.tier[-1]:
             if room.function is not None:
                 for pos in room.border():
                     if map.getTile(pos).wall:
                         if room.function is "start":
-                            pixels[pos[X], pos[Y]] = (50, 250, 50)
+                            for i in range(3):
+                                pixels[3 * pos[X] + i, 3 *
+                                       pos[Y] + i] = COLOR['RED']
                         elif room.function is "extraction":
-                            pixels[pos[X], pos[Y]] = (250, 50, 50)
+                            for i in range(3):
+                                pixels[3 * pos[X] + i, 3 *
+                                       pos[Y] + i] = COLOR['BLUE']
+
+        for lamp in map.getAll('Lamp'):
+            pixels[3 * lamp.cell.pos[X] + 1, 3 *
+                   lamp.cell.pos[Y] + 1] = COLOR['WHITE']
+
         img.save(fileName)

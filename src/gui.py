@@ -2,7 +2,7 @@ from globals import *
 import numpy as np
 
 from render import Render
-from map import Map
+from map import Map, Rectangle
 
 
 class Gui:
@@ -12,10 +12,9 @@ class Gui:
         self.cursorPos = np.array([64, 64])
         self.cursorDir = np.array([1, 1])
         self.mapRange = [[0, Map.WIDTH], [0, Map.HEIGHT]]
-        self.mapCells = []
+        self.mapRectangle = Rectangle(self.mapOffset, 0, 0)
 
-    self.messages = [
-        'The hum from the vents reminds you of a TV tuned to a dead channel.']
+        self.messages = ['The hum from the vents reminds you of a TV tuned to a dead channel.']
 
     def updateCursor(self, terminalPos=np.array([8, 8])):
         if not Render.inMap(terminalPos):
@@ -34,15 +33,10 @@ class Gui:
     def moveOffset(self, dir=np.array([0, 0])):
         self.mapOffset += dir
         (panelX, panelY) = self.main.render.mapPanel.get_size()
-        self.mapRange[X] = [max(0, self.mapOffset[X]), min(
-            self.mapOffset[X] + panelX, Map.WIDTH)]
-        self.mapRange[Y] = [max(0, self.mapOffset[Y]), min(
-            self.mapOffset[Y] + panelY, Map.HEIGHT)]
+        self.mapRectangle = Rectangle(self.mapOffset, panelX, panelY)
 
-        self.mapCells = []
-        for i in range(*self.mapRange[X]):
-            for j in range(*self.mapRange[Y]):
-                self.mapCells.append(self.main.map.tile[i][j])
+    def getCells(self, map):
+        return self.mapRectangle.getCells(map)
 
     def pushMessage(self, string):
         self.messages.insert(0, string)

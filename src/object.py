@@ -117,6 +117,7 @@ class Terminal(Object):
         Object.__init__(self, cell, char=20, color=COLOR['MEDIUMGREEN'])
 
         self.on = True
+        self.cell.grid = True
         self.connection = []
 
     def interact(self, actor=None, dir=None, type=None):
@@ -124,17 +125,18 @@ class Terminal(Object):
             self.destroy()
             return 5
 
-        for obj in self.connection:
-            obj.interact(actor)
+        self.connection[0].interact(actor)
         return 3
 
     def describe(self):
         return "Terminal"
 
     def connect(self, obj):
+        self.cell.grid = True
         self.connection.append(obj)
         if isinstance(obj, Terminal):
             obj.connection.append(self)
+            obj.cell.grid = True
 
     def disconnect(self, obj):
         self.connection.remove(obj)

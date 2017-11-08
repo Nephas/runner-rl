@@ -3,14 +3,21 @@ from globals import *
 import math as m
 import numpy as np
 import random as rd
+import itertools as it
 
 
 class Map:
     WIDTH = 128
     HEIGHT = 128
 
+    PHYSICSRANGE = np.array([24, 24])
+
     def __init__(self, main=None):
         self.main = main
+        self.tile = [[Cell(self, [x, y]) for y in range(Map.HEIGHT)]
+                     for x in range(Map.WIDTH)]
+
+    def clear(self):
         self.tile = [[Cell(self, [x, y]) for y in range(Map.HEIGHT)]
                      for x in range(Map.WIDTH)]
 
@@ -18,18 +25,35 @@ class Map:
         return self.tile[pos[X]][pos[Y]]
 
     def updatePhysics(self):
-        for cell in self.main.gui.mapCells:
+        rect = Rectangle(self.main.player.cell.pos -
+                         Map.PHYSICSRANGE, *(2 * Map.PHYSICSRANGE))
+
+        for cell in rect.getCells(self):
             cell.light = 2
             cell.vision[LOS] = False
 
         self.castFov(self.main.player.cell.pos)
 
-        for cell in self.main.gui.mapCells:
+        for cell in rect.getCells(self):
             cell.updatePhysics()
 
     def updateRender(self):
-        for cell in self.main.gui.mapCells:
+        for cell in self.main.gui.getCells(self):
             cell.updateRender()
+
+    def getObjects(self):
+        for x in range(Map.WIDTH):
+            for y in range(Map.HEIGHT):
+                for obj in self.tile[x][y].object:
+                    yield obj
+
+    def getAll(self, objClass=None):
+        if type(objClass) is str:
+            return filter(lambda o: o.__class__.__name__ == objClass, self.getObjects())
+        elif objClass is not None:
+            return filter(lambda o: isinstance(o, objClass), self.getObjects())
+        else:
+            return self.getObjects()
 
     def getNeighborhood(self, pos, shape=4):
         if shape == 4:
@@ -73,6 +97,46 @@ class Map:
                     break
 
 
+class Rectangle:  # a rectangle on the map. used to characterize a room or a window
+    def __init__(self, pos, w, h):
+        self.pos = np.array(pos)
+        self.size = np.array([w, h])
+        self.x = [max(0, pos[X]), min(Map.WIDTH, pos[X] + w)]
+        self.y = [max(0, pos[Y]), min(Map.HEIGHT, pos[Y] + h)]
+        self.center = (self.pos + self.size / 2).round().astype('int')
+
+    def intersects(self, other):  # returns true if this rectangle intersects with another one
+        return not (self.x[MAX] <= other.x[MIN] or other.x[MAX] <= self.x[MIN] or self.y[MAX] <= other.y[MIN] or
+                    other.y[MAX] <= self.y[MIN])
+
+    def contains(self, pos):
+        return pos[X] in range(*self.x) and pos[Y] in range(*self.y)
+
+    def border(self):
+        positions = []
+        for x in range(self.x[MIN], self.x[MAX]):
+            positions.append([x, self.y[MIN]])
+            positions.append([x, self.y[MAX] - 1])
+        for y in range(self.y[MIN], self.y[MAX]):
+            positions.append([self.x[MIN], y])
+            positions.append([self.x[MAX] - 1, y])
+        return positions
+
+    def drawFrame(self, map, color):
+        for pos in self.border():
+            map.getTile().bg = color
+
+    def getPositions(self):
+        for x in range(self.x[MIN], self.x[MAX]):
+            for y in range(self.y[MIN], self.y[MAX]):
+                yield [x, y]
+
+    def getCells(self, map):
+        for x in range(self.x[MIN], self.x[MAX]):
+            for y in range(self.y[MIN], self.y[MAX]):
+                yield map.tile[x][y]
+
+
 class Cell:
     def __init__(self, map, pos, wall=None):
         self.map = map
@@ -80,6 +144,7 @@ class Cell:
         self.wall = wall
         self.tier = -1
         self.light = 2
+        self.grid = None
 
         # [MOVE, LOS]
         self.block = [False, False]
@@ -146,9 +211,20 @@ class Cell:
                 self.block[LOS] = True
             obj.physics(self.map)
 
-    def draw(self, window, pos):
+    def drawMap(self, window, pos):
         if self.vision[EXP]:
             window.draw_char(pos[X], pos[Y], self.char, self.fg, self.bg)
+
+    def drawTier(self, window, pos):
+        if self.grid is None:
+            window.draw_char(pos[X], pos[Y], ' ', self.fg,
+                             list(TIERCOLOR[self.tier]))
+        elif not self.grid:
+            window.draw_char(pos[X], pos[Y], 197,
+                             COLOR['GREEN'], list(TIERCOLOR[self.tier]))
+        elif self.grid:
+            window.draw_char(pos[X], pos[Y], ' ', list(
+                TIERCOLOR[self.tier]), COLOR['GREEN'])
 
     def drawHighlight(self, window, pos, color=COLOR['WHITE']):
         if self.vision[EXP]:

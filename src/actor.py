@@ -94,7 +94,7 @@ class Player(Actor):
         targetPos = self.cell.pos + dir
         if self.moveTo(targetPos):
             self.main.gui.moveOffset(dir)
-            return np.abs(dir[X]) + np.abs(dir[Y]) + 1
+            return np.abs(dir[X]) + np.abs(dir[Y])
         else:
             return self.interactDir(self.main.map, dir)
 

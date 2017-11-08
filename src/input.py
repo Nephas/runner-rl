@@ -50,12 +50,15 @@ class Input:
             dir = (ray / np.linalg.norm(ray)).round().astype('int')
             self.actions.append({'TYPE': 'ATTACK', 'DIR': dir})
 
-        if key == 'CHAR' and char == 'r':
-            self.main.gui.pushMessage("Waiting")
-            self.main.player.cooldown += 2
-
-        elif key == 'CHAR' and len(self.actions) < 2:
-            self.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[char]})
+        if key == 'CHAR':
+            if char == 'r':
+                self.main.gui.pushMessage("Waiting")
+                self.main.player.cooldown += 2
+            if char == 'm':
+                self.main.gui.pushMessage("Switching Map")
+                self.main.render.mapLayer = (self.main.render.mapLayer + 1) % 3
+            if char in "wasdqeyc" and len(self.actions) < 2:
+                self.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[char]})
 
     def handleMouse(self, terminalPos):
         self.main.gui.updateCursor(terminalPos)

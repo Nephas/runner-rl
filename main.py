@@ -21,6 +21,7 @@ class Game:
     def __init__(self):
         self.player = None
         self.actor = []
+        self.object = []
         self.render = Render(self)
         self.input = Input(self)
         self.gui = Gui(self)
@@ -34,14 +35,14 @@ class Game:
         self.render.renderStart()
 
         stats = {'DEADENDS': -1, 'VENTS': - 1}
-#        while stats['DEADENDS'] != 0 or stats['VENTS'] < 16:
-        self.map = Level(self)
-        stats = self.map.generate()
-        print(stats)
+        while stats['DEADENDS'] > 0 or stats['VENTS'] < 5 or stats['ROOMS'] < 10:
+            self.map = Level(self)
+            stats = self.map.generate()
+            print(stats)
 
         self.player = Player(self.map.tile[0][0], self)
         self.map.finalize(self.player)
-        self.render.printImage(self.map, "levelgen.bmp")
+        Render.printImage(self.map, "levelgen.bmp")
 
         self.gui.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
         self.gui.updateCursor()
