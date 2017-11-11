@@ -1,20 +1,13 @@
-from globals import *
-from object import Object
-from item import Item, Key
+from src.globals import *
+
+from src.object.object import Object, Effect
+from src.object.item import Item, Key
+
+from src.actor.ai import AI
 
 import random as rd
 
 
-class AI:
-    def __init__(self):
-        pass
-
-    @staticmethod
-    def decide(actor, map):
-        return actor.moveDir(rd.choice(NEIGHBORHOOD))
-#            return 2
-#        else:
-#            return 0
 
 
 class Actor(Object):
@@ -50,11 +43,14 @@ class Actor(Object):
         self.main.gui.pushMessage(self.describe() + " dies")
 
     def interactDir(self, map, dir, type=None):
-        tile = map.getTile(self.cell.pos + dir)
-        if len(tile.object) > 0:
-            return tile.object[0].interact(self, dir, type)
-        else:
-            return 0
+        if map.contains(self.cell.pos + dir):
+            tile = map.getTile(self.cell.pos + dir)
+            if type is 'ATTACK':
+                tile.addObject(Effect(char='X', color=self.fg, time=2))
+
+            if len(tile.object) > 0:
+                return tile.object[0].interact(self, dir, type)
+        return 0
 
     def act(self, map=None):
         if self.cooldown > 0:
@@ -67,7 +63,7 @@ class Player(Actor):
     def __init__(self, cell=None, main=None):
         Actor.__init__(self, cell, main, char='@')
 
-        self.fg = [225, 200, 100]
+        self.fg = [225, 150, 50]
         self.inventory = [Item(), Key(tier=5)]
 
     def act(self, tileMap=None):

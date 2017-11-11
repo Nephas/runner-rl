@@ -8,12 +8,15 @@ import itertools as it
 
 from src.level.map import Map, Rectangle
 from src.level.room import Room
-from src.object import Object, Obstacle, Terminal, Server
-from src.light import Lamp, DoorLamp
+
+from src.object.object import Object, Obstacle
+from src.object.server import Terminal, Server
+from src.object.light import Lamp, DoorLamp
+from src.object.item import Item, Key
+from src.object.door import Vent, SecDoor, AutoDoor
+
 from src.render import Render
-from src.door import Vent, SecDoor, AutoDoor
-from src.item import Item, Key
-from src.actor import Player, Actor
+from src.actor.actor import Player, Actor
 
 
 class Level(Map):
@@ -93,16 +96,19 @@ class Level(Map):
         """Propagate every single room according to the N_CHILD and ROOM_SIZE specifications. If a corridor produces
         a dead end, generation breaks."""
         # recursively spread room
+        Render.printImage(self, "gif/levelgen{:02}.bmp".format(0))
+
         for i in range(1, len(Level.ROOM_TYPE)):
+            Render.printImage(self, "gif/levelgen{:02}.bmp".format(i))
+
             self.tier.append([])
-            for room in self.tier[i - 1]:
+            for j, room in enumerate(self.tier[i - 1]):
                 room.propagate(
                     self, Level.N_CHILD[i], Level.ROOM_SIZE[i], Level.ROOM_TYPE[i])
-                Render.printImage(self, "levelgen.bmp")
 
         # extend boss room
         self.tier[0][0].propagate(self, [2, 4], [7, 10], ['Room'])
-        Render.printImage(self, "levelgen.bmp")
+        Render.printImage(self, "gif/levelgen90.bmp")
 
         # remove deadends
         for tier in reversed(self.tier):
@@ -110,7 +116,7 @@ class Level(Map):
                 if room.__class__.__name__ is 'Corridor' and room.children == []:
                     room.fill(self)
                     tier.remove(room)
-        Render.printImage(self, "levelgen.bmp")
+        Render.printImage(self, "gif/levelgen91.bmp")
 
     def generateVents(self):
         for pair in it.combinations(self.tier[-1] + self.tier[-2], 2):
@@ -159,7 +165,7 @@ class Level(Map):
         for i in range(3):
             exRooms.pop().function = "extraction"
 
-        Render.printImage(self, "levelgen.bmp")
+        Render.printImage(self, "gif/levelgen99.bmp")
 
     def layCable(self, pos1, pos2, horizontal=True):
         for pos in self.getConnection(pos1, pos2, horizontal):

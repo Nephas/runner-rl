@@ -6,12 +6,15 @@ import random as rd
 import copy as cp
 import itertools as it
 
-from src.object import Object, Obstacle, Terminal, Server
-from src.light import Lamp, FlickerLamp, SpotLight
+from src.object.object import Object, Obstacle
+from src.object.server import Terminal, Server
+from src.object.light import Lamp, FlickerLamp, SpotLight
+from src.object.door import Vent, SecDoor, AutoDoor
+from src.object.item import Item, Key
+
+from src.actor.actor import Actor
+
 from src.render import Render
-from src.door import Vent, SecDoor, AutoDoor
-from src.item import Item, Key
-from src.actor import Actor
 from src.level.map import Rectangle
 
 
