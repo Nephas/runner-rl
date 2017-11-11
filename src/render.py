@@ -9,9 +9,9 @@ import time as t
 
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
-    TILESET = 'tileset16x16.png'
+    TILESET = 'experimental_12x16.png'
 
-    SCREEN = np.array([80, 40])  # [WIDTH, HEIGHT]
+    SCREEN = np.array([100, 40])  # [WIDTH, HEIGHT]
     SEPARATOR = (5. / 8. * SCREEN).astype('int')
     MAPINSET = np.array([1, 1])
 
@@ -23,10 +23,10 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
         self.console = tdl.init(
             self.SCREEN[X], self.SCREEN[Y], title="RunnerRL", fullscreen=False)
-        self.console.clear(bg=[50, 50, 50])
+        self.console.clear(bg=[25, 25, 25])
 
         self.back = tdl.Window(self.console, 0, 0, None, None)
-        self.back.clear(bg=[50, 50, 50])
+        self.back.clear(bg=[25, 25, 25])
 
         self.mapPanel = tdl.Window(
             self.console, self.MAPINSET[X], self.MAPINSET[Y], self.SEPARATOR[X] - 2, self.SEPARATOR[Y] - 2)
@@ -37,7 +37,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
         self.mapLayer = 0
 
-        self.raymap = Render.rayMap(20, 32)
+        self.raymap = Render.rayMap(24, 96)
         self.lightmap = Render.rayMap(8, 32)
 
     def renderStart(self):
@@ -71,10 +71,16 @@ class Render:  # a rectangle on the map. used to characterize a room.
             for cell in self.main.gui.getCells(map):
                 cell.drawNet(self.mapPanel, cell.pos - mapOffset)
 
-        cell = map.getTile(self.main.player.cell.pos + self.main.gui.cursorDir)
-        cursorPos = cell.pos - mapOffset
-        if Render.inMap(cursorPos):
+        try:
+            cell = map.getTile(self.main.player.cell.pos + self.main.gui.cursorDir)
+            cursorPos = cell.pos - mapOffset
             cell.drawHighlight(self.mapPanel, cursorPos)
+
+            cell = map.getTile(self.main.gui.cursorPos)
+            cursorPos = cell.pos - mapOffset
+            cell.drawHighlight(self.mapPanel, cursorPos)
+        except AssertionError:
+            pass
 
     @staticmethod
     def inMap(terminalPos):

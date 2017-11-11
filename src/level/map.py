@@ -10,7 +10,10 @@ class Map:
     WIDTH = 128
     HEIGHT = 128
 
-    FOV_NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
+    FOV_NEIGHBORHOOD = np.array([[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]])
+#    FOV_NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
+#    FOV_NEIGHBORHOOD = np.array([[0,1],[1,0],[0,-1],[-1,0]])
+
 
     PHYSICSRANGE = np.array([24, 24])
 
@@ -70,23 +73,27 @@ class Map:
         return pos[X] in range(0, Map.WIDTH) and pos[Y] in range(0, Map.HEIGHT)
 
     def castFov(self, pos):
-        for n in NEIGHBORHOOD:
-            self.getTile(pos + n).vision = [True, True]
+        try:
+            self.getTile(pos).vision = [True, True]
 
-        blockIndex = 0
-        blockPoint = [0, 0]
+            blockIndex = 0
+            blockPoint = [0, 0]
 
-        for baseLine in self.main.render.raymap:
-            if not all(baseLine[blockIndex] == blockPoint):
-                line = baseLine + pos
-                for i, point in enumerate(line):
-                    if not self.getTile(point).block[LOS]:
-                        for neighbor in Map.FOV_NEIGHBORHOOD + point:
-                            self.getTile(neighbor).vision = [True, True]
-                    else:
-                        blockIndex = i
-                        blockPoint = baseLine[i]
-                        break
+            for baseLine in self.main.render.raymap:
+                if not all(baseLine[blockIndex] == blockPoint):
+                    line = baseLine + pos
+                    for i, point in enumerate(line):
+                        if not self.getTile(point).block[LOS]:
+                            self.getTile(point).vision = [True, True]
+                            for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
+                                if neighbor.block[LOS]:
+                                    neighbor.vision = [True, True]
+                        else:
+                            blockIndex = i
+                            blockPoint = baseLine[i]
+                            break
+        except IndexError:
+            pass
 
 
 class Rectangle:  # a rectangle on the map. used to characterize a room or a window
@@ -143,6 +150,7 @@ class Cell:
         self.vision = [False, False]
 
         self.object = []
+        self.effect = None
 
         # graphics attributes
         self.char = ' '
@@ -170,11 +178,8 @@ class Cell:
             self.fg = (85, 85, 85)
             return
 
-        self.char = ' '
         self.bg = tuple(self.light * TIERCOLOR[self.tier] / MAX_LIGHT)
-
-        if self.tier == -1:
-            self.bg = (40, 40, 40)
+        self.char = ' '
 
         for object in self.object:
             self.char = object.char

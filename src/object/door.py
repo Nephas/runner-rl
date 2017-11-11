@@ -1,7 +1,7 @@
-from globals import *
+from src.globals import *
 
-from object import Object
-from item import Key
+from src.object.object import Object
+from src.object.item import Key
 
 
 class Vent(Object):

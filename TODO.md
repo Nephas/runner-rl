@@ -39,9 +39,32 @@ Corporate Generator:
         * Bounty
         * Sabotage
 
-Player Class:
-    * Judge
-    * Cyberpunk
-    * Hitman
-    * Guerilla
-    * MAL(function)
+Player Class (Playstyle, Ideology):
+    * Judge     (Loud, Violent, Lawful)
+    * Cyberpunk (Silent, Peaceful, Anarchist)
+    * Hitman    (Silent, Violent, Pragmatic)
+    * Guerilla  (Silent, Violent, Anarchist)
+    * MAL(function) (Loud, Violent, ???)
+    * Mask      (Loud, Peaceful, Pragmatic)
+
+Room
+    + Corridor
+    + Room
+        * Office
+        * Storage
+        * Surveillance
+        * Maintenance
+        * Lab
+    + Hall
+        * Assembly
+        * Storage
+        * Server Farm
+        * Fish farm
+    + Dome
+        * Reactor
+        * Incinerator
+        * Greenhouse
+    + Vault
+        * CEO Office
+        * Data Storage
+        * Prototype Storage

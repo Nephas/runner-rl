@@ -5,15 +5,13 @@ from src.level.level import Level
 from src.input import Input
 from src.gui import Gui
 from src.render import Render
-from src.actor import Player
 
 import sys
 import time as t
 import tdl
 
-
 class Game:
-    LIMIT_FPS = 24
+    LIMIT_FPS = 16
     TIC_SEC = 8
     TIC_SIZE = 1. / TIC_SEC
     FRAME_LENGTH = 1. / LIMIT_FPS

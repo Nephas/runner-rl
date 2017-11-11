@@ -1,4 +1,5 @@
-from globals import *
+from src.globals import *
+
 import numpy as np
 import tdl
 
@@ -70,3 +71,17 @@ class Input:
         elif event.button is 'RIGHT' and len(self.actions) < 2:
             self.actions.append(
                 {'TYPE': 'USE', 'DIR': self.main.gui.cursorDir})
+
+    def findPath(self, map, start, target):
+        walker = start
+
+        delta = end - start
+        direction = delta / np.linalg.norm(delta)
+        line = []
+
+        ray = 0.25 * direction
+        while np.linalg.norm(ray) <= np.linalg.norm(delta):
+            if len(line) == 0 or np.linalg.norm(line[-1] - ray.round().astype('int')) != 0:
+                line.append(ray.round().astype('int'))
+            ray += 0.25 * direction
+        return np.array(line)

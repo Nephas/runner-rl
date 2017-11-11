@@ -1,9 +1,10 @@
-from globals import *
+from src.globals import *
 
 import random as rd
 
+from src.object.object import Object
 from src.render import Render
-from src.object import Object
+
 
 class Lamp(Object):
     def __init__(self, cell=None, brightness=12):

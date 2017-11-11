@@ -1,5 +1,6 @@
-from globals import *
-from object import Object
+from src.globals import *
+
+from src.object.object import Object
 
 
 class Item(Object):
