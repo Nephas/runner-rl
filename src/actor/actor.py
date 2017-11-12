@@ -3,7 +3,7 @@ from src.globals import *
 from src.object.object import Object, Effect
 from src.object.item import Item, Key
 
-from src.actor.ai import AI
+from src.actor.ai import AI, Idle
 
 import random as rd
 
@@ -11,13 +11,17 @@ import random as rd
 
 
 class Actor(Object):
-    def __init__(self, cell=None, main=None, char='@'):
+    def __init__(self, cell=None, main=None, char='@', ai=None):
         Object.__init__(self, cell, char=char)
 
         self.main = main
+        self.actions = []
+
         self.block = [True, False]
         self.cooldown = 0
         self.main.actor.append(self)
+
+        self.ai = ai
 
     def describe(self):
         return "Someone"
@@ -55,36 +59,35 @@ class Actor(Object):
     def act(self, map=None):
         if self.cooldown > 0:
             self.cooldown -= 1
-        else:
-            self.cooldown += AI.decide(self, map)
+        elif len(self.actions) > 0:
+            act = self.actions.pop(0)
+            if act['TYPE'] is 'MOVE':
+                dir = act['DIR']
+                self.cooldown += self.moveDir(act['DIR'])
+            elif act['TYPE'] in ['USE','ATTACK']:
+                dir = act['DIR']
+                self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
 
 
 class Player(Actor):
     def __init__(self, cell=None, main=None):
         Actor.__init__(self, cell, main, char='@')
 
+        self.ai = None
         self.fg = [225, 150, 50]
         self.inventory = [Item(), Key(tier=5)]
 
     def act(self, tileMap=None):
-        actions = self.main.input.actions
-
         if self.cooldown > 0:
             self.cooldown -= 1
-        elif len(actions) > 0:
-            if actions[0]['TYPE'] is 'MOVE':
-                dir = sum(map(lambda a: a['DIR'], actions))
-                for coord in [X, Y]:
-                    if np.abs(dir[coord]) > 1:
-                        dir[coord] /= np.abs(dir[coord])
-                self.cooldown += self.moveDir(dir)
-            elif actions[0]['TYPE'] is 'USE':
-                dir = actions[0]['DIR']
-                self.cooldown += self.interactDir(tileMap, dir, 'USE')
-            elif actions[0]['TYPE'] is 'ATTACK':
-                dir = actions[0]['DIR']
-                self.cooldown += self.interactDir(tileMap, dir, 'ATTACK')
-            self.main.input.actions = []
+        elif len(self.actions) > 0:
+            act = self.actions.pop(0)
+            if act['TYPE'] is 'MOVE':
+                dir = act['DIR']
+                self.cooldown += self.moveDir(act['DIR'])
+            elif act['TYPE'] in ['USE','ATTACK']:
+                dir = act['DIR']
+                self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
 
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir
@@ -97,10 +100,29 @@ class Player(Actor):
     def describe(self):
         return "You"
 
-
-class Guard(Actor):
+class NPC(Actor):
     def __init__(self, cell=None, main=None):
-        Actor.__init__(self, cell, main, char='G')
+        Actor.__init__(self, cell, main, char='@')
+
+        self.ai = Idle(self)
+
+    def act(self, map=None):
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        elif len(self.actions) > 0:
+            act = self.actions.pop(0)
+            if act['TYPE'] is 'MOVE':
+                dir = act['DIR']
+                self.cooldown += self.moveDir(act['DIR'])
+            elif act['TYPE'] in ['USE','ATTACK']:
+                dir = act['DIR']
+                self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
+
+        elif len(self.actions) == 0:
+            self.actions = self.ai.decide(map)
+
+    def describe(self):
+        return "Someone" + self.ai.describe()
 
 
 class Corpse(Object):

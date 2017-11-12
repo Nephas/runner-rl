@@ -12,7 +12,7 @@ from src.object.light import Lamp, FlickerLamp, SpotLight
 from src.object.door import Vent, SecDoor, AutoDoor
 from src.object.item import Item, Key
 
-from src.actor.actor import Actor
+from src.actor.actor import Actor, NPC
 
 from src.render import Render
 from src.level.map import Rectangle
@@ -114,6 +114,8 @@ class Room(Rectangle):
     def generateContent(self, map):
         map.getTile(self.randomSpot(3)).addObject(Lamp())
         Server(map.getTile(self.randomSpot()))
+
+        NPC(map.getTile(self.randomSpot(3)), map.main)
 
         self.scatter(map, Obstacle(), rd.randint(1, 5))
         self.scatter(map, Key(tier=rd.randint(3, 5)), rd.randint(0, 1))

@@ -147,11 +147,11 @@ class Level(Map):
             room.generateContent(self)
 
         # connect terminals
-        for pair in it.combinations(self.getAll(Server) + self.getAll(Terminal), 2):
-            if rd.randint(0, 2) <= 2:
-                if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
-                    pair[0].connect(pair[1])
-                    self.layCable(pair[0].cell.pos, pair[1].cell.pos)
+        # for pair in it.combinations(self.getAll(Server) + self.getAll(Terminal), 2):
+        #     if rd.randint(0, 2) <= 2:
+        #         if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
+        #             pair[0].connect(pair[1])
+        #             self.layCable(pair[0].cell.pos, pair[1].cell.pos)
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
