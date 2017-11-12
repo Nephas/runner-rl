@@ -13,7 +13,7 @@ Levels are scattered with interconnected Servers and Terminals which will later 
 with the level objects.
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/levelgen.bmp" width="600"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/levelgen.gif" width="500"/>
 </p>
 
 Other features implemented so far:
