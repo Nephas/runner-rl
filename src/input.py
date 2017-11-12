@@ -4,6 +4,7 @@ import numpy as np
 import tdl
 
 from src.actor.ai import AI
+from src.render import Render
 
 class Input:
 
@@ -26,45 +27,53 @@ class Input:
                 event = tdl.event.get().next()
 
                 if event.type is 'KEYDOWN':
-                    self.handleKey(event.key, event.char)
+                    self.handleKey(event)
                 elif event.type is 'MOUSEUP':
                     self.handleClick(event)
                 elif event.type is 'MOUSEMOTION':
-                    self.handleMouse(event.cell)
+                    self.handleMouse(event)
+                elif event.type is 'MOUSEDOWN':
+                    self.handleScroll(event)
         except:
             pass
 
-    def handleKey(self, key, char):
-        if key == 'ESCAPE':
+    def handleKey(self, event):
+        if event.key == 'ESCAPE':
             self.quit = True
-        elif key == 'UP':
+        elif event.key == 'UP':
             self.main.gui.moveOffset(np.array([0, -3]))
-        elif key == 'DOWN':
+        elif event.key == 'DOWN':
             self.main.gui.moveOffset(np.array([0, 3]))
-        elif key == 'LEFT':
+        elif event.key == 'LEFT':
             self.main.gui.moveOffset(np.array([-3, 0]))
-        elif key == 'RIGHT':
+        elif event.key == 'RIGHT':
             self.main.gui.moveOffset(np.array([3, 0]))
 
-        elif key == 'SPACE' and len(self.main.player.actions) < 2:
+        elif event.key == 'SPACE' and len(self.main.player.actions) < 2:
             self.main.player.actions = []
             ray = self.main.gui.cursorPos - self.main.player.cell.pos
             dir = (ray / np.linalg.norm(ray)).round().astype('int')
             self.main.player.actions.append({'TYPE': 'ATTACK', 'DIR': dir})
 
-        if key == 'CHAR':
+        if event.key == 'CHAR':
             self.main.player.actions = []
-            if char == 'r':
+            if event.char == 'r':
                 self.main.gui.pushMessage("Waiting")
                 self.main.player.cooldown += 2
-            if char == 'm':
+            if event.char == 'm':
                 self.main.gui.pushMessage("Switching Map")
                 self.main.render.mapLayer = (self.main.render.mapLayer + 1) % 3
-            if char in "wasdqeyc" and len(self.main.player.actions) < 2:
-                self.main.player.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[char]})
+            if event.char in "wasdqeyc" and len(self.main.player.actions) < 2:
+                self.main.player.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[event.char]})
 
-    def handleMouse(self, terminalPos):
-        self.main.gui.updateCursor(terminalPos)
+        if event.key == 'TEXT':
+            if event.text in ['0','1','2','3','4','5']:
+                index = int(event.text)
+                if index < len(self.main.player.inventory):
+                    self.main.player.actions.append({'TYPE': 'ITEM', 'INDEX': index})
+
+    def handleMouse(self, event):
+        self.main.gui.updateCursor(event.cell)
 
     def handleClick(self, event):
         self.main.player.actions = []
@@ -74,34 +83,17 @@ class Input:
         elif event.button is 'RIGHT' and len(self.main.player.actions) < 2:
             self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.gui.cursorPos, True)
 
-#            self.actions.append(
-#                {'TYPE': 'USE', 'DIR': self.main.gui.cursorDir})
+    def handleScroll(self, event):
+        if event.button is 'SCROLLUP':
+            if event.cell[X] <= Render.SEPARATOR[X]:
+                self.main.gui.messageOffset += 1
+            else:
+                self.main.gui.inventoryOffset += 1
+        elif event.button is 'SCROLLDOWN':
+            if event.cell[X] <= Render.SEPARATOR[X]:
+                self.main.gui.messageOffset -= 1
+            else:
+                self.main.gui.inventoryOffset -= 1
 
-    def findPath(self, map, start, target, interact=False):
-        path = [start]
-
-        dist = Input.eucDist(path[-1], target)
-        while dist != 0 and len(path) < 32:
-            possibleCells = filter(lambda c: not c.block[MOVE], map.getNeighborhood(path[-1], shape=8))
-            closestCell = min(possibleCells, key = lambda c: Input.eucDist(target, c.pos))
-            if dist <= 1.5 and map.getTile(target).block[MOVE]:
-                break
-            if all(closestCell.pos == path[-1]):
-                break
-            path.append(closestCell.pos)
-            dist = Input.eucDist(path[-1], target)
-
-        for i in range(1, len(path)):
-            self.main.player.actions.append({'TYPE': 'MOVE', 'DIR': path[i] - path[i - 1]})
-
-        if interact:
-            self.main.player.actions.append({'TYPE': 'USE', 'DIR': target - path[-1]})
-
-
-    @staticmethod
-    def manDist(pos1, pos2):
-        return np.sum(np.abs(pos1 - pos2))
-
-    @staticmethod
-    def eucDist(pos1, pos2):
-        return np.linalg.norm(pos1 - pos2)
+        self.main.gui.messageOffset = max(0, self.main.gui.messageOffset)
+        self.main.gui.inventoryOffset = max(0, self.main.gui.inventoryOffset)

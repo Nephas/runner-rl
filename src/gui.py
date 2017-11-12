@@ -9,6 +9,8 @@ class Gui:
     def __init__(self, main):
         self.main = main
         self.mapOffset = np.array([0, 0])
+        self.messageOffset = 0
+        self.inventoryOffset = 0
         self.cursorPos = np.array([64, 64])
         self.cursorDir = np.array([1, 1])
         self.mapRectangle = Rectangle(self.mapOffset, 0, 0)
@@ -32,6 +34,7 @@ class Gui:
 
     def moveOffset(self, dir=np.array([0, 0])):
         self.mapOffset += dir
+        self.cursorPos += dir
         (panelX, panelY) = self.main.render.mapPanel.get_size()
         self.mapRectangle = Rectangle(self.mapOffset, panelX, panelY)
 
@@ -63,14 +66,21 @@ class Gui:
         for i, obj in enumerate(cursorTile.object):
             panel.draw_str(1, 7 + 2 * i, obj.describe(), obj.fg)
 
-        for i, item in enumerate(self.main.player.inventory):
-            panel.draw_str(1, 20 + 2 * i, item.describe(), item.fg)
+    def renderInventory(self, panel):
+        panel.clear(bg=COLOR['BLACK'])
+
+        for i, item in enumerate(self.main.player.inventory[self.inventoryOffset:]):
+            pos = 1 + 2 * i
+            if pos >= panel.height - 1:
+                break
+
+            panel.draw_str(1, pos, str(i) + ': ' + item.describe(), item.fg)
 
     def renderMessage(self, panel):
         panel.clear(bg=COLOR['BLACK'])
         pos = 0
 
-        for string, color in self.messages:
+        for string, color in self.messages[self.messageOffset:]:
             # line wrapping in list comprehension
             block = [string[i:i + panel.width - 2]
                      for i in range(0, len(string), panel.width - 2)]

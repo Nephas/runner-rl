@@ -31,7 +31,9 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.mapPanel = tdl.Window(
             self.console, self.MAPINSET[X], self.MAPINSET[Y], self.SEPARATOR[X] - 2, self.SEPARATOR[Y] - 2)
         self.infoPanel = tdl.Window(
-            self.console, self.SEPARATOR[X], 1, self.SCREEN[X] - self.SEPARATOR[X] - 1, self.SCREEN[Y] - 2)
+            self.console, self.SEPARATOR[X], self.SEPARATOR[Y], self.SCREEN[X] - self.SEPARATOR[X] - 1, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
+        self.inventoryPanel = tdl.Window(
+            self.console, self.SEPARATOR[X], 1, self.SCREEN[X] - self.SEPARATOR[X] - 1, self.SEPARATOR[Y] - 2)
         self.messagePanel = tdl.Window(
             self.console, self.MAPINSET[X], self.SEPARATOR[Y], self.SEPARATOR[X] - 2, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
 
@@ -43,12 +45,13 @@ class Render:  # a rectangle on the map. used to characterize a room.
     def renderStart(self):
         self.mapPanel.clear(bg=COLOR['BLACK'])
         self.infoPanel.clear(bg=COLOR['BLACK'])
+        self.inventoryPanel.clear(bg=COLOR['BLACK'])
         self.messagePanel.clear(bg=COLOR['BLACK'])
 
         self.mapPanel.draw_str(2, 2, "Generating Level")
 
-        self.console.blit(self.mapPanel, 1, 1)
-        self.console.blit(self.infoPanel, self.SEPARATOR[X], 1)
+#        self.console.blit(self.mapPanel, 1, 1)
+#        self.console.blit(self.infoPanel, self.SEPARATOR[X], 1)
 
         tdl.flush()
 
@@ -56,9 +59,11 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.renderMap(map, gui.mapOffset)
         gui.renderInfo(self.infoPanel)
         gui.renderMessage(self.messagePanel)
+        gui.renderInventory(self.inventoryPanel)
 
-        self.console.blit(self.mapPanel, 1, 1)
-        self.console.blit(self.infoPanel, self.SEPARATOR[WIDTH], 1)
+#        self.console.blit(self.mapPanel, 1, 1)
+#        self.console.blit(self.infoPanel, self.SEPARATOR[WIDTH], 1)
+#        self.console.blit(self.inventoryPanel, self.SEPARATOR[WIDTH], 1)
         tdl.flush()
 
     def renderMap(self, map, mapOffset):

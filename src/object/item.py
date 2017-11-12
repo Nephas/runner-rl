@@ -7,9 +7,7 @@ class Item(Object):
     def __init__(self, cell=None, carrier=None, char='i', color=COLOR['WHITE']):
         Object.__init__(self, cell, char=char, color=color)
 
-        self.carrier = None
-        if carrier is not None:
-            self.take(carrier)
+        self.carrier = carrier
 
     def interact(self, actor=None, dir=None, type=None):
         self.take(actor)
@@ -28,17 +26,22 @@ class Item(Object):
             self.carrier = None
 
     def use(self):
-        pass
+        self.carrier.main.gui.pushMessage('This Item has no use')
+        return 0
 
     def describe(self):
-        return "generic item"
+        return 'generic item'
 
 
 class Key(Item):
     def __init__(self, cell=None, carrier=None, tier=0):
-        Object.__init__(self, cell, char='$', color=TIERCOLOR[tier])
+        Item.__init__(self, cell, carrier, char='$', color=TIERCOLOR[tier])
 
         self.tier = tier
 
     def describe(self):
         return "Key ({:})".format(self.tier)
+
+    def use(self):
+        self.carrier.main.gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
+        return 0

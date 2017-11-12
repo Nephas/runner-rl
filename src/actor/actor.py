@@ -16,6 +16,7 @@ class Actor(Object):
 
         self.main = main
         self.actions = []
+        self.inventory = []
 
         self.block = [True, False]
         self.cooldown = 0
@@ -75,7 +76,7 @@ class Player(Actor):
 
         self.ai = None
         self.fg = [225, 150, 50]
-        self.inventory = [Item(), Key(tier=5)]
+        self.inventory = [Item(carrier=self), Key(carrier=self,tier=5), Key(carrier=self,tier=4), Key(carrier=self,tier=3)]
 
     def act(self, tileMap=None):
         if self.cooldown > 0:
@@ -85,6 +86,8 @@ class Player(Actor):
             if act['TYPE'] is 'MOVE':
                 dir = act['DIR']
                 self.cooldown += self.moveDir(act['DIR'])
+            elif act['TYPE'] is 'ITEM':
+                self.cooldown += self.inventory[act['INDEX']].use()
             elif act['TYPE'] in ['USE','ATTACK']:
                 dir = act['DIR']
                 self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
