@@ -51,9 +51,7 @@ class Input:
 
         elif event.key == 'SPACE' and len(self.main.player.actions) < 2:
             self.main.player.actions = []
-            ray = self.main.gui.cursorPos - self.main.player.cell.pos
-            dir = (ray / np.linalg.norm(ray)).round().astype('int')
-            self.main.player.actions.append({'TYPE': 'ATTACK', 'DIR': dir})
+            self.main.player.actions.append({'TYPE': 'ATTACK', 'DIR': self.main.gui.cursorDir})
 
         if event.key == 'CHAR':
             self.main.player.actions = []
