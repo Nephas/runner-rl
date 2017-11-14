@@ -148,7 +148,9 @@ class Cell:
         self.block = [False, False]
         self.vision = [False, False]
 
+        # contents
         self.object = []
+        self.effect = []
 
         # graphics attributes
         self.char = ' '
@@ -196,10 +198,11 @@ class Cell:
         self.char = ' '
 
     def updatePhysics(self):
-        self.block = [False, False]
         if self.wall:
-            self.block[MOVE] = True
-            self.block[LOS] = True
+            self.block = [True, True]
+        else:
+            self.block = [False, False]
+
         for obj in self.object:
             if obj.block[MOVE]:
                 self.block[MOVE] = True
