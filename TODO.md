@@ -1,3 +1,13 @@
+Fog Object:
+    + Spawn adjacent Fog Objects
+    + Decay timer
+    + block LOS or dim light
+
+Dialogue Trees:
+    + write to Message log
+    + attached to AI state
+    + can change AI state
+
 Corporate Generator:
     + Names:
         * Tyrell
