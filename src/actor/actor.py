@@ -3,7 +3,8 @@ from src.globals import *
 from src.object.object import Object, Effect
 from src.object.item import Item, Key
 
-from src.actor.ai import AI, Idle
+from src.actor.ai import AI, Idle, Waiting
+from src.gui import Gui
 
 import random as rd
 
@@ -45,7 +46,7 @@ class Actor(Object):
         self.cell.object.remove(self)
         self.main.actor.remove(self)
         Corpse(self.cell, self)
-        self.main.gui.pushMessage(self.describe() + " dies")
+        Gui.pushMessage(self.describe() + " dies")
 
     def interactDir(self, map, dir, type=None):
         if map.contains(self.cell.pos + dir):
@@ -68,7 +69,6 @@ class Actor(Object):
             elif act['TYPE'] in ['USE','ATTACK']:
                 dir = act['DIR']
                 self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
-
 
 class Player(Actor):
     def __init__(self, cell=None, main=None):
@@ -123,6 +123,17 @@ class NPC(Actor):
 
         elif len(self.actions) == 0:
             self.actions = self.ai.decide(map)
+
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.die()
+            return 10
+        elif type is 'USE':
+            Gui.pushMessage('Hi, how are you?',(50,255,50))
+            self.ai = Waiting(self)
+            return 5
+        else:
+            return 0
 
     def describe(self):
         return "Someone" + self.ai.describe()

@@ -17,9 +17,15 @@ class Input:
                'y': np.array([-1, 1]),
                'c': np.array([1, 1])}
 
+    OFFSETMAP = {'UP': np.array([0, -3]),
+                 'DOWN': np.array([0, 3]),
+                 'LEFT': np.array([-3, 0]),
+                 'RIGHT': np.array([3, 0])}
+
     def __init__(self, main):
         self.main = main
         self.quit = False
+        self.debug = False
 
     def handleEvents(self):
         try:
@@ -40,28 +46,26 @@ class Input:
     def handleKey(self, event):
         if event.key == 'ESCAPE':
             self.quit = True
-        elif event.key == 'UP':
-            self.main.gui.moveOffset(np.array([0, -3]))
-        elif event.key == 'DOWN':
-            self.main.gui.moveOffset(np.array([0, 3]))
-        elif event.key == 'LEFT':
-            self.main.gui.moveOffset(np.array([-3, 0]))
-        elif event.key == 'RIGHT':
-            self.main.gui.moveOffset(np.array([3, 0]))
+
+        elif event.key in Input.OFFSETMAP:
+            self.main.gui.moveOffset(Input.OFFSETMAP[event.key])
 
         elif event.key == 'SPACE' and len(self.main.player.actions) < 2:
             self.main.player.actions = []
             self.main.player.actions.append({'TYPE': 'ATTACK', 'DIR': self.main.gui.cursorDir})
 
-        if event.key == 'CHAR':
+        elif event.key == 'CHAR':
             self.main.player.actions = []
             if event.char == 'r':
                 self.main.gui.pushMessage("Waiting")
                 self.main.player.cooldown += 2
+            if event.char == 't':
+                print('entering debug mode')
+                self.debug = True
             if event.char == 'm':
                 self.main.gui.pushMessage("Switching Map")
                 self.main.render.mapLayer = (self.main.render.mapLayer + 1) % 3
-            if event.char in "wasdqeyc" and len(self.main.player.actions) < 2:
+            if event.char in Input.MOVEMAP and len(self.main.player.actions) < 2:
                 self.main.player.actions.append({'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[event.char]})
 
         if event.key == 'TEXT':

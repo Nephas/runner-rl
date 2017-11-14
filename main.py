@@ -18,12 +18,12 @@ class Game:
 
     def __init__(self):
         self.player = None
-        self.actor = []
-        self.object = []
         self.render = Render(self)
         self.input = Input(self)
         self.gui = Gui(self)
         self.map = Level(self)
+
+        self.actor = []
 
         self.lastTic = t.time()
         self.tic = 0
@@ -32,13 +32,7 @@ class Game:
         tdl.setFPS(self.LIMIT_FPS)
         self.render.renderStart()
 
-        stats = {'DEADENDS': -1, 'VENTS': - 1}
-        while stats['VENTS'] < 5 or stats['ROOMS'] < 10:
-            self.map = Level(self)
-            stats = self.map.generate()
-            print(stats)
-
-        self.map.finalize()
+        self.map.generate('Evil-Corp')
 
         self.gui.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
         self.gui.updateCursor()
@@ -46,8 +40,13 @@ class Game:
         self.map.updateRender()
 
     def run(self):
+        self.input.debug = False
+        self.input.quit = False
+
         while True:
-            if tdl.event.isWindowClosed() or game.input.quit:
+            if self.input.debug:
+                break
+            if tdl.event.isWindowClosed() or self.input.quit:
                 sys.exit()
             if t.time() >= self.TIC_SIZE + self.lastTic:
                 self.map.updatePhysics()

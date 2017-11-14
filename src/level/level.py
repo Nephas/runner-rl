@@ -33,7 +33,8 @@ class Level(Map):
 
     def contains(self, target):
         """Returns whether the target is fully contained inside the map, excluding the forbidden regions.
-        Takes 2D pos lists and Rectangle objects"""
+        Takes 2D pos lists and Rectangle objects
+        """
         if target.__class__.__name__ in ['Rectangle', 'Room']:
             for rect in self.forbidden:
                 if target.intersects(rect):
@@ -50,12 +51,22 @@ class Level(Map):
             for room in tier:
                 yield room
 
-    def generate(self):
+    def generate(self, seed):
+        rd.seed(seed)
+
         self.generateShape()
         self.generateStart()
-        self.generateRooms()
-        self.generateVents()
-        return self.countMetrics()
+
+        stats = {'DEADENDS': -1, 'VENTS': - 1}
+        while stats['VENTS'] < 5 or stats['ROOMS'] < 10:
+            self.map = Level(self)
+            self.generateRooms()
+            self.generateVents()
+
+            stats = self.countMetrics()
+            print(stats)
+
+        self.finalize()
 
     def generateShape(self):
         shape = rd.choice(['CROSS', 'CORNER', 'RING', 'DUAL'])
@@ -93,8 +104,7 @@ class Level(Map):
                 break
 
     def generateRooms(self):
-        """Propagate every single room according to the N_CHILD and ROOM_SIZE specifications. If a corridor produces
-        a dead end, generation breaks."""
+        """Propagate every single room according to the N_CHILD and ROOM_SIZE specifications."""
         # recursively spread room
         Render.printImage(self, "gif/levelgen{:02}.bmp".format(0))
 
@@ -147,11 +157,11 @@ class Level(Map):
             room.generateContent(self)
 
         # connect terminals
-        # for pair in it.combinations(self.getAll(Server) + self.getAll(Terminal), 2):
-        #     if rd.randint(0, 2) <= 2:
-        #         if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
-        #             pair[0].connect(pair[1])
-        #             self.layCable(pair[0].cell.pos, pair[1].cell.pos)
+        for pair in it.combinations(self.getAll(Server) + self.getAll(Terminal), 2):
+            if rd.randint(0, 2) <= 2:
+                if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
+                    pair[0].connect(pair[1])
+                    self.layCable(pair[0].cell.pos, pair[1].cell.pos)
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
@@ -249,6 +259,9 @@ class Level(Map):
         return True
 
     def getConnection(self, pos1, pos2, horizontal=True):
+        """Returns a list of position coorinates in a right-angled connection between two points. The third argument
+        states whether the connection starts in horizontal or vertical direction.
+        """
         if horizontal:            # horizontal first:
             return [[x, pos1[Y]] for x in range(min(pos1[X], pos2[X]), max(
                 pos1[X], pos2[X]) + 1)] + [[pos2[X], y] for y in range(min(pos1[Y], pos2[Y]), max(pos1[Y], pos2[Y]) + 1)]

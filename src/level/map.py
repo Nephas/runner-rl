@@ -5,15 +5,14 @@ import numpy as np
 import random as rd
 import itertools as it
 
+from src.render import Render
 
 class Map:
     WIDTH = 128
     HEIGHT = 128
 
+    FOVMAP = Render.rayMap(24, 96)
     FOV_NEIGHBORHOOD = np.array([[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]])
-#    FOV_NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
-#    FOV_NEIGHBORHOOD = np.array([[0,1],[1,0],[0,-1],[-1,0]])
-
 
     PHYSICSRANGE = np.array([24, 24])
 
@@ -79,7 +78,7 @@ class Map:
             blockIndex = 0
             blockPoint = [0, 0]
 
-            for baseLine in self.main.render.raymap:
+            for baseLine in self.FOVMAP:
                 if not all(baseLine[blockIndex] == blockPoint):
                     line = baseLine + pos
                     for i, point in enumerate(line):
@@ -150,7 +149,6 @@ class Cell:
         self.vision = [False, False]
 
         self.object = []
-        self.effect = None
 
         # graphics attributes
         self.char = ' '

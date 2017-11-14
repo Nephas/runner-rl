@@ -1,6 +1,7 @@
 from src.globals import *
 
 from src.object.object import Object
+from src.gui import Gui
 
 
 class Item(Object):
@@ -10,6 +11,7 @@ class Item(Object):
         self.carrier = carrier
 
     def interact(self, actor=None, dir=None, type=None):
+        Gui.pushMessage('You pickup ' + self.describe(), self.fg)
         self.take(actor)
         return 1
 
@@ -26,7 +28,7 @@ class Item(Object):
             self.carrier = None
 
     def use(self):
-        self.carrier.main.gui.pushMessage('This Item has no use')
+        Gui.pushMessage('This Item has no use')
         return 0
 
     def describe(self):
@@ -43,5 +45,5 @@ class Key(Item):
         return "Key ({:})".format(self.tier)
 
     def use(self):
-        self.carrier.main.gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
+        Gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
         return 0

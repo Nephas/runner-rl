@@ -2,6 +2,7 @@ from src.globals import *
 
 from src.object.object import Object
 from src.object.item import Key
+from src.gui import Gui
 
 
 class Vent(Object):
@@ -73,9 +74,9 @@ class SecDoor(Door):
     def authorize(self, actor):
         for item in actor.inventory:
             if isinstance(item, Key) and item.tier == self.tier:
-                actor.main.gui.pushMessage("Access granted")
+                Gui.pushMessage("Access granted")
                 return True
-        actor.main.gui.pushMessage("Access denied", COLOR['RED'])
+        Gui.pushMessage("Access denied", COLOR['RED'])
         return False
 
     def interact(self, actor=None, dir=None, type=None):

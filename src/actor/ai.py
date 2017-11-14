@@ -69,4 +69,22 @@ class Idle(AI):
                 return AI.findPath(map, self.actor.cell.pos, self.room.randomSpot(2))
 
     def describe(self):
-        return "(Idle)"
+        return " (Idle) "
+
+
+class Waiting(AI):
+    def __init__(self, actor, time=32):
+        AI.__init__(self, actor)
+
+        self.state = 'WAIT'
+        self.counter = time
+
+    def decide(self, map):
+        if self.counter > 0:
+            self.counter -= 1
+        else:
+            self.actor.ai = Idle(self.actor)
+        return []
+
+    def describe(self):
+        return " (Waiting) "

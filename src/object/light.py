@@ -4,7 +4,7 @@ import random as rd
 
 from src.object.object import Object
 from src.render import Render
-
+from src.gui import Gui
 
 class Lamp(Object):
     def __init__(self, cell=None, brightness=12):
@@ -34,6 +34,7 @@ class Lamp(Object):
             self.destroy()
             return 5
         else:
+            Gui.pushMessage('You switch the ' + self.describe())
             self.on = not self.on
             return 3
 

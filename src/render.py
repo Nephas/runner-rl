@@ -6,7 +6,6 @@ import tdl
 import tcod
 import time as t
 
-
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
     TILESET = 'experimental_12x16.png'
@@ -18,29 +17,21 @@ class Render:  # a rectangle on the map. used to characterize a room.
     def __init__(self, main):
         self.main = main
 
-        tdl.set_font(Render.GRAPHICSPATH + Render.TILESET,
-                     greyscale=True)
+        tdl.set_font(Render.GRAPHICSPATH + Render.TILESET, greyscale=True)
 
-        self.console = tdl.init(
-            self.SCREEN[X], self.SCREEN[Y], title="RunnerRL", fullscreen=False)
+        self.console = tdl.init(*self.SCREEN, title="RunnerRL", fullscreen=False)
         self.console.clear(bg=[25, 25, 25])
 
-        self.back = tdl.Window(self.console, 0, 0, None, None)
-        self.back.clear(bg=[25, 25, 25])
-
         self.mapPanel = tdl.Window(
-            self.console, self.MAPINSET[X], self.MAPINSET[Y], self.SEPARATOR[X] - 2, self.SEPARATOR[Y] - 2)
+            self.console, self.MAPINSET[X], self.MAPINSET[Y], *(self.SEPARATOR - np.array([2,2])) )
         self.infoPanel = tdl.Window(
-            self.console, self.SEPARATOR[X], self.SEPARATOR[Y], self.SCREEN[X] - self.SEPARATOR[X] - 1, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
+            self.console, self.SEPARATOR[X], self.SEPARATOR[Y], *(self.SCREEN - self.SEPARATOR - np.array([1,1])) )
         self.inventoryPanel = tdl.Window(
             self.console, self.SEPARATOR[X], 1, self.SCREEN[X] - self.SEPARATOR[X] - 1, self.SEPARATOR[Y] - 2)
         self.messagePanel = tdl.Window(
             self.console, self.MAPINSET[X], self.SEPARATOR[Y], self.SEPARATOR[X] - 2, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
 
         self.mapLayer = 0
-
-        self.raymap = Render.rayMap(24, 96)
-        self.lightmap = Render.rayMap(8, 32)
 
     def renderStart(self):
         self.mapPanel.clear(bg=COLOR['BLACK'])
@@ -50,41 +41,35 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
         self.mapPanel.draw_str(2, 2, "Generating Level")
 
-#        self.console.blit(self.mapPanel, 1, 1)
-#        self.console.blit(self.infoPanel, self.SEPARATOR[X], 1)
-
         tdl.flush()
 
     def renderAll(self, map, gui):
-        self.renderMap(map, gui.mapOffset)
+        self.renderMap(map, gui)
         gui.renderInfo(self.infoPanel)
         gui.renderMessage(self.messagePanel)
         gui.renderInventory(self.inventoryPanel)
 
-#        self.console.blit(self.mapPanel, 1, 1)
-#        self.console.blit(self.infoPanel, self.SEPARATOR[WIDTH], 1)
-#        self.console.blit(self.inventoryPanel, self.SEPARATOR[WIDTH], 1)
         tdl.flush()
 
-    def renderMap(self, map, mapOffset):
+    def renderMap(self, map, gui):
         self.mapPanel.clear(bg=COLOR['BLACK'])
 
         if self.mapLayer == 0:
-            for cell in self.main.gui.getCells(map):
-                cell.drawMap(self.mapPanel, cell.pos - mapOffset)
+            for cell in gui.getCells(map):
+                cell.drawMap(self.mapPanel, cell.pos - gui.mapOffset)
         elif self.mapLayer == 1:
-            for cell in self.main.gui.getCells(map):
-                cell.drawNet(self.mapPanel, cell.pos - mapOffset)
+            for cell in gui.getCells(map):
+                cell.drawNet(self.mapPanel, cell.pos - gui.mapOffset)
 
         try:
-            cell = map.getTile(self.main.player.cell.pos + self.main.gui.cursorDir)
-            cursorPos = cell.pos - mapOffset
+            cell = map.getTile(self.main.player.cell.pos + gui.cursorDir)
+            cursorPos = cell.pos - gui.mapOffset
             cell.drawHighlight(self.mapPanel, cursorPos)
 
-            cell = map.getTile(self.main.gui.cursorPos)
-            cursorPos = cell.pos - mapOffset
+            cell = map.getTile(gui.cursorPos)
+            cursorPos = cell.pos - gui.mapOffset
             cell.drawHighlight(self.mapPanel, cursorPos)
-        except AssertionError:
+        except AssertionError, IndexError:
             pass
 
     @staticmethod
@@ -102,11 +87,11 @@ class Render:  # a rectangle on the map. used to characterize a room.
         direction = delta / np.linalg.norm(delta)
         line = []
 
-        ray = 0.25 * direction
+        ray = 0.1 * direction
         while np.linalg.norm(ray) <= np.linalg.norm(delta):
             if len(line) == 0 or np.linalg.norm(line[-1] - ray.round().astype('int')) != 0:
                 line.append(ray.round().astype('int'))
-            ray += 0.25 * direction
+            ray += 0.1 * direction
         return np.array(line)
 
     @staticmethod

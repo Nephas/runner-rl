@@ -6,6 +6,10 @@ from src.level.map import Map, Rectangle
 
 
 class Gui:
+    MESSAGES = [
+            ('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
+
+
     def __init__(self, main):
         self.main = main
         self.mapOffset = np.array([0, 0])
@@ -15,15 +19,17 @@ class Gui:
         self.cursorDir = np.array([1, 1])
         self.mapRectangle = Rectangle(self.mapOffset, 0, 0)
 
-        self.messages = [
-            ('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
+    @staticmethod
+    def pushMessage(string, color=COLOR['WHITE']):
+        if not Gui.MESSAGES[0][0] == string:
+            Gui.MESSAGES.insert(0, (string, color))
 
     def updateCursor(self, terminalPos=np.array([8, 8])):
         if not Render.inMap(terminalPos):
             return
 
         mapPos = np.array(terminalPos) + self.mapOffset - \
-            self.main.render.MAPINSET
+            Render.MAPINSET
         if self.main.map.contains(mapPos):
             self.cursorPos = mapPos
 
@@ -40,9 +46,6 @@ class Gui:
 
     def getCells(self, map):
         return self.mapRectangle.getCells(map)
-
-    def pushMessage(self, string, color=COLOR['WHITE']):
-        self.messages.insert(0, (string, color))
 
     def renderInfo(self, panel):
         panel.clear(bg=COLOR['BLACK'])
@@ -80,7 +83,7 @@ class Gui:
         panel.clear(bg=COLOR['BLACK'])
         pos = 0
 
-        for string, color in self.messages[self.messageOffset:]:
+        for string, color in Gui.MESSAGES[self.messageOffset:]:
             # line wrapping in list comprehension
             block = [string[i:i + panel.width - 2]
                      for i in range(0, len(string), panel.width - 2)]

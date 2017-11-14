@@ -3,7 +3,7 @@ from src.globals import *
 import random as rd
 
 from src.render import Render
-
+from src.gui import Gui
 
 class Object(object):
     def __init__(self, cell=None, char=None, color=COLOR['WHITE']):
@@ -40,6 +40,7 @@ class Object(object):
         pass
 
     def destroy(self):
+        Gui.pushMessage('The ' + self.describe() + ' is destroyed')
         self.cell.object.remove(self)
         Debris(self.cell, self)
 
@@ -88,10 +89,14 @@ class Obstacle(Object):
         self.block = [True, True]
 
     def interact(self, actor=None, dir=None, type=None):
+        oldCell = self.cell
+
         if type is 'ATTACK':
             self.destroy()
             return 5
         elif self.moveDir(dir):
+            Gui.pushMessage('You push the ' + self.describe())
+            oldCell.updatePhysics()
             actor.moveDir(dir)
             return 3
         else:
