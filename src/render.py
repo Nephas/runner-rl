@@ -69,7 +69,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
             cell = map.getTile(gui.cursorPos)
             cursorPos = cell.pos - gui.mapOffset
             cell.drawHighlight(self.mapPanel, cursorPos)
-        except AssertionError, IndexError:
+        except:
             pass
 
     @staticmethod

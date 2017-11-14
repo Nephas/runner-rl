@@ -1,6 +1,6 @@
 from src.globals import *
 
-from src.object.object import Object
+from src.object.object import Object, Fog
 from src.gui import Gui
 
 
@@ -33,6 +33,18 @@ class Item(Object):
 
     def describe(self):
         return 'generic item'
+
+class FogCloak(Item):
+    def __init__(self, cell=None, carrier=None):
+        Item.__init__(self, cell, carrier, char='*')
+
+    def use(self):
+        Gui.pushMessage('You release a Gas grenade')
+        self.carrier.cell.addEffect(Fog())
+        return 3
+
+    def describe(self):
+        return 'Fog Cloak'
 
 
 class Key(Item):

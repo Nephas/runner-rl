@@ -1,7 +1,7 @@
 from src.globals import *
 
 from src.object.object import Object, Effect
-from src.object.item import Item, Key
+from src.object.item import Item, Key, FogCloak
 
 from src.actor.ai import AI, Idle, Waiting
 from src.gui import Gui
@@ -52,7 +52,7 @@ class Actor(Object):
         if map.contains(self.cell.pos + dir):
             tile = map.getTile(self.cell.pos + dir)
             if type is 'ATTACK':
-                tile.addObject(Effect(char='X', color=self.fg, time=2))
+                tile.addEffect(Effect(char='X', time=2))
 
             if len(tile.object) > 0:
                 return tile.object[0].interact(self, dir, type)
@@ -76,7 +76,7 @@ class Player(Actor):
 
         self.ai = None
         self.fg = [225, 150, 50]
-        self.inventory = [Item(carrier=self), Key(carrier=self,tier=5), Key(carrier=self,tier=4), Key(carrier=self,tier=3)]
+        self.inventory = [FogCloak(carrier=self), Key(carrier=self,tier=5), Key(carrier=self,tier=4), Key(carrier=self,tier=3)]
 
     def act(self, tileMap=None):
         if self.cooldown > 0:

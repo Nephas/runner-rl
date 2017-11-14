@@ -72,9 +72,10 @@ class Map:
         return pos[X] in range(0, Map.WIDTH) and pos[Y] in range(0, Map.HEIGHT)
 
     def castFov(self, pos):
-        try:
-            self.getTile(pos).vision = [True, True]
+        for cell in self.getTile(pos).getNeighborhood(shape=8):
+            cell.vision = [True, True]
 
+        try:
             blockIndex = 0
             blockPoint = [0, 0]
 
@@ -161,6 +162,10 @@ class Cell:
         self.object.append(obj)
         obj.cell = self
 
+    def addEffect(self, eff):
+        self.effect.append(eff)
+        eff.cell = self
+
     def isEmpty(self):
         return self.object == [] and not self.wall
 
@@ -181,9 +186,15 @@ class Cell:
         self.bg = tuple(self.light * TIERCOLOR[self.tier] / MAX_LIGHT)
         self.char = ' '
 
-        for object in self.object:
-            self.char = object.char
-            self.fg = object.fg
+        for obj in self.object + self.effect:
+            try:
+                self.char = obj.char
+                self.fg = obj.fg
+                self.bg = obj.bg
+            except AttributeError:
+                pass
+
+
 
     def makeWall(self):
         self.object = []
@@ -197,13 +208,22 @@ class Cell:
         self.block = [False, False]
         self.char = ' '
 
+    def getNeighborhood(self, shape=4):
+        if shape == 4:
+            offsets = np.array([[0, -1], [1, 0], [0, 1], [-1, 0]])
+        if shape == 8:
+            offsets = [np.array([i, j]) for i in [-1, 0, 1]
+                       for j in [-1, 0, 1]]
+        positions = map(lambda off: off + self.pos, offsets)
+        return map(lambda p: self.map.getTile(p), positions)
+
     def updatePhysics(self):
         if self.wall:
             self.block = [True, True]
         else:
             self.block = [False, False]
 
-        for obj in self.object:
+        for obj in self.object + self.effect:
             if obj.block[MOVE]:
                 self.block[MOVE] = True
             if obj.block[LOS]:
