@@ -65,9 +65,10 @@ class Gui:
         for i in range(int(float(self.main.player.cell.light) / MAX_LIGHT * 6)):
             panel.draw_char(1 + i, 3, 15)
 
-        cursorTile = self.main.map.getTile(self.cursorPos)
-        for i, obj in enumerate(cursorTile.object):
-            panel.draw_str(1, 7 + 2 * i, obj.describe(), obj.fg)
+        if self.main.map.contains(self.cursorPos):
+            cursorTile = self.main.map.getTile(self.cursorPos)
+            for i, obj in enumerate(cursorTile.object + cursorTile.effect):
+                panel.draw_str(1, 7 + 2 * i, obj.describe(), obj.fg)
 
     def renderInventory(self, panel):
         panel.clear(bg=COLOR['BLACK'])

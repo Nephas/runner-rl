@@ -1,7 +1,8 @@
 from src.globals import *
 
-from src.object.object import Object, Effect
-from src.object.item import Item, Key, FogCloak
+from src.object.object import Object
+from src.object.item import Item, Key, FogCloak, Canister, Lighter
+from src.effect.effect import Effect
 
 from src.actor.ai import AI, Idle, Waiting
 from src.gui import Gui
@@ -42,6 +43,9 @@ class Actor(Object):
         else:
             return 0
 
+    def destroy(self):
+        self.die()
+
     def die(self):
         self.cell.object.remove(self)
         self.main.actor.remove(self)
@@ -76,7 +80,8 @@ class Player(Actor):
 
         self.ai = None
         self.fg = [225, 150, 50]
-        self.inventory = [FogCloak(carrier=self), Key(carrier=self,tier=5), Key(carrier=self,tier=4), Key(carrier=self,tier=3)]
+        self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Lighter(carrier=self),
+                          Key(carrier=self,tier=5), Key(carrier=self,tier=4), Key(carrier=self,tier=3)]
 
     def act(self, tileMap=None):
         if self.cooldown > 0:
@@ -144,6 +149,7 @@ class Corpse(Object):
         Object.__init__(self, cell, char='%', color=(150, 150, 150))
 
         self.actor = actor
+        self.flammable = -1
 
     def interact(self, actor, dir, type):
         self.moveDir(dir)

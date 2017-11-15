@@ -1,7 +1,7 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.effect.effect import Fog, Fluid, Fire
+from src.effect.effect import Fog, Fluid
 from src.gui import Gui
 
 
@@ -41,7 +41,7 @@ class FogCloak(Item):
 
     def use(self):
         Gui.pushMessage('You release a Gas grenade')
-        self.carrier.cell.addEffect(Fog(amount=16))
+        self.carrier.cell.addEffect(Fog())
         return 3
 
     def describe(self):
@@ -53,23 +53,11 @@ class Canister(Item):
 
     def use(self):
         Gui.pushMessage('You empty the canister')
-        self.carrier.cell.addEffect(Fluid(amount=8))
+        self.carrier.cell.addEffect(Fluid(depth=8))
         return 3
 
     def describe(self):
         return 'Canister'
-
-class Lighter(Item):
-    def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, char=';')
-
-    def use(self):
-        Gui.pushMessage('You light a Fire')
-        self.carrier.cell.addEffect(Fire(amount=2))
-        return 3
-
-    def describe(self):
-        return 'Lighter'
 
 class Key(Item):
     def __init__(self, cell=None, carrier=None, tier=0):

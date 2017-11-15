@@ -6,7 +6,7 @@ import random as rd
 import copy as cp
 import itertools as it
 
-from src.object.object import Object, Obstacle
+from src.object.object import Object, Obstacle, Barrel
 from src.object.server import Terminal, Server
 from src.object.light import Lamp, FlickerLamp, SpotLight
 from src.object.door import Vent, SecDoor, AutoDoor
@@ -117,7 +117,8 @@ class Room(Rectangle):
 
         NPC(map.getTile(self.randomSpot(3)), map.main)
 
-        self.scatter(map, Obstacle(), rd.randint(1, 5))
+        self.scatter(map, Obstacle(), rd.randint(0, 1))
+        self.scatter(map, Barrel(), rd.randint(1, 2))
         self.scatter(map, Key(tier=rd.randint(3, 5)), rd.randint(0, 1))
 
     def randomSpot(self, margin=1):
@@ -132,14 +133,14 @@ class Room(Rectangle):
         while i < n:
             cell = map.getTile(self.randomSpot())
             if cell.isEmpty():
-                cell.addObject(cp.copy(obj))
+                cell.addObject(cp.deepcopy(obj))
                 i += 1
 
     def cluster(self, map, pos, obj, n = 0):
         if n > 0:
             cell = map.getTile(pos)
             if cell.isEmpty():
-                cell.addObject(cp.copy(obj))
+                cell.addObject(cp.deepcopy(obj))
                 n -= 1
             self.cluster(map, rd.choice(map.getNeighborhood(pos)).pos, obj, n)
 
@@ -223,7 +224,7 @@ class Dome(Room):
                     map.tile[x][y].addObject(Lamp())
 
         for i in range(rd.randint(4,8)):
-            self.cluster(map, self.randomSpot(3), Obstacle(), rd.randint(2,12))
+            self.cluster(map, self.randomSpot(3), rd.choice([Barrel(), Obstacle()]), rd.randint(2,12))
 
     def carve(self, map):
         # create a boundary wall

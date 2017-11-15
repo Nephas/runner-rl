@@ -162,9 +162,13 @@ class Cell:
         self.object.append(obj)
         obj.cell = self
 
-    def addEffect(self, eff):
-        self.effect.append(eff)
-        eff.cell = self
+    def addEffect(self, newEffect):
+        for eff in self.effect:
+            if eff.__class__ is newEffect.__class__:
+                eff.stack(newEffect)
+                return
+        self.effect.append(newEffect)
+        newEffect.cell = self
 
     def isEmpty(self):
         return self.object == [] and not self.wall
@@ -186,15 +190,12 @@ class Cell:
         self.bg = tuple(self.light * TIERCOLOR[self.tier] / MAX_LIGHT)
         self.char = ' '
 
-        for obj in self.object + self.effect:
-            try:
-                self.char = obj.char
-                self.fg = obj.fg
-                self.bg = obj.bg
-            except AttributeError:
-                pass
-
-
+        try:
+            obj = max(self.object + self.effect, key = lambda obj: obj.priority)
+            self.char = obj.char
+            self.fg = obj.fg
+        except ValueError:
+            pass
 
     def makeWall(self):
         self.object = []
