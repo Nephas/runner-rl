@@ -20,7 +20,7 @@ class Actor(Object):
         self.actions = []
         self.inventory = []
 
-        self.block = [True, False]
+        self.block = [True, False, False]
         self.cooldown = 0
         self.main.actor.append(self)
 
@@ -29,10 +29,10 @@ class Actor(Object):
     def describe(self):
         return "Someone"
 
-    def moveDir(self, dir):
+    def moveDir(self, dir, speed=1):
         targetPos = self.cell.pos + dir
         if self.moveTo(targetPos):
-            return np.abs(dir[X]) + np.abs(dir[Y]) + 1
+            return np.abs(dir[X]) + np.abs(dir[Y]) + 2 - speed
         else:
             return 0
 
@@ -74,6 +74,7 @@ class Actor(Object):
                 dir = act['DIR']
                 self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
 
+
 class Player(Actor):
     def __init__(self, cell=None, main=None):
         Actor.__init__(self, cell, main, char='@')
@@ -92,7 +93,7 @@ class Player(Actor):
                 dir = act['DIR']
                 self.cooldown += self.moveDir(act['DIR'])
             elif act['TYPE'] is 'ITEM':
-                self.cooldown += self.inventory[act['INDEX']].use()
+                self.cooldown += self.inventory[act['INDEX']].use(act['DIR'])
             elif act['TYPE'] in ['USE','ATTACK']:
                 dir = act['DIR']
                 self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])

@@ -30,45 +30,57 @@ class Render:  # a rectangle on the map. used to characterize a room.
             self.console, self.SEPARATOR[X], 1, self.SCREEN[X] - self.SEPARATOR[X] - 1, self.SEPARATOR[Y] - 2)
         self.messagePanel = tdl.Window(
             self.console, self.MAPINSET[X], self.SEPARATOR[Y], self.SEPARATOR[X] - 2, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
+        self.helpPanel = tdl.Window(
+            self.console, self.MAPINSET[X], self.MAPINSET[Y], self.SEPARATOR[X] - 2, self.SCREEN[Y] - 2)
 
         self.mapLayer = 0
 
     def renderStart(self):
-        self.mapPanel.clear(bg=COLOR['BLACK'])
+        self.helpPanel.clear(bg=COLOR['BLACK'])
         self.infoPanel.clear(bg=COLOR['BLACK'])
         self.inventoryPanel.clear(bg=COLOR['BLACK'])
         self.messagePanel.clear(bg=COLOR['BLACK'])
 
-        self.mapPanel.draw_str(2, 2, "Generating Level")
+        self.helpPanel.draw_str(1, 1, "===== Generating Level =====")
 
         tdl.flush()
 
     def renderAll(self, map, gui):
-        self.renderMap(map, gui)
+        self.console.clear(bg=[25, 25, 25])
+
         gui.renderInfo(self.infoPanel)
-        gui.renderMessage(self.messagePanel)
         gui.renderInventory(self.inventoryPanel)
+
+        if self.main.input.help != 0:
+            gui.renderHelp(self.helpPanel, self.main.input.help)
+
+            self.console.blit(self.helpPanel, *self.MAPINSET)
+        else:
+            gui.renderMessage(self.messagePanel)
+            self.renderMap(self.mapPanel, map, gui)
+
+            self.console.blit(self.mapPanel, *self.MAPINSET)
 
         tdl.flush()
 
-    def renderMap(self, map, gui):
-        self.mapPanel.clear(bg=COLOR['BLACK'])
+    def renderMap(self, panel, map, gui):
+        panel.clear(bg=COLOR['BLACK'])
 
         if self.mapLayer == 0:
             for cell in gui.getCells(map):
-                cell.drawMap(self.mapPanel, cell.pos - gui.mapOffset)
+                cell.drawMap(panel, cell.pos - gui.mapOffset)
         elif self.mapLayer == 1:
             for cell in gui.getCells(map):
-                cell.drawNet(self.mapPanel, cell.pos - gui.mapOffset)
+                cell.drawNet(panel, cell.pos - gui.mapOffset)
 
         try:
             cell = map.getTile(self.main.player.cell.pos + gui.cursorDir)
             cursorPos = cell.pos - gui.mapOffset
-            cell.drawHighlight(self.mapPanel, cursorPos)
+            cell.drawHighlight(panel, cursorPos)
 
             cell = map.getTile(gui.cursorPos)
             cursorPos = cell.pos - gui.mapOffset
-            cell.drawHighlight(self.mapPanel, cursorPos)
+            cell.drawHighlight(panel, cursorPos)
         except:
             pass
 

@@ -3,19 +3,22 @@ import time as t
 
 X = 0
 Y = 1
+
 MIN = 0
 MAX = 1
+
 UP = 0
 RIGHT = 1
 DOWN = 2
 LEFT = 3
+
 MOVE = 0
 EXP = 0
 LOS = 1
+LIGHT = 2
+
 WIDTH = 0
 HEIGHT = 1
-
-NEIGHBORHOOD = [np.array([i, j]) for i in [-1, 0, 1] for j in [-1, 0, 1]]
 
 MAX_LIGHT = 16
 BASE_LIGHT = 2
@@ -23,6 +26,7 @@ BASE_LIGHT = 2
 COLOR = {'BLACK': (0, 0, 0),
          'WHITE': (255, 255, 255),
          'RED'	: (255, 0, 0),
+         'FIRE'	: (255, 128, 0),
          'LIME'	: (0, 255, 0),
          'BLUE'	: (0, 0, 255),
          'YELLOW': (255, 255, 0),

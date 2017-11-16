@@ -7,7 +7,7 @@ import copy as cp
 import itertools as it
 
 from src.level.map import Map, Rectangle
-from src.level.room import Room
+from src.level.room import Room, BossRoom
 
 from src.object.object import Object, Obstacle
 from src.object.server import Terminal, Server
@@ -23,7 +23,7 @@ class Level(Map):
     ROOM_SIZE = [[10, 20], [5, 15], [20, 40], [20, 30], [10, 20], [7, 15]]
     N_CHILD = [[0, 0], [1, 1], [2, 4], [2, 4], [3, 4], [4, 6]]
     ROOM_TYPE = [['Room'], ['Corridor'], ['Corridor'], [
-        'Corridor', 'Dome', 'Hall'], ['Corridor', 'Room'], ['Room']]
+        'Corridor', 'Dome', 'Hall'], ['Corridor', 'Room'], ['Office']]
 
     def __init__(self, main=None):
         Map.__init__(self, main)
@@ -35,7 +35,7 @@ class Level(Map):
         """Returns whether the target is fully contained inside the map, excluding the forbidden regions.
         Takes 2D pos lists and Rectangle objects
         """
-        if target.__class__.__name__ in ['Rectangle', 'Room']:
+        if target.__class__.__name__ in ['Rectangle', 'BossRoom', 'Room']:
             for rect in self.forbidden:
                 if target.intersects(rect):
                     return False
@@ -97,7 +97,7 @@ class Level(Map):
         while True:
             pos = [rd.randint(margin, Map.WIDTH - w - margin),
                    rd.randint(margin, Map.HEIGHT - h - margin)]
-            start = Room(0, None, pos, w, h)
+            start = BossRoom(0, None, pos, w, h)
             if self.contains(start):
                 self.tier[0].append(start)
                 start.carve(self)

@@ -9,7 +9,7 @@ class Vent(Object):
     def __init__(self, cell=None):
         Object.__init__(self, cell, char='#', color=(100, 100, 100))
 
-        self.block = [False, True]
+        self.block = [False, True, False]
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':
@@ -29,55 +29,19 @@ class Door(Object):
 
         self.tier = tier
         self.closed = True
-        self.block = [True, True]
-
-    def open(self):
-        self.closed = False
-        self.block = [False, False]
-        self.char = 177
-
-    def close(self):
-        self.closed = True
-        self.block = [True, True]
-        self.char = 178
-
-    def interact(self, actor=None, dir=None, type=None):
-        if type is 'ATTACK':
-            self.destroy()
-            return 5
-        if self.closed:
-            self.open()
-        else:
-            self.close()
-        return 3
-
-    def describe(self):
-        return "Door ({:})".format(self.tier)
-
-
-class SecDoor(Door):
-    def __init__(self, cell=None, tier=0):
-        Door.__init__(self, cell, tier)
+        self.block = [True, True, True]
 
     def open(self, actor):
         if self.authorize(actor):
             self.closed = False
-            self.block = [False, False]
+            self.block = [False, False, False]
             self.char = 177
 
     def close(self, actor):
         if self.authorize(actor):
             self.closed = True
-            self.block = [True, True]
+            self.block = [True, True, True]
             self.char = 178
-
-    def authorize(self, actor):
-        for item in actor.inventory:
-            if isinstance(item, Key) and item.tier == self.tier:
-                Gui.pushMessage("Access granted")
-                return True
-        Gui.pushMessage("Access denied", COLOR['RED'])
-        return False
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':
@@ -88,6 +52,25 @@ class SecDoor(Door):
         else:
             self.close(actor)
         return 3
+
+    def authorize(self, actor):
+        return True
+
+    def describe(self):
+        return "Door ({:})".format(self.tier)
+
+
+class SecDoor(Door):
+    def __init__(self, cell=None, tier=0):
+        Door.__init__(self, cell, tier)
+
+    def authorize(self, actor):
+        for item in actor.inventory:
+            if isinstance(item, Key) and item.tier == self.tier:
+                Gui.pushMessage("Access granted")
+                return True
+        Gui.pushMessage("Access denied", COLOR['RED'])
+        return False
 
     def describe(self):
         return "SecDoor ({:})".format(self.tier)

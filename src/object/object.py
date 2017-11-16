@@ -5,7 +5,7 @@ import copy as cp
 
 from src.render import Render
 from src.gui import Gui
-from src.effect.effect import Fluid
+from src.effect.effect import Fuel
 
 class Object(object):
     PRIORITY = {'Object': 4,
@@ -20,7 +20,7 @@ class Object(object):
         self.cell = cell
         if cell is not None:
             self.cell.object.append(self)
-        self.block = [False, False]  # [MOVE, LOS]
+        self.block = [False, False, False]  # [MOVE, LOS]
 
         self.char = char
         self.fg = list(color)
@@ -66,7 +66,7 @@ class Debris(Object):
     def __init__(self, cell=None, obj=None):
         Object.__init__(self, cell, char='%', color=(200, 200, 200))
 
-        self.block = [False, False]
+        self.block = [False, False, False]
         self.obj = obj
         self.flammable = -1
 
@@ -78,12 +78,20 @@ class Debris(Object):
     def describe(self):
         return "Destroyed " + self.obj.describe()
 
+class Desk(Object):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, char=178, color=COLOR['MAROON'])
+
+        self.block = [True, False, True]
+
+    def describe(self):
+        return "Desk"
 
 class Obstacle(Object):
     def __init__(self, cell=None):
         Object.__init__(self, cell, char=10, color=(200, 200, 200))
 
-        self.block = [True, True]
+        self.block = [True, True, True]
 
     def interact(self, actor=None, dir=None, type=None):
         oldCell = self.cell
@@ -106,10 +114,10 @@ class Barrel(Object):
     def __init__(self, cell=None, content=None):
         Object.__init__(self, cell, char=9, color=(200, 200, 200))
 
-        self.block = [True, False]
+        self.block = [True, False, True]
 
         if content is None:
-            self.content = Fluid(amount=16)
+            self.content = Fuel(amount=16)
 
     def interact(self, actor=None, dir=None, type=None):
         oldCell = self.cell

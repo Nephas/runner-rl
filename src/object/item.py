@@ -1,7 +1,7 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.effect.effect import Fog, Fluid, Fire
+from src.effect.effect import Fog, Fluid, Fire, Fuel
 from src.gui import Gui
 
 
@@ -28,18 +28,36 @@ class Item(Object):
             self.carrier.inventory.remove(self)
             self.carrier = None
 
-    def use(self):
+    def use(self, dir=None):
         Gui.pushMessage('This Item has no use')
         return 0
 
     def describe(self):
         return 'generic item'
 
+class PlotDevice(Item):
+    def __init__(self, cell=None, carrier=None):
+        Item.__init__(self, cell, carrier, char='!', color=COLOR['RED'])
+
+    def take(self, actor):
+        Gui.pushMessage('You got it! Now to the extraction point!')
+        self.carrier = actor
+        actor.inventory.append(self)
+        self.cell.object.remove(self)
+        self.cell = self.carrier.cell
+
+    def use(self, dir=None):
+        Gui.pushMessage('This Item has no use')
+        return 0
+
+    def describe(self):
+        return 'MacGuffin'
+
 class FogCloak(Item):
     def __init__(self, cell=None, carrier=None):
         Item.__init__(self, cell, carrier, char='*')
 
-    def use(self):
+    def use(self, dir=None):
         Gui.pushMessage('You release a Gas grenade')
         self.carrier.cell.addEffect(Fog(amount=16))
         return 3
@@ -51,9 +69,10 @@ class Canister(Item):
     def __init__(self, cell=None, carrier=None):
         Item.__init__(self, cell, carrier, char='*')
 
-    def use(self):
+    def use(self, dir=None):
         Gui.pushMessage('You empty the canister')
-        self.carrier.cell.addEffect(Fluid(amount=8))
+        cell = self.carrier.main.map.getTile(self.carrier.cell.pos + dir)
+        cell.addEffect(Fuel(amount=4))
         return 3
 
     def describe(self):
@@ -63,9 +82,10 @@ class Lighter(Item):
     def __init__(self, cell=None, carrier=None):
         Item.__init__(self, cell, carrier, char=';')
 
-    def use(self):
+    def use(self, dir=None):
         Gui.pushMessage('You light a Fire')
-        self.carrier.cell.addEffect(Fire(amount=2))
+        cell = self.carrier.main.map.getTile(self.carrier.cell.pos + dir)
+        cell.addEffect(Fire(amount=2))
         return 3
 
     def describe(self):
@@ -80,6 +100,6 @@ class Key(Item):
     def describe(self):
         return "Key ({:})".format(self.tier)
 
-    def use(self):
+    def use(self, dir=None):
         Gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
         return 0

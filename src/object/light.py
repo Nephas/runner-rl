@@ -22,12 +22,18 @@ class Lamp(Object):
         self.cell.light =  max(self.brightness, self.cell.light)
         for baseLine in self.lightmap:
             line = baseLine + self.cell.pos
-            for i, point in enumerate(line):
+            strength = self.cell.light
+            for point in line:
                 cell = map.getTile(point)
-                if not cell.block[LOS]:
-                    cell.light = max((self.brightness - i), cell.light)
-                else:
+                cell.light = max(strength, cell.light)
+
+                if cell.block[LIGHT]:
+                    strength -= 4
+                if cell.block[LOS] or strength < 0:
                     break
+                else:
+                    strength -= 1
+
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':

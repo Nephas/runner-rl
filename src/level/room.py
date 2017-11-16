@@ -6,11 +6,11 @@ import random as rd
 import copy as cp
 import itertools as it
 
-from src.object.object import Object, Obstacle, Barrel
+from src.object.object import Object, Obstacle, Barrel, Desk
 from src.object.server import Terminal, Server
 from src.object.light import Lamp, FlickerLamp, SpotLight
 from src.object.door import Vent, SecDoor, AutoDoor
-from src.object.item import Item, Key
+from src.object.item import Item, Key, PlotDevice
 
 from src.actor.actor import Actor, NPC
 
@@ -128,10 +128,10 @@ class Room(Rectangle):
                        margin, self.y[MAX] - margin - 1)
         return np.array([x, y])
 
-    def scatter(self, map, obj, n):
+    def scatter(self, map, obj, n=1, margin=1):
         i = 0
         while i < n:
-            cell = map.getTile(self.randomSpot())
+            cell = map.getTile(self.randomSpot(margin))
             if cell.isEmpty():
                 cell.addObject(cp.deepcopy(obj))
                 i += 1
@@ -169,6 +169,23 @@ class Corridor(Room):
 
     def carve(self, map):
         pass
+
+class Office(Room):
+    def __init__(self, tier, parent, pos, w, h):
+        Room.__init__(self, tier, parent, pos, w, h)
+
+    def generateContent(self, map):
+        deskTile = map.getTile(self.randomSpot(3))
+        neighbors = filter(lambda c: not c.wall, deskTile.getNeighborhood())
+        rd.shuffle(neighbors)
+
+        try:
+            for cell in ([deskTile] + neighbors)[0:3]:
+                cell.addObject(cp.deepcopy(Desk()))
+        except IndexError:
+            pass
+
+        self.scatter(map, Lamp(), margin=2)
 
 class Hall(Room):
     def __init__(self, tier, parent, pos, w, h):
@@ -238,3 +255,10 @@ class Dome(Room):
                 if np.linalg.norm([x, y] - (self.center - np.array([0.5, 0.5]))) < self.size[X] / 2.0 - 1:
                     map.tile[x][y].removeWall()
                     map.tile[x][y].tier = self.tier
+
+class BossRoom(Room):
+    def __init__(self, tier, parent, pos, w, h):
+        Room.__init__(self, tier, parent, pos, w, h)
+
+    def generateContent(self, map):
+        map.getTile(self.center).addObject(PlotDevice())

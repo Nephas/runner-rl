@@ -2,13 +2,13 @@ from globals import *
 import numpy as np
 
 from src.render import Render
+from src.input import Input
 from src.level.map import Map, Rectangle
 
 
 class Gui:
     MESSAGES = [
-            ('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
-
+        ('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
 
     def __init__(self, main):
         self.main = main
@@ -97,3 +97,31 @@ class Gui:
             pos += 1
             if pos >= panel.height - 1:
                 break
+
+    def renderHelp(self, panel, page=0):
+        panel.clear(bg=COLOR['BLACK'])
+        pos = [1, 3]
+        panel.draw_str(1, 1, "===== Help page {:} =====".format(page))
+
+        if page == 1:
+            for key in Input.KEYMAP:
+                panel.draw_str(pos[X], pos[Y], "{: >5}: ".format(key.split('_')[-1]) + Input.KEYMAP[key][2])
+
+                pos[Y] += 2
+                if pos[Y] >= panel.height - 1:
+                    pos = [panel.width // 2, 3]
+
+        elif page >= 2:
+            for i in range((page - 2) * 100, (page - 1) * 100):
+                if i > 255:
+                    break
+                try:
+                    panel.draw_str(pos[X], pos[Y], "{:03}:".format(i))
+                    panel.draw_char(pos[X] + 5, pos[Y], i)
+                except:
+                    pass
+
+                pos[Y] += 2
+                if pos[Y] >= panel.height - 1:
+                    pos[X] += 8
+                    pos[Y] = 3

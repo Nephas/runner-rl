@@ -11,8 +11,8 @@ import time as t
 import tdl
 
 class Game:
-    LIMIT_FPS = 16
-    TIC_SEC = 8
+    LIMIT_FPS = 20
+    TIC_SEC = 10
     TIC_SIZE = 1. / TIC_SEC
     FRAME_LENGTH = 1. / LIMIT_FPS
 
@@ -48,7 +48,7 @@ class Game:
                 break
             if tdl.event.isWindowClosed() or self.input.quit:
                 sys.exit()
-            if t.time() >= self.TIC_SIZE + self.lastTic:
+            if t.time() >= self.TIC_SIZE + self.lastTic and not self.input.pause:
                 self.map.updatePhysics()
                 for actor in self.actor:
                     actor.act(self.map)

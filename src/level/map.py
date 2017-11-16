@@ -36,10 +36,11 @@ class Map:
             cell.light = BASE_LIGHT
             cell.vision[LOS] = False
 
-        self.castFov(self.main.player.cell.pos)
-
         for cell in rect.getCells(self):
             cell.updatePhysics()
+
+        self.castFov(self.main.player.cell.pos)
+
 
     def updateRender(self):
         for cell in self.main.gui.getCells(self):
@@ -72,28 +73,34 @@ class Map:
         return pos[X] in range(0, Map.WIDTH) and pos[Y] in range(0, Map.HEIGHT)
 
     def castFov(self, pos):
-        for cell in self.getTile(pos).getNeighborhood(shape=8):
-            cell.vision = [True, True]
+        blockIndex = 0
+        blockPoint = [0, 0]
 
-        try:
-            blockIndex = 0
-            blockPoint = [0, 0]
-
-            for baseLine in self.FOVMAP:
+        for baseLine in self.FOVMAP:
+            try:
                 if not all(baseLine[blockIndex] == blockPoint):
                     line = baseLine + pos
                     for i, point in enumerate(line):
-                        if not self.getTile(point).block[LOS]:
-                            self.getTile(point).vision = [True, True]
-                            for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
-                                if neighbor.block[LOS]:
-                                    neighbor.vision = [True, True]
-                        else:
+                        cell = self.getTile(point)
+                        if cell.block[LOS]:
                             blockIndex = i
                             blockPoint = baseLine[i]
                             break
-        except IndexError:
-            pass
+                        else:
+                            if cell.light > BASE_LIGHT:
+                                cell.vision = [True, True]
+                                for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
+                                    neighbor.vision = [True, True]
+                            else:
+                                self.getTile(point).vision = [True, False]
+                                for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
+                                    if neighbor.block[LOS]:
+                                        neighbor.vision = [True, False]
+            except IndexError:
+                pass
+        for cell in self.getTile(pos).getNeighborhood(shape=8):
+            cell.vision = [True, True]
+
 
 
 class Rectangle:  # a rectangle on the map. used to characterize a room or a window
@@ -145,8 +152,9 @@ class Cell:
         self.light = BASE_LIGHT
         self.grid = None
 
-        # [MOVE, LOS]
-        self.block = [False, False]
+        # [MOVE, LOS, LIGHT]
+        self.block = [False, False, False]
+        # [EXP, LOS]
         self.vision = [False, False]
 
         # contents
@@ -187,26 +195,30 @@ class Cell:
             self.fg = (85, 85, 85)
             return
 
-        self.bg = tuple(self.light * TIERCOLOR[self.tier] / MAX_LIGHT)
+        self.bg = TIERCOLOR[self.tier]
         self.char = ' '
 
-        try:
+        if self.object + self.effect != []:
             obj = max(self.object + self.effect, key = lambda obj: obj.priority)
             self.char = obj.char
             self.fg = obj.fg
-        except ValueError:
-            pass
+            try:
+                self.bg = obj.bg
+            except:
+                pass
+
+        self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
 
     def makeWall(self):
         self.object = []
         self.wall = True
-        self.block = [True, True]
+        self.block = [True, True, True]
         self.char = Wall.getChar(self.pos, self.map)
 
     def removeWall(self):
         self.object = []
         self.wall = False
-        self.block = [False, False]
+        self.block = [False, False, False]
         self.char = ' '
 
     def getNeighborhood(self, shape=4):
@@ -220,15 +232,17 @@ class Cell:
 
     def updatePhysics(self):
         if self.wall:
-            self.block = [True, True]
+            self.block = [True, True, True]
         else:
-            self.block = [False, False]
+            self.block = [False, False, False]
 
         for obj in self.object + self.effect:
             if obj.block[MOVE]:
                 self.block[MOVE] = True
             if obj.block[LOS]:
                 self.block[LOS] = True
+            if obj.block[LIGHT]:
+                self.block[LIGHT] = True
             obj.physics(self.map)
 
     def drawMap(self, window, pos):
