@@ -11,10 +11,10 @@ class Map:
     WIDTH = 128
     HEIGHT = 128
 
-    FOVMAP = Render.rayMap(24, 96)
+    FOVMAP = Render.rayMap(20)
     FOV_NEIGHBORHOOD = np.array([[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]])
 
-    PHYSICSRANGE = np.array([24, 24])
+    PHYSICSRANGE = np.array([20, 20])
 
     def __init__(self, main=None):
         self.main = main
@@ -39,7 +39,7 @@ class Map:
         for cell in rect.getCells(self):
             cell.updatePhysics()
 
-        self.castFov(self.main.player.cell.pos)
+        self.main.player.castFov(self)
 
 
     def updateRender(self):
@@ -72,34 +72,34 @@ class Map:
     def contains(self, pos):
         return pos[X] in range(0, Map.WIDTH) and pos[Y] in range(0, Map.HEIGHT)
 
-    def castFov(self, pos):
-        blockIndex = 0
-        blockPoint = [0, 0]
-
-        for baseLine in self.FOVMAP:
-            try:
-                if not all(baseLine[blockIndex] == blockPoint):
-                    line = baseLine + pos
-                    for i, point in enumerate(line):
-                        cell = self.getTile(point)
-                        if cell.block[LOS]:
-                            blockIndex = i
-                            blockPoint = baseLine[i]
-                            break
-                        else:
-                            if cell.light > BASE_LIGHT:
-                                cell.vision = [True, True]
-                                for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
-                                    neighbor.vision = [True, True]
-                            else:
-                                self.getTile(point).vision = [True, False]
-                                for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
-                                    if neighbor.block[LOS]:
-                                        neighbor.vision = [True, False]
-            except IndexError:
-                pass
-        for cell in self.getTile(pos).getNeighborhood(shape=8):
-            cell.vision = [True, True]
+    # def castFov(self, pos):
+    #     blockIndex = 0
+    #     blockPoint = [0, 0]
+    #
+    #     for baseLine in self.FOVMAP:
+    #         try:
+    #             if not all(baseLine[blockIndex] == blockPoint):
+    #                 line = baseLine + pos
+    #                 for i, point in enumerate(line):
+    #                     cell = self.getTile(point)
+    #                     if cell.block[LOS]:
+    #                         blockIndex = i
+    #                         blockPoint = baseLine[i]
+    #                         break
+    #                     else:
+    #                         if cell.light > BASE_LIGHT:
+    #                             cell.vision = [True, True]
+    #                             for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
+    #                                 neighbor.vision = [True, True]
+    #                         else:
+    #                             self.getTile(point).vision = [True, False]
+    #                             for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
+    #                                 if neighbor.block[LOS]:
+    #                                     neighbor.vision = [True, False]
+    #         except IndexError:
+    #             pass
+    #     for cell in self.getTile(pos).getNeighborhood(shape=8):
+    #         cell.vision = [True, True]
 
 
 

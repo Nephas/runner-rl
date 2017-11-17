@@ -4,7 +4,7 @@ from src.object.object import Object
 from src.object.item import Item, Key, FogCloak, Canister, Lighter
 from src.effect.effect import Effect
 
-from src.actor.ai import AI, Idle, Waiting
+from src.actor.ai import AI, Idle, Waiting, Follow
 from src.gui import Gui
 
 import random as rd
@@ -24,7 +24,7 @@ class Actor(Object):
         self.cooldown = 0
         self.main.actor.append(self)
 
-        self.ai = ai
+        self.ai = AI(self)
 
     def describe(self):
         return "Someone"
@@ -62,28 +62,6 @@ class Actor(Object):
                 return tile.object[0].interact(self, dir, type)
         return 0
 
-    def act(self, map=None):
-        if self.cooldown > 0:
-            self.cooldown -= 1
-        elif len(self.actions) > 0:
-            act = self.actions.pop(0)
-            if act['TYPE'] is 'MOVE':
-                dir = act['DIR']
-                self.cooldown += self.moveDir(act['DIR'])
-            elif act['TYPE'] in ['USE','ATTACK']:
-                dir = act['DIR']
-                self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
-
-
-class Player(Actor):
-    def __init__(self, cell=None, main=None):
-        Actor.__init__(self, cell, main, char='@')
-
-        self.ai = None
-        self.fg = [225, 150, 50]
-        self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Lighter(carrier=self),
-                          Key(carrier=self,tier=5), Key(carrier=self,tier=4), Key(carrier=self,tier=3)]
-
     def act(self, tileMap=None):
         if self.cooldown > 0:
             self.cooldown -= 1
@@ -98,6 +76,14 @@ class Player(Actor):
                 dir = act['DIR']
                 self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
 
+class Player(Actor):
+    def __init__(self, cell=None, main=None):
+        Actor.__init__(self, cell, main, char='@')
+
+        self.fg = [225, 150, 50]
+        self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Lighter(carrier=self),
+                          Key(carrier=self,tier=5), Key(carrier=self,tier=4), Key(carrier=self,tier=3)]
+
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir
         if self.moveTo(targetPos):
@@ -106,12 +92,15 @@ class Player(Actor):
         else:
             return self.interactDir(self.main.map, dir)
 
+    def castFov(self, map):
+        self.ai.castFov(map, self.cell.pos)
+
     def describe(self):
         return "You"
 
 class NPC(Actor):
-    def __init__(self, cell=None, main=None):
-        Actor.__init__(self, cell, main, char='@')
+    def __init__(self, cell=None, main=None, char='@'):
+        Actor.__init__(self, cell, main, char=char)
 
         self.ai = Idle(self)
 
@@ -144,6 +133,26 @@ class NPC(Actor):
     def describe(self):
         return "Someone" + self.ai.describe()
 
+class Drone(NPC):
+    def __init__(self, cell=None, main=None, owner=None):
+        NPC.__init__(self, cell, main, char='*')
+
+        self.ai = Follow(self, owner)
+
+    def describe(self):
+        return "Your trusty drone" + self.ai.describe()
+
+    def act(self, map=None):
+        if self.cooldown > 0:
+            self.cooldown -= 1
+        elif len(self.actions) > 0:
+            act = self.actions.pop(0)
+            if act['TYPE'] is 'MOVE':
+                dir = act['DIR']
+                self.cooldown += self.moveDir(act['DIR'])
+
+        elif len(self.actions) == 0:
+            self.actions = self.ai.decide(map)
 
 class Corpse(Object):
     def __init__(self, cell=None, actor=None):

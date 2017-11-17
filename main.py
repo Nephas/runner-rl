@@ -32,7 +32,7 @@ class Game:
         tdl.setFPS(self.LIMIT_FPS)
         self.render.renderStart()
 
-        self.map.generate('Evil-Corp')
+        self.map.generate('Evil-Corp7')
 
         self.gui.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
         self.gui.updateCursor()
@@ -48,14 +48,15 @@ class Game:
                 break
             if tdl.event.isWindowClosed() or self.input.quit:
                 sys.exit()
-            if t.time() >= self.TIC_SIZE + self.lastTic and not self.input.pause:
-                self.map.updatePhysics()
-                for actor in self.actor:
-                    actor.act(self.map)
-                self.map.updateRender()
+            if (self.input.pause and self.player.actions != []) or not self.input.pause:
+                if t.time() >= self.TIC_SIZE + self.lastTic:
+                    for actor in self.actor:
+                        actor.act(self.map)
+                    self.map.updatePhysics()
+                    self.map.updateRender()
 
-                self.tic += 1
-                self.lastTic = t.time()
+                    self.tic += 1
+                    self.lastTic = t.time()
             if t.time() >= self.FRAME_LENGTH + self.lastTic:
                 self.render.renderAll(self.map, self.gui)
                 self.input.handleEvents()

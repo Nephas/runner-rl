@@ -3,12 +3,27 @@ from src.globals import *
 import random as rd
 import numpy as np
 
+from src.render import Render
 
 class AI:
+    FOVMAP = Render.rayMap(30)
+    FOV_NEIGHBORHOOD = np.array([[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]])
+
     def __init__(self, actor):
 
         self.actor = actor
         self.room = None
+
+        self.aware = [self]
+
+        self.enemy = []
+        self.friend = []
+        self.neutral = []
+
+    def lookAround(self, map):
+        self.aware = []
+        for cell in self.room.getCells(map):
+            self.aware += filter(lambda obj: hasattr(obj, 'ai'), cell.object)
 
     def updateRoom(self, map):
         cell = self.actor.cell
@@ -17,9 +32,44 @@ class AI:
                 self.room = room
                 break
 
-    @staticmethod
+    def switchState(self, ai):
+        self.actor.ai = ai(self.actor)
+
+    def describe(self):
+        return " (" + self.__class__.__name__ + ") "
+
     def decide(map):
         return []
+
+    @staticmethod
+    def castFov(tileMap, pos, radius=20):
+        blockIndex = 0
+        blockPoint = [0, 0]
+
+        for baseLine in AI.FOVMAP:
+            try:
+                if not all(baseLine[blockIndex] == blockPoint):
+                    line = baseLine + pos
+                    for i, point in enumerate(line):
+                        cell = tileMap.getTile(point)
+                        if cell.block[LOS] or i > radius:
+                            blockIndex = i
+                            blockPoint = baseLine[i]
+                            break
+                        else:
+                            if cell.light > BASE_LIGHT:
+                                cell.vision = [True, True]
+                                for neighbor in map(lambda p: tileMap.getTile(p), AI.FOV_NEIGHBORHOOD + point):
+                                    neighbor.vision = [True, True]
+                            else:
+                                tileMap.getTile(point).vision = [True, False]
+                                for neighbor in map(lambda p: tileMap.getTile(p), AI.FOV_NEIGHBORHOOD + point):
+                                    if neighbor.block[LOS]:
+                                        neighbor.vision = [True, False]
+            except IndexError:
+                pass
+        for cell in tileMap.getTile(pos).getNeighborhood(shape=8):
+            cell.vision = [True, True]
 
     @staticmethod
     def findPath(map, start, target, interact=False):
@@ -47,15 +97,10 @@ class AI:
 
         return actions
 
-    def describe(self):
-        return ''
-
-
 class Idle(AI):
     def __init__(self, actor):
         AI.__init__(self, actor)
 
-        self.state = 'WAIT'
         self.counter = 0
 
     def decide(self, map):
@@ -68,8 +113,18 @@ class Idle(AI):
                 self.counter = rd.randint(8, 32)
                 return AI.findPath(map, self.actor.cell.pos, self.room.randomSpot(2))
 
-    def describe(self):
-        return " (Idle) "
+class Follow(AI):
+    def __init__(self, actor, target):
+        AI.__init__(self, actor)
+
+        self.target = target
+
+    def decide(self, map):
+        if len(self.actor.actions) == 0:
+            if np.linalg.norm(self.actor.cell.pos - self.target.cell.pos) < 5:
+                return []
+            else:
+                return AI.findPath(map, self.actor.cell.pos, self.target.cell.pos)[0:3]
 
 
 class Waiting(AI):
@@ -85,6 +140,3 @@ class Waiting(AI):
         else:
             self.actor.ai = Idle(self.actor)
         return []
-
-    def describe(self):
-        return " (Waiting) "

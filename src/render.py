@@ -6,6 +6,7 @@ import tdl
 import tcod
 import time as t
 
+
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
     TILESET = 'experimental_12x16.png'
@@ -19,13 +20,14 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
         tdl.set_font(Render.GRAPHICSPATH + Render.TILESET, greyscale=True)
 
-        self.console = tdl.init(*self.SCREEN, title="RunnerRL", fullscreen=False)
+        self.console = tdl.init(
+            *self.SCREEN, title="RunnerRL", fullscreen=False)
         self.console.clear(bg=[25, 25, 25])
 
         self.mapPanel = tdl.Window(
-            self.console, self.MAPINSET[X], self.MAPINSET[Y], *(self.SEPARATOR - np.array([2,2])) )
+            self.console, self.MAPINSET[X], self.MAPINSET[Y], *(self.SEPARATOR - np.array([2, 2])))
         self.infoPanel = tdl.Window(
-            self.console, self.SEPARATOR[X], self.SEPARATOR[Y], *(self.SCREEN - self.SEPARATOR - np.array([1,1])) )
+            self.console, self.SEPARATOR[X], self.SEPARATOR[Y], *(self.SCREEN - self.SEPARATOR - np.array([1, 1])))
         self.inventoryPanel = tdl.Window(
             self.console, self.SEPARATOR[X], 1, self.SCREEN[X] - self.SEPARATOR[X] - 1, self.SEPARATOR[Y] - 2)
         self.messagePanel = tdl.Window(
@@ -99,32 +101,99 @@ class Render:  # a rectangle on the map. used to characterize a room.
         direction = delta / np.linalg.norm(delta)
         line = []
 
-        ray = 0.1 * direction
+        ray = 0.25 * direction
         while np.linalg.norm(ray) <= np.linalg.norm(delta):
             if len(line) == 0 or np.linalg.norm(line[-1] - ray.round().astype('int')) != 0:
                 line.append(ray.round().astype('int'))
-            ray += 0.1 * direction
-        return np.array(line)
+            ray += 0.25 * direction
+
+        # correction for diagonal cases
+        if delta[X] == delta[Y]:
+            return np.array([start] + line)
+        else:
+            return np.array(line)
 
     @staticmethod
-    def rayMap(r, num):
+    def rayMap(r):
         lines = []
-        start = np.array([0., 0.])
-        phi0 = 2 * np.pi * np.random.random()
-        for phi in np.linspace(phi0, phi0 + 2. * np.pi, num):
-            end = r * np.array([np.cos(phi), np.sin(phi)])
-            lines.append(Render.rayCast(start, end)[1:int(r)])
+        start = np.array([0, 0])
+        for end in Render.circleCast(r):
+            lines.append(Render.rayCast(start, end)[1:r])
         return lines
 
     @staticmethod
-    def coneMap(r, num, angle):
-        lines = []
-        start = np.array([0., 0.])
-        phi0 = 2 * np.pi * np.random.random()
-        for phi in np.linspace(phi0, phi0 + angle, num):
-            end = r * np.array([np.cos(phi), np.sin(phi)])
-            lines.append(Render.rayCast(start, end)[1:int(r)])
-        return lines
+    def circleCast(r):
+        circle = []
+
+        for phi in np.linspace(0, 2. * np.pi, int(r) * 20):
+            end = (r * np.array([np.cos(phi), np.sin(phi)])).astype('int')
+            if len(circle) == 0 or not all(circle[-1] == end):
+                circle.append(end)
+        return np.array(circle)
+
+    @staticmethod
+    def rayBresenham(start, end):
+        line = []
+        delta = end - start
+        if delta[X] == 0:
+            return np.array([[0, y] for y in range(start[Y], end[Y], np.sign(delta[Y]))] + [end])
+
+        deltaerr = abs(delta[Y] / float(delta[X]))
+        error = 0.0
+
+        y = start[Y]
+        for x in range(start[X], end[X]):
+            line.append([x, y])
+            error = error + deltaerr
+            while error >= 0.5:
+                y = y + np.sign(delta[Y])
+                error = error - 1.0
+        return np.array(line + [end])
+
+    @staticmethod
+    def midpointCircle(center, radius):
+        (x0, y0) = center
+        (x, y) = (0, radius)
+
+        f = 1 - radius
+        ddf_x = 1
+        ddf_y = -2 * radius
+
+        circle = [[x0, y0 + radius], [x0, y0 - radius],
+                  [x0 + radius, y0], [x0 - radius, y0]]
+
+        while x < y:
+            if f >= 0:
+                y -= 1
+                ddf_y += 2
+                f += ddf_y
+            x += 1
+            ddf_x += 2
+            f += ddf_x
+            circle += [[x0 + x, y0 + y],
+                       [x0 - x, y0 + y],
+                       [x0 + x, y0 - y],
+                       [x0 - x, y0 - y],
+                       [x0 + y, y0 + x],
+                       [x0 - y, y0 + x],
+                       [x0 + y, y0 - x],
+                       [x0 - y, y0 - x]]
+        return np.array(circle)
+
+    @staticmethod
+    def coneMap(r, dir, width=np.pi*0.5):
+        arc = []
+        cone = []
+        start = np.array([0, 0])
+
+        for phi in np.linspace(dir - width / 2, dir + width / 2, int(r) * 20):
+            end = (r * np.array([np.cos(phi), np.sin(phi)])).astype('int')
+            if len(cone) == 0 or not all(cone[-1] == end):
+                arc.append(end)
+
+        for end in arc:
+            cone.append(Render.rayCast(start, end)[1:r])
+        return np.array(cone)
 
     @staticmethod
     def printImage(map, fileName):

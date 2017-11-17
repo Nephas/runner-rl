@@ -7,33 +7,35 @@ from src.render import Render
 from src.gui import Gui
 
 class Lamp(Object):
-    def __init__(self, cell=None, brightness=12):
+    def __init__(self, cell=None, brightness=10):
         Object.__init__(self, cell, char=7)
 
         self.on = True
         self.brightness = brightness
-        self.lightmap = Render.rayMap(brightness, brightness*3)
+        self.lightmap = Render.rayMap(brightness)
 
     def physics(self, map):
         if self.on:
             self.castLight(map)
 
     def castLight(self, map):
-        self.cell.light =  max(self.brightness, self.cell.light)
+        self.cell.light = max(self.brightness, self.cell.light)
         for baseLine in self.lightmap:
-            line = baseLine + self.cell.pos
-            strength = self.cell.light
-            for point in line:
-                cell = map.getTile(point)
-                cell.light = max(strength, cell.light)
+            try:
+                line = baseLine + self.cell.pos
+                strength = self.cell.light
+                for point in line:
+                    cell = map.getTile(point)
+                    cell.light = max(strength, cell.light)
 
-                if cell.block[LIGHT]:
-                    strength -= 4
-                if cell.block[LOS] or strength < 0:
-                    break
-                else:
-                    strength -= 1
-
+                    if cell.block[LIGHT]:
+                        strength -= 4
+                    if cell.block[LOS] or strength < 0:
+                        break
+                    else:
+                        strength -= 1
+            except IndexError:
+                pass
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':
@@ -49,7 +51,7 @@ class Lamp(Object):
 
 
 class DoorLamp(Lamp):
-    def __init__(self, cell=None, brightness=4):
+    def __init__(self, cell=None, brightness=3):
         Lamp.__init__(self, cell, brightness=brightness)
 
         self.fg = COLOR['RED']
@@ -89,7 +91,8 @@ class FlickerLamp(Lamp):
             self.castLight(map)
 
 class SpotLight(Lamp):
-    def __init__(self, cell=None, brightness=16):
+    def __init__(self, cell=None, direction=0, brightness=12):
         Lamp.__init__(self, cell, brightness=brightness)
 
-        self.lightmap = Render.coneMap(brightness, 12, 1.2)
+        self.direction = direction
+        self.lightmap = Render.coneMap(brightness, direction, width=np.pi*0.25)
