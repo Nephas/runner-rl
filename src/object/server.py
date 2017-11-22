@@ -43,7 +43,7 @@ class Server(Terminal):
 
         self.char = 19
         self.fg = COLOR['GREEN']
-        self.block = [True, False, True]
+        self.block = [True, True, True]
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':

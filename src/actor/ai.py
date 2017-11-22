@@ -5,44 +5,85 @@ import numpy as np
 
 from src.render import Render
 
-class AI:
-    FOVMAP = Render.rayMap(30)
-    FOV_NEIGHBORHOOD = np.array([[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]])
 
-    def __init__(self, actor):
+class AI:
+    FOVMAP = Render.rayMap(24)
+    FOV_NEIGHBORHOOD = np.array(
+        [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, -1], [-1, 1]])
+
+    def __init__(self, actor, mind=None):
 
         self.actor = actor
-        self.room = None
+        self.char = actor.char
+        self.color = COLOR['WHITE']
 
-        self.aware = [self]
-
-        self.enemy = []
-        self.friend = []
-        self.neutral = []
+        if mind is None:
+            self.mind = {'AWARE': [self],
+                         'TARGET': None,
+                         'ROOM': None,
+                         'ENEMY': [],
+                         'FRIEND': []}
+        else:
+            self.mind = mind
 
     def lookAround(self, map):
-        self.aware = []
-        for cell in self.room.getCells(map):
-            self.aware += filter(lambda obj: hasattr(obj, 'ai'), cell.object)
+        self.mind['AWARE'] = []
+        self.updateRoom(map)
+        actors = []
+
+        for cell in self.mind['ROOM'].getCells(map):
+            if cell.light > BASE_LIGHT:
+                actors += filter(lambda obj: hasattr(obj, 'ai'), cell.object)
+
+        for obj in actors:
+            if self.hasLos(map, self.actor.cell.pos, obj.cell.pos):
+                self.mind['AWARE'] += [obj]
+
+        for cell in self.actor.cell.getNeighborhood(shape=8):
+            self.mind['AWARE'] += filter(lambda obj: hasattr(obj, 'ai')
+                                         and not obj in self.mind['AWARE'], cell.object)
+
+    def makeEnemy(self, actor):
+        if actor in self.mind['FRIEND']:
+            self.mind['FRIEND'].remove(actor)
+        self.mind['ENEMY'].append(actor)
+
+    def makeFriend(self, actor):
+        if actor in self.mind['ENEMY']:
+            self.mind['ENEMY'].remove(actor)
+        self.mind['FRIEND'].append(actor)
 
     def updateRoom(self, map):
         cell = self.actor.cell
         for room in map.tier[cell.tier]:
             if room.contains(cell.pos):
-                self.room = room
+                self.mind['ROOM'] = room
                 break
 
-    def switchState(self, ai):
-        self.actor.ai = ai(self.actor)
+    def switchState(self, aiState, target=None):
+        self.actor.ai = aiState(self.actor, self.mind, target)
+        self.actor.fg = self.actor.ai.color
 
     def describe(self):
         return " (" + self.__class__.__name__ + ") "
+
+    def switchChar(self):
+        if self.actor.char is not self.actor.basechar:
+            self.actor.char = self.actor.basechar
+        elif self.actor.char is self.actor.basechar:
+            if self.actor.main.player in self.mind['ENEMY']:
+                self.actor.char = '!'
+            elif self.actor.main.player in self.mind['FRIEND']:
+                self.actor.char = 003
+            else:
+                self.actor.char = '?'
+
 
     def decide(map):
         return []
 
     @staticmethod
-    def castFov(tileMap, pos, radius=20):
+    def castFov(tileMap, pos):
         blockIndex = 0
         blockPoint = [0, 0]
 
@@ -52,24 +93,31 @@ class AI:
                     line = baseLine + pos
                     for i, point in enumerate(line):
                         cell = tileMap.getTile(point)
-                        if cell.block[LOS] or i > radius:
+                        if cell.block[LOS]:
                             blockIndex = i
                             blockPoint = baseLine[i]
                             break
                         else:
+                            neighbors = map(lambda p: tileMap.getTile(p), AI.FOV_NEIGHBORHOOD + point) + [cell]
+
                             if cell.light > BASE_LIGHT:
                                 cell.vision = [True, True]
-                                for neighbor in map(lambda p: tileMap.getTile(p), AI.FOV_NEIGHBORHOOD + point):
+                                for neighbor in filter(lambda n: n.block[LOS], neighbors):
                                     neighbor.vision = [True, True]
                             else:
-                                tileMap.getTile(point).vision = [True, False]
-                                for neighbor in map(lambda p: tileMap.getTile(p), AI.FOV_NEIGHBORHOOD + point):
-                                    if neighbor.block[LOS]:
-                                        neighbor.vision = [True, False]
+                                for neighbor in filter(lambda n: n.block[LOS], neighbors):
+                                    neighbor.vision = [True, False]
             except IndexError:
                 pass
         for cell in tileMap.getTile(pos).getNeighborhood(shape=8):
             cell.vision = [True, True]
+
+    @staticmethod
+    def hasLos(map, start, end):
+        for pos in Render.rayCast(start, end):
+            if map.getTile(pos).block[LOS]:
+                return False
+        return True
 
     @staticmethod
     def findPath(map, start, target, interact=False):
@@ -94,28 +142,63 @@ class AI:
 
         if interact:
             actions.append({'TYPE': 'USE', 'DIR': target - path[-1]})
-
         return actions
 
+
 class Idle(AI):
-    def __init__(self, actor):
-        AI.__init__(self, actor)
+    def __init__(self, actor, mind=None, target=None):
+        AI.__init__(self, actor, mind)
 
         self.counter = 0
+        self.color = COLOR['GREEN']
 
     def decide(self, map):
+        for cell in self.actor.cell.getNeighborhood(shape=8):
+            for obj in cell.object:
+                if not obj in self.mind['AWARE'] and obj is not self.mind['TARGET'] and obj in self.mind['ENEMY']:
+                    self.switchState(Stunned)
+                    self.mind['AWARE'].append(obj)
+                    self.mind['TARGET'] == obj
+                    return []
+                elif obj is self.mind['TARGET']:
+                    self.switchState(Attack, obj)
+                    return []
+
         if len(self.actor.actions) == 0:
             if self.counter > 0:
+                self.lookAround(map)
+                for actor in self.mind['AWARE']:
+                    if actor in self.mind['ENEMY']:
+                        self.mind['TARGET'] = actor
+                        self.switchState(Attack, actor)
+                        break
                 self.counter -= 1
                 return []
             else:
                 self.updateRoom(map)
                 self.counter = rd.randint(8, 32)
-                return AI.findPath(map, self.actor.cell.pos, self.room.randomSpot(2))
+                return AI.findPath(map, self.actor.cell.pos, self.mind['ROOM'].randomSpot(2))
+
+
+class Stunned(AI):
+    def __init__(self, actor, mind=None, target=None):
+        AI.__init__(self, actor, mind)
+
+        self.counter = 10
+        self.color = COLOR['YELLOW']
+
+    def decide(self, map):
+        self.actor.actions = []
+        if self.counter > 0:
+            self.counter -= 1
+        else:
+            self.switchState(Idle)
+        return []
+
 
 class Follow(AI):
-    def __init__(self, actor, target):
-        AI.__init__(self, actor)
+    def __init__(self, actor, mind, target):
+        AI.__init__(self, actor, mind)
 
         self.target = target
 
@@ -127,16 +210,44 @@ class Follow(AI):
                 return AI.findPath(map, self.actor.cell.pos, self.target.cell.pos)[0:3]
 
 
-class Waiting(AI):
-    def __init__(self, actor, time=32):
-        AI.__init__(self, actor)
+class Attack(AI):
+    def __init__(self, actor, mind, target):
+        AI.__init__(self, actor, mind)
 
-        self.state = 'WAIT'
-        self.counter = time
+        self.target = target
+        self.color = COLOR['RED']
 
     def decide(self, map):
-        if self.counter > 0:
-            self.counter -= 1
-        else:
-            self.actor.ai = Idle(self.actor)
-        return []
+        if len(self.actor.actions) == 0:
+            self.lookAround(map)
+            if self.target in self.mind['AWARE']:
+                direction = self.target.cell.pos - self.actor.cell.pos
+                if np.linalg.norm(direction) < 2:
+                    return [{'TYPE': 'ATTACK', 'DIR': direction}]
+                else:
+                    return AI.findPath(map, self.actor.cell.pos, self.target.cell.pos)[0:3]
+            else:
+                self.switchState(Chase, self.target)
+                return []
+
+
+class Chase(AI):
+    def __init__(self, actor, mind, target):
+        AI.__init__(self, actor, mind)
+
+        self.target = target
+        self.lastPos = target.cell.pos
+        self.color = COLOR['ORANGE']
+
+    def decide(self, map):
+        if len(self.actor.actions) == 0:
+            self.lookAround(map)
+            if self.target in self.mind['AWARE']:
+                self.switchState(Attack, self.target)
+                return AI.findPath(map, self.actor.cell.pos, self.target.cell.pos)[0:3]
+            else:
+                if all(self.actor.cell.pos == self.lastPos):
+                    self.switchState(Idle)
+                    return []
+                else:
+                    return AI.findPath(map, self.actor.cell.pos, self.lastPos)[0:3]

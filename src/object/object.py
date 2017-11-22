@@ -23,6 +23,7 @@ class Object(object):
         self.block = [False, False, False]  # [MOVE, LOS]
 
         self.char = char
+        self.basechar = char
         self.fg = list(color)
 
         self.flammable = 8

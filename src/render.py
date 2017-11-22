@@ -10,6 +10,7 @@ import time as t
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
     TILESET = 'experimental_12x16.png'
+    LOGO = 'graphics/logo.txt'
 
     SCREEN = np.array([100, 40])  # [WIDTH, HEIGHT]
     SEPARATOR = (5. / 8. * SCREEN).astype('int')
@@ -42,8 +43,6 @@ class Render:  # a rectangle on the map. used to characterize a room.
         self.infoPanel.clear(bg=COLOR['BLACK'])
         self.inventoryPanel.clear(bg=COLOR['BLACK'])
         self.messagePanel.clear(bg=COLOR['BLACK'])
-
-        self.helpPanel.draw_str(1, 1, "===== Generating Level =====")
 
         tdl.flush()
 
@@ -97,21 +96,13 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
     @staticmethod
     def rayCast(start, end):
-        delta = end - start
-        direction = delta / np.linalg.norm(delta)
-        line = []
+        nPoints = np.max(np.abs(end - start)) + 1
 
-        ray = 0.25 * direction
-        while np.linalg.norm(ray) <= np.linalg.norm(delta):
-            if len(line) == 0 or np.linalg.norm(line[-1] - ray.round().astype('int')) != 0:
-                line.append(ray.round().astype('int'))
-            ray += 0.25 * direction
+        xLine = np.linspace(start[X], end[X], nPoints).round().astype('int')
+        yLine = np.linspace(start[Y], end[Y], nPoints).round().astype('int')
 
-        # correction for diagonal cases
-        if delta[X] == delta[Y]:
-            return np.array([start] + line)
-        else:
-            return np.array(line)
+        line = [[x, y] for x, y in zip(xLine, yLine)]
+        return np.array(line)
 
     @staticmethod
     def rayMap(r):

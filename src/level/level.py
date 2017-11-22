@@ -170,7 +170,11 @@ class Level(Map):
 
         player = Player(self.getTile(start.center), self.main)
         self.main.player = player
-        Drone(self.getTile(start.randomSpot()), self.main, player)
+        for actor in self.main.actor:
+            actor.ai.makeEnemy(player)
+
+        drone = Drone(self.getTile(start.randomSpot()), self.main, player)
+        drone.ai.makeFriend(player)
 
         exRooms = filter(lambda r: r.function is None, self.tier[-1])
         rd.shuffle(exRooms)

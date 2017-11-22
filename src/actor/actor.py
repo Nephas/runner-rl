@@ -4,7 +4,7 @@ from src.object.object import Object
 from src.object.item import Item, Key, FogCloak, Canister, Lighter
 from src.effect.effect import Effect
 
-from src.actor.ai import AI, Idle, Waiting, Follow
+from src.actor.ai import AI, Idle, Follow
 from src.gui import Gui
 
 import random as rd
@@ -105,6 +105,9 @@ class NPC(Actor):
         self.ai = Idle(self)
 
     def act(self, map=None):
+        if self.main.tic % 3 == 0:
+            self.ai.switchChar()
+
         if self.cooldown > 0:
             self.cooldown -= 1
         elif len(self.actions) > 0:
@@ -114,7 +117,7 @@ class NPC(Actor):
                 self.cooldown += self.moveDir(act['DIR'])
             elif act['TYPE'] in ['USE','ATTACK']:
                 dir = act['DIR']
-                self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
+                self.cooldown += self.interactDir(map, act['DIR'], act['TYPE'])
 
         elif len(self.actions) == 0:
             self.actions = self.ai.decide(map)
@@ -137,22 +140,11 @@ class Drone(NPC):
     def __init__(self, cell=None, main=None, owner=None):
         NPC.__init__(self, cell, main, char='*')
 
-        self.ai = Follow(self, owner)
+        self.ai = Follow(self, None, target = owner)
 
     def describe(self):
         return "Your trusty drone" + self.ai.describe()
 
-    def act(self, map=None):
-        if self.cooldown > 0:
-            self.cooldown -= 1
-        elif len(self.actions) > 0:
-            act = self.actions.pop(0)
-            if act['TYPE'] is 'MOVE':
-                dir = act['DIR']
-                self.cooldown += self.moveDir(act['DIR'])
-
-        elif len(self.actions) == 0:
-            self.actions = self.ai.decide(map)
 
 class Corpse(Object):
     def __init__(self, cell=None, actor=None):

@@ -7,12 +7,14 @@ import itertools as it
 
 from src.render import Render
 
+
 class Map:
     WIDTH = 128
     HEIGHT = 128
 
     FOVMAP = Render.rayMap(20)
-    FOV_NEIGHBORHOOD = np.array([[0,1],[1,0],[0,-1],[-1,0],[1,1],[1,-1],[-1,-1],[-1,1]])
+    FOV_NEIGHBORHOOD = np.array(
+        [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, -1], [-1, 1]])
 
     PHYSICSRANGE = np.array([20, 20])
 
@@ -40,7 +42,6 @@ class Map:
             cell.updatePhysics()
 
         self.main.player.castFov(self)
-
 
     def updateRender(self):
         for cell in self.main.gui.getCells(self):
@@ -71,36 +72,6 @@ class Map:
 
     def contains(self, pos):
         return pos[X] in range(0, Map.WIDTH) and pos[Y] in range(0, Map.HEIGHT)
-
-    # def castFov(self, pos):
-    #     blockIndex = 0
-    #     blockPoint = [0, 0]
-    #
-    #     for baseLine in self.FOVMAP:
-    #         try:
-    #             if not all(baseLine[blockIndex] == blockPoint):
-    #                 line = baseLine + pos
-    #                 for i, point in enumerate(line):
-    #                     cell = self.getTile(point)
-    #                     if cell.block[LOS]:
-    #                         blockIndex = i
-    #                         blockPoint = baseLine[i]
-    #                         break
-    #                     else:
-    #                         if cell.light > BASE_LIGHT:
-    #                             cell.vision = [True, True]
-    #                             for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
-    #                                 neighbor.vision = [True, True]
-    #                         else:
-    #                             self.getTile(point).vision = [True, False]
-    #                             for neighbor in map(lambda p: self.getTile(p), Map.FOV_NEIGHBORHOOD + point):
-    #                                 if neighbor.block[LOS]:
-    #                                     neighbor.vision = [True, False]
-    #         except IndexError:
-    #             pass
-    #     for cell in self.getTile(pos).getNeighborhood(shape=8):
-    #         cell.vision = [True, True]
-
 
 
 class Rectangle:  # a rectangle on the map. used to characterize a room or a window
@@ -199,7 +170,7 @@ class Cell:
         self.char = ' '
 
         if self.object + self.effect != []:
-            obj = max(self.object + self.effect, key = lambda obj: obj.priority)
+            obj = max(self.object + self.effect, key=lambda obj: obj.priority)
             self.char = obj.char
             self.fg = obj.fg
             try:
