@@ -2,7 +2,7 @@ from src.globals import *
 
 import random as rd
 
-from src.render import Render
+from src.render import Render, Light
 from src.gui import Gui
 
 class Effect(object):
@@ -10,7 +10,8 @@ class Effect(object):
                 'Fluid': 2,
                 'Fuel': 4,
                 'Fog': 24,
-                'Fire': 24}
+                'Fire': 24,
+                'Shot': 24}
 
     def __init__(self, cell=None, char='+', color=COLOR['RED'], bgColor=None, time=1):
         self.cell = cell
@@ -113,6 +114,21 @@ class Fluid(Effect):
         elif rd.randint(0,1000) < 1:
             self.cease()
 
+class Shot(Effect):
+    def __init__(self, cell=None, char=250, amount=1, color=COLOR['GRAY']):
+        Effect.__init__(self, cell, char, color=color)
+
+        self.amount = amount
+
+    def describe(self):
+        return 'Shot'
+
+    def physics(self, map):
+        if self.amount <= 0:
+            self.cease()
+        self.amount -= 1
+        for obj in self.cell.object:
+            obj.destroy()
 
 class Fuel(Fluid):
     def __init__(self, cell=None, amount=1):
@@ -180,3 +196,19 @@ class Fog(Fluid):
                     self.amount -= 1
         elif rd.randint(0,100) < 1:
             self.cease()
+
+
+class Flash(Effect):
+    def __init__(self, cell=None, brightness = 7):
+        Effect.__init__(self, cell, char=' ', color=COLOR['WHITE'])
+
+        self.brightness = brightness
+        self.amount = 1
+        self.bg = COLOR['WHITE']
+
+    def physics(self, map):
+        if self.amount <= 0:
+            self.cease()
+        self.amount -= 1
+
+        Light.cast(map, self.cell.pos, self.brightness)

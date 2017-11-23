@@ -20,8 +20,8 @@ class Object(object):
         self.cell = cell
         if cell is not None:
             self.cell.object.append(self)
-        self.block = [False, False, False]  # [MOVE, LOS]
 
+        self.block = [False, False, False]  # [MOVE, LOS]
         self.char = char
         self.basechar = char
         self.fg = list(color)
@@ -72,12 +72,11 @@ class Debris(Object):
         self.flammable = -1
 
     def interact(self, actor=None, dir=None, type=None):
-        #        self.moveDir(dir)
-        #        actor.moveDir(dir)
         return 0
 
     def describe(self):
         return "Destroyed " + self.obj.describe()
+
 
 class Desk(Object):
     def __init__(self, cell=None):
@@ -87,6 +86,7 @@ class Desk(Object):
 
     def describe(self):
         return "Desk"
+
 
 class Obstacle(Object):
     def __init__(self, cell=None):

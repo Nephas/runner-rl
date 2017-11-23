@@ -67,8 +67,11 @@ class Gui:
 
         if self.main.map.contains(self.cursorPos):
             cursorTile = self.main.map.getTile(self.cursorPos)
-            for i, obj in enumerate(cursorTile.object + cursorTile.effect):
-                panel.draw_str(1, 7 + 2 * i, obj.describe(), obj.fg)
+            if cursorTile.vision[LOS] is True:
+                if cursorTile.room is not None:
+                    panel.draw_str(1, 5, cursorTile.room.describe(), tuple(TIERCOLOR[cursorTile.room.tier]))
+                for i, obj in enumerate(cursorTile.object + cursorTile.effect):
+                    panel.draw_str(1, 7 + 2 * i, obj.describe(), obj.fg)
 
     def renderInventory(self, panel):
         panel.clear(bg=COLOR['BLACK'])

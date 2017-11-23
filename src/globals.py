@@ -44,5 +44,6 @@ COLOR = {'BLACK': (0, 0, 0),
          'TEAL': (0, 128, 128),
          'NAVY': (0, 0, 128)}
 
-TIERCOLOR = [np.array([40 * i, 255 - 40 * i, 255]) for i in range(10)]
+TIERCOLOR = {i : np.array([40 * i, 255 - 40 * i, 255]) for i in range(10)}
 TIERCOLOR[-1] = np.array((10,10,10))
+TIERCOLOR[None] = np.array((0,0,0))

@@ -117,6 +117,7 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
 class Cell:
     def __init__(self, map, pos, wall=None):
         self.map = map
+        self.room = None
         self.pos = np.array(pos)
         self.wall = wall
         self.tier = -1
@@ -162,11 +163,16 @@ class Cell:
             return
 
         if self.wall:
-            self.bg = (40, 40, 40)
+            self.bg = (50, 50, 50)
             self.fg = (85, 85, 85)
             return
 
-        self.bg = TIERCOLOR[self.tier]
+        if self.room is None:
+            self.bg = (25, 25, 25)
+        else:
+            self.bg = TIERCOLOR[self.room.tier]
+            self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
+
         self.char = ' '
 
         if self.object + self.effect != []:
@@ -175,10 +181,10 @@ class Cell:
             self.fg = obj.fg
             try:
                 self.bg = obj.bg
+                self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
             except:
                 pass
 
-        self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
 
     def makeWall(self):
         self.object = []
@@ -187,19 +193,23 @@ class Cell:
         self.char = Wall.getChar(self.pos, self.map)
 
     def removeWall(self):
-        self.object = []
         self.wall = False
         self.block = [False, False, False]
         self.char = ' '
 
-    def getNeighborhood(self, shape=4):
-        if shape == 4:
+    def getNeighborhood(self, shape='SMALL'):
+        if shape is 'SMALL':
             offsets = np.array([[0, -1], [1, 0], [0, 1], [-1, 0]])
-        if shape == 8:
+        elif shape is 'LARGE':
             offsets = [np.array([i, j]) for i in [-1, 0, 1]
                        for j in [-1, 0, 1]]
+        else:
+            offsets = [np.array([i, j]) for i in range(-1*shape, shape)
+                       for j in range(-1*shape, shape)]
+            offsets = filter(lambda off: np.linalg.norm(off) < shape, offsets)
+
         positions = map(lambda off: off + self.pos, offsets)
-        return map(lambda p: self.map.getTile(p), positions)
+        return map(lambda p: self.map.getTile(p), filter(lambda p: self.map.contains(p), positions))
 
     def updatePhysics(self):
         if self.wall:

@@ -3,8 +3,9 @@ from src.globals import *
 import random as rd
 
 from src.object.object import Object
-from src.render import Render
+from src.render import Render, Light
 from src.gui import Gui
+
 
 class Lamp(Object):
     def __init__(self, cell=None, brightness=10):
@@ -12,30 +13,10 @@ class Lamp(Object):
 
         self.on = True
         self.brightness = brightness
-        self.lightmap = Render.rayMap(brightness)
 
     def physics(self, map):
         if self.on:
-            self.castLight(map)
-
-    def castLight(self, map):
-        self.cell.light = max(self.brightness, self.cell.light)
-        for baseLine in self.lightmap:
-            try:
-                line = baseLine + self.cell.pos
-                strength = self.cell.light
-                for point in line:
-                    cell = map.getTile(point)
-                    cell.light = max(strength, cell.light)
-
-                    if cell.block[LIGHT]:
-                        strength -= 4
-                    if cell.block[LOS] or strength < 0:
-                        break
-                    else:
-                        strength -= 1
-            except IndexError:
-                pass
+            Light.cast(map, self.cell.pos, self.brightness)
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':
@@ -63,7 +44,7 @@ class DoorLamp(Lamp):
             self.on = not self.on
         if self.on:
             self.fg = COLOR['WHITE']
-            self.castLight(map)
+            Light.cast(map, self.cell.pos, self.brightness)
         else:
             self.fg = COLOR['RED']
 
@@ -88,7 +69,7 @@ class FlickerLamp(Lamp):
             self.on = True
 
         if self.on:
-            self.castLight(map)
+            Light.cast(map, self.cell.pos, self.brightness)
 
 class SpotLight(Lamp):
     def __init__(self, cell=None, direction=0, brightness=12):

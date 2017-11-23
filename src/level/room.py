@@ -18,7 +18,7 @@ from src.level.map import Rectangle
 
 
 class Room(Rectangle):
-    def __init__(self, tier, parent, pos, w, h):
+    def __init__(self, pos, w, h, tier = -1, parent = None):
         Rectangle.__init__(self, pos, w, h)
         self.tier = tier
         self.function = None
@@ -26,8 +26,11 @@ class Room(Rectangle):
         self.children = []
 
     def carve(self, map):
+        self.updateCells(map)
+
         # create a boundary wall
         for cell in self.getCells(map):
+            cell.room = self
             if cell.wall is None:
                 cell.makeWall()
 
@@ -35,7 +38,6 @@ class Room(Rectangle):
         for x in range(self.x[MIN] + 1, self.x[MAX] - 1):
             for y in range(self.y[MIN] + 1, self.y[MAX] - 1):
                 map.tile[x][y].removeWall()
-                map.tile[x][y].tier = self.tier
 
     def fill(self, map):
         for cell in self.getCells(map):
@@ -78,7 +80,9 @@ class Room(Rectangle):
                         count += 1
         return count
 
-    def updateTier(self, map):
+    def describe(self):
+        return self.__class__.__name__
+
+    def updateCells(self, map):
         for cell in self.getCells(map):
-            if not cell.wall:
-                cell.tier = self.tier
+            cell.room = self

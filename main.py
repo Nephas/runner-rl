@@ -7,6 +7,7 @@ from src.gui import Gui
 from src.render import Render
 
 import sys
+import pygame as pg
 import time as t
 import tdl
 
@@ -22,6 +23,7 @@ class Game:
         self.input = Input(self)
         self.gui = Gui(self)
         self.map = Level(self)
+        self.sound = {}
 
         self.actor = []
 
@@ -30,6 +32,14 @@ class Game:
 
     def initialize(self):
         tdl.setFPS(self.LIMIT_FPS)
+        pg.init()
+        self.sound = {'SHOT': pg.mixer.Sound('sounds/shot.wav'),
+                      'EXPLOSION': pg.mixer.Sound('sounds/explosion.wav'),
+                      'DOOR': pg.mixer.Sound('sounds/door.wav'),
+                      'PUNCH': pg.mixer.Sound('sounds/punch.wav'),
+                      'STEP': pg.mixer.Sound('sounds/step.wav')}
+
+
         self.render.renderStart()
 
         self.map.generate('Evil-Corp7')

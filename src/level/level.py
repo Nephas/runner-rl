@@ -101,7 +101,7 @@ class Level(Map):
         while True:
             pos = [rd.randint(margin, Map.WIDTH - w - margin),
                    rd.randint(margin, Map.HEIGHT - h - margin)]
-            start = BossRoom(0, None, pos, w, h)
+            start = BossRoom(pos, w, h, 0, None)
             if self.contains(start):
                 self.tier[0].append(start)
                 start.carve(self)
@@ -154,7 +154,7 @@ class Level(Map):
 
         for room in self.getRooms():
             room.carve(self)
-            room.updateTier(self)
+            room.updateCells(self)
             room.generateContent(self)
 
         # connect terminals
@@ -170,8 +170,8 @@ class Level(Map):
 
         player = Player(self.getTile(start.center), self.main)
         self.main.player = player
-        for actor in self.main.actor:
-            actor.ai.makeEnemy(player)
+#        for actor in self.main.actor:
+#            actor.ai.makeEnemy(player)
 
         drone = Drone(self.getTile(start.randomSpot()), self.main, player)
         drone.ai.makeFriend(player)
@@ -202,14 +202,12 @@ class Level(Map):
                 for cell in self.getNeighborhood(pos, shape=8):
                     if list(cell.pos) not in room1.border():
                         cell.removeWall()
-                        cell.tier = room2.tier
 
         # place door and Terminal
         door = SecDoor(tier=tunnelTier)
         for pos in positions:
             cell = self.getTile(pos)
             cell.removeWall()
-            cell.tier = tunnelTier
             if pos in room1.border():
                 cell.addObject(door)
             if pos in room2.border():
@@ -249,7 +247,6 @@ class Level(Map):
         # carve connection
         for cell in map(lambda p: self.getTile(p), positions):
             cell.removeWall()
-            cell.tier = -1
 
         # place vents
         for pos in positions:
@@ -306,7 +303,7 @@ class Level(Map):
 
             if rect is not None:
                 roomClass = globals()[shape]
-                nextRoom = roomClass(room.tier + 1, room, rect.pos, rect.size[X], rect.size[Y])
+                nextRoom = roomClass(rect.pos, rect.size[X], rect.size[Y], room.tier + 1, room)
                 room.children.append(nextRoom)
                 self.tier[room.tier + 1].append(nextRoom)
                 nextRoom.carve(self)

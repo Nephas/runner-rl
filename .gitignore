@@ -1,5 +1,6 @@
 *.pyc
 src/*.pyc
+sounds/
 dist/
 gif/
 graphics/

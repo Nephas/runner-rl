@@ -1,10 +1,11 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.object.item import Item, Key, FogCloak, Canister, Lighter
+from src.object.item import Item, Key, FogCloak, Canister, Lighter, Explosive, Gun
 from src.effect.effect import Effect
 
 from src.actor.ai import AI, Idle, Follow
+from src.actor.body import Body
 from src.gui import Gui
 
 import random as rd
@@ -25,6 +26,7 @@ class Actor(Object):
         self.main.actor.append(self)
 
         self.ai = AI(self)
+        self.body = Body(self)
 
     def describe(self):
         return "Someone"
@@ -53,13 +55,13 @@ class Actor(Object):
         Gui.pushMessage(self.describe() + " dies")
 
     def interactDir(self, map, dir, type=None):
-        if map.contains(self.cell.pos + dir):
-            tile = map.getTile(self.cell.pos + dir)
-            if type is 'ATTACK':
-                tile.addEffect(Effect(char='X', time=2))
+        tile = map.getTile(self.cell.pos + dir)
+        if type is 'ATTACK':
+            self.main.sound['PUNCH'].play()
+            tile.addEffect(Effect(char='X', time=2))
 
-            if len(tile.object) > 0:
-                return tile.object[0].interact(self, dir, type)
+        if len(tile.object) > 0:
+            return tile.object[0].interact(self, dir, type)
         return 0
 
     def act(self, tileMap=None):
@@ -71,10 +73,11 @@ class Actor(Object):
                 dir = act['DIR']
                 self.cooldown += self.moveDir(act['DIR'])
             elif act['TYPE'] is 'ITEM':
-                self.cooldown += self.inventory[act['INDEX']].use(act['DIR'])
+                self.cooldown += self.inventory[act['INDEX']].use(act)
             elif act['TYPE'] in ['USE','ATTACK']:
                 dir = act['DIR']
                 self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
+
 
 class Player(Actor):
     def __init__(self, cell=None, main=None):
@@ -82,11 +85,13 @@ class Player(Actor):
 
         self.fg = [225, 150, 50]
         self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Lighter(carrier=self),
-                          Key(carrier=self,tier=5), Key(carrier=self,tier=4), Key(carrier=self,tier=3)]
+                          Key(carrier=self,tier=5), Gun(carrier=self), Explosive(carrier=self)]
 
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir
         if self.moveTo(targetPos):
+            self.main.sound['STEP'].set_volume(0.05)
+            self.main.sound['STEP'].play()
             self.main.gui.moveOffset(dir)
             return np.abs(dir[X]) + np.abs(dir[Y])
         else:
@@ -97,6 +102,7 @@ class Player(Actor):
 
     def describe(self):
         return "You"
+
 
 class NPC(Actor):
     def __init__(self, cell=None, main=None, char='@'):
@@ -135,6 +141,7 @@ class NPC(Actor):
 
     def describe(self):
         return "Someone" + self.ai.describe()
+
 
 class Drone(NPC):
     def __init__(self, cell=None, main=None, owner=None):

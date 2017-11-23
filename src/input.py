@@ -82,7 +82,9 @@ class Input:
         self.main.render.mapLayer = (self.main.render.mapLayer + 1) % 3
 
     def playerAttack(self, qualifier=None):
-        self.main.player.actions = [{'TYPE': 'ATTACK', 'DIR': self.main.gui.cursorDir}]
+        self.main.player.actions = [{'TYPE': 'ATTACK',
+                                     'DIR': self.main.gui.cursorDir,
+                                     'TARGET': self.main.gui.cursorPos}]
 
     def movePlayer(self, direction):
         self.main.player.actions = [{'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[direction]}]
@@ -93,8 +95,10 @@ class Input:
 
     def useItem(self, index):
         if index < len(self.main.player.inventory):
-            self.main.player.actions = [{'TYPE': 'ITEM', 'INDEX': index, 'DIR': self.main.gui.cursorDir}]
-
+            self.main.player.actions = [{'TYPE': 'ITEM',
+                                         'INDEX': index,
+                                         'DIR': self.main.gui.cursorDir,
+                                         'TARGET': self.main.gui.cursorPos}]
 
 
     def handleMouse(self, event):

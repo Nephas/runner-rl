@@ -17,19 +17,20 @@ from src.actor.actor import Actor, NPC
 
 
 class Corridor(Room):
-    def __init__(self, tier, parent, pos, w, h):
-        Room.__init__(self, tier, parent, pos, w, h)
+    def __init__(self, pos, w, h, tier, parent):
+        Room.__init__(self, pos, w, h, tier, parent)
 
     def generateContent(self, map):
         map.getTile(self.center).addObject(Lamp())
 
     def carve(self, map):
+        self.updateCells(map)
         pass
 
 
 class Office(Room):
-    def __init__(self, tier, parent, pos, w, h):
-        Room.__init__(self, tier, parent, pos, w, h)
+    def __init__(self, pos, w, h, tier, parent):
+        Room.__init__(self, pos, w, h, tier, parent)
 
     def generateContent(self, map):
         Server(map.getTile(self.randomSpot()))
@@ -50,8 +51,8 @@ class Office(Room):
 
 
 class Hall(Room):
-    def __init__(self, tier, parent, pos, w, h):
-        Room.__init__(self, tier, parent, pos, w, h)
+    def __init__(self, pos, w, h, tier, parent):
+        Room.__init__(self, pos, w, h, tier, parent)
 
     def generateContent(self, map):
         offset = (2 * (self.center - self.pos) // 3).round().astype('int')
@@ -70,6 +71,8 @@ class Hall(Room):
                         Server(cell)
 
     def carve(self, map):
+        self.updateCells(map)
+
         # create a boundary wall
         for cell in self.getCells(map):
             if cell.wall is None:
@@ -90,8 +93,8 @@ class Hall(Room):
 
 
 class Dome(Room):
-    def __init__(self, tier, parent, pos, w, h):
-        Room.__init__(self, tier, parent, pos, w, h)
+    def __init__(self, pos, w, h, tier, parent):
+        Room.__init__(self, pos, w, h, tier, parent)
 
         self.radius = w // 2
 
@@ -111,6 +114,8 @@ class Dome(Room):
                 [Barrel(), Obstacle()]), rd.randint(2, 12))
 
     def carve(self, map):
+        self.updateCells(map)
+
         # create a boundary wall
         for cell in self.getCells(map):
             if cell.wall is None:
@@ -125,8 +130,8 @@ class Dome(Room):
 
 
 class BossRoom(Room):
-    def __init__(self, tier, parent, pos, w, h):
-        Room.__init__(self, tier, parent, pos, w, h)
+    def __init__(self, pos, w, h, tier, parent):
+        Room.__init__(self, pos, w, h, tier, parent)
 
     def generateContent(self, map):
         map.getTile(self.center).addObject(PlotDevice())

@@ -12,7 +12,6 @@ class AI:
         [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, -1], [-1, 1]])
 
     def __init__(self, actor, mind=None):
-
         self.actor = actor
         self.char = actor.char
         self.color = COLOR['WHITE']
@@ -39,7 +38,7 @@ class AI:
             if self.hasLos(map, self.actor.cell.pos, obj.cell.pos):
                 self.mind['AWARE'] += [obj]
 
-        for cell in self.actor.cell.getNeighborhood(shape=8):
+        for cell in self.actor.cell.getNeighborhood('LARGE'):
             self.mind['AWARE'] += filter(lambda obj: hasattr(obj, 'ai')
                                          and not obj in self.mind['AWARE'], cell.object)
 
@@ -78,7 +77,6 @@ class AI:
             else:
                 self.actor.char = '?'
 
-
     def decide(map):
         return []
 
@@ -109,7 +107,7 @@ class AI:
                                     neighbor.vision = [True, False]
             except IndexError:
                 pass
-        for cell in tileMap.getTile(pos).getNeighborhood(shape=8):
+        for cell in tileMap.getTile(pos).getNeighborhood('LARGE'):
             cell.vision = [True, True]
 
     @staticmethod
@@ -153,7 +151,7 @@ class Idle(AI):
         self.color = COLOR['GREEN']
 
     def decide(self, map):
-        for cell in self.actor.cell.getNeighborhood(shape=8):
+        for cell in self.actor.cell.getNeighborhood('LARGE'):
             for obj in cell.object:
                 if not obj in self.mind['AWARE'] and obj is not self.mind['TARGET'] and obj in self.mind['ENEMY']:
                     self.switchState(Stunned)

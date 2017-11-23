@@ -196,11 +196,11 @@ class Render:  # a rectangle on the map. used to characterize a room.
                 tile = [[i, j] for i in range(3 * x, 3 * x + 3)
                         for j in range(3 * y, 3 * y + 3)]
 
-                if map.tile[x][y].wall is False:
+                if map.tile[x][y].wall is False and map.tile[x][y].room is not None:
                     # set the colour accordingly
                     for p in tile:
                         pixels[p[X], p[Y]] = tuple(
-                            TIERCOLOR[map.tile[x][y].tier])
+                            TIERCOLOR[map.tile[x][y].room.tier])
                 elif map.tile[x][y].wall is True:
                     for p in tile:
                         # set the colour accordingly
@@ -236,3 +236,31 @@ class Render:  # a rectangle on the map. used to characterize a room.
                    lamp.cell.pos[Y] + 1] = COLOR['WHITE']
 
         img.save(fileName)
+
+
+class Light():
+    LIGHTMAP = [Render.rayMap(brightness) for brightness in range(0, 20)]
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def cast(map, pos, brightness=1):
+        cell = map.getTile(pos)
+        cell.light = max(brightness, cell.light)
+        for baseLine in Light.LIGHTMAP[brightness]:
+            try:
+                line = baseLine + pos
+                strength = brightness
+                for point in line:
+                    cell = map.getTile(point)
+                    cell.light = max(strength, cell.light)
+
+                    if cell.block[LIGHT]:
+                        strength -= 4
+                    if cell.block[LOS] or strength < 0:
+                        break
+                    else:
+                        strength -= 1
+            except IndexError:
+                pass

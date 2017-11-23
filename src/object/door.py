@@ -33,12 +33,14 @@ class Door(Object):
 
     def open(self, actor):
         if self.authorize(actor):
+            actor.main.sound['DOOR'].play()
             self.closed = False
             self.block = [False, False, False]
             self.char = 177
 
     def close(self, actor):
         if self.authorize(actor):
+            actor.main.sound['DOOR'].play()
             self.closed = True
             self.block = [True, True, True]
             self.char = 178
