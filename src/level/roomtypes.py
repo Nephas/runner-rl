@@ -9,11 +9,11 @@ import itertools as it
 from src.level.room import Room
 
 from src.object.object import Object, Obstacle, Barrel, Desk
-from src.object.server import Terminal, Server
+from src.object.server import Terminal, Server, MasterSwitch, Rack
 from src.object.light import Lamp, FlickerLamp, SpotLight
 from src.object.item import Item, Key, PlotDevice
 
-from src.actor.actor import Actor, NPC
+from src.actor.npc import Guard, Worker
 
 
 class Corridor(Room):
@@ -21,6 +21,7 @@ class Corridor(Room):
         Room.__init__(self, pos, w, h, tier, parent)
 
     def generateContent(self, map):
+        Guard(map.getTile(self.randomSpot(1)), map.main)
         map.getTile(self.center).addObject(Lamp())
 
     def carve(self, map):
@@ -33,7 +34,10 @@ class Office(Room):
         Room.__init__(self, pos, w, h, tier, parent)
 
     def generateContent(self, map):
-        Server(map.getTile(self.randomSpot()))
+        self.placeAtWall(map, Server())
+        self.placeAtWall(map, MasterSwitch())
+#        Server(map.getTile(rd.choice(self.edge())))
+#        MasterSwitch(map.getTile(rd.choice(self.edge())))
 
         deskTile = map.getTile(self.randomSpot(3))
         neighbors = filter(lambda c: not c.wall, deskTile.getNeighborhood())
@@ -45,7 +49,7 @@ class Office(Room):
         except IndexError:
             pass
 
-        NPC(map.getTile(self.randomSpot(3)), map.main)
+        Worker(map.getTile(self.randomSpot(3)), map.main)
         self.scatter(map, Key(tier=rd.randint(3, 5)), rd.randint(0, 1))
         self.scatter(map, Lamp(), margin=2)
 
@@ -68,7 +72,7 @@ class Hall(Room):
                 if x % 3 == 0 and y % 5 != 0:
                     cell = map.tile[x][y]
                     if cell.isEmpty():
-                        Server(cell)
+                        Rack(cell)
 
     def carve(self, map):
         self.updateCells(map)
@@ -105,9 +109,9 @@ class Dome(Room):
         r = self.radius - 1
 
         for phi in np.linspace(0, 2. * np.pi, 8)[1:]:
-            pos = (self.center + r * np.array([np.cos(phi), np.sin(phi)])).astype('int')
-            map.getTile(pos).addObject(SpotLight(direction=phi+np.pi))
-
+            pos = (self.center + r *
+                   np.array([np.cos(phi), np.sin(phi)])).astype('int')
+            map.getTile(pos).addObject(SpotLight(direction=phi + np.pi))
 
         for i in range(rd.randint(4, 8)):
             self.cluster(map, self.randomSpot(3), rd.choice(

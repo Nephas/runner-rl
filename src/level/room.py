@@ -11,14 +11,12 @@ from src.object.server import Terminal, Server
 from src.object.door import Vent, SecDoor, AutoDoor
 from src.object.item import Item, Key, PlotDevice
 
-from src.actor.actor import Actor, NPC
-
 from src.render import Render
 from src.level.map import Rectangle
 
 
 class Room(Rectangle):
-    def __init__(self, pos, w, h, tier = -1, parent = None):
+    def __init__(self, pos, w, h, tier=-1, parent=None):
         Rectangle.__init__(self, pos, w, h)
         self.tier = tier
         self.function = None
@@ -61,7 +59,23 @@ class Room(Rectangle):
                 cell.addObject(cp.deepcopy(obj))
                 i += 1
 
-    def cluster(self, map, pos, obj, n = 0):
+    def edge(self):
+        positions = []
+        for x in range(self.x[MIN] + 1, self.x[MAX] - 1):
+            positions.append([x, self.y[MIN] + 1])
+            positions.append([x, self.y[MAX] - 2])
+        for y in range(self.y[MIN] + 1, self.y[MAX] - 1):
+            positions.append([self.x[MIN] + 1, y])
+            positions.append([self.x[MAX] - 2, y])
+        return positions
+
+    def placeAtWall(self, tileMap, obj):
+        cells = map(lambda p: tileMap.getTile(p), self.edge())
+        cells = filter(lambda c: c.isEmpty() and c.atWall(), cells)
+        cell = rd.choice(cells)
+        cell.addObject(cp.deepcopy(obj))
+
+    def cluster(self, map, pos, obj, n=0):
         if n > 0:
             cell = map.getTile(pos)
             if cell.isEmpty():

@@ -73,6 +73,9 @@ class Render:  # a rectangle on the map. used to characterize a room.
         elif self.mapLayer == 1:
             for cell in gui.getCells(map):
                 cell.drawNet(panel, cell.pos - gui.mapOffset)
+        elif self.mapLayer == 2:
+            for cell in gui.getCells(map):
+                cell.drawDist(panel, cell.pos - gui.mapOffset, self.main.player.ai.distmap)
 
         try:
             cell = map.getTile(self.main.player.cell.pos + gui.cursorDir)

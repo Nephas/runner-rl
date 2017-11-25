@@ -1,7 +1,7 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.object.item import Item, Key, FogCloak, Canister, Lighter, Explosive, Gun
+from src.object.item import Item, Key, FogCloak, Canister, Lighter, Explosive, Gun, Shotgun
 from src.effect.effect import Effect
 
 from src.actor.ai import AI, Idle, Follow
@@ -50,6 +50,8 @@ class Actor(Object):
 
     def die(self):
         self.cell.object.remove(self)
+        for item in self.inventory:
+            item.drop()
         self.main.actor.remove(self)
         Corpse(self.cell, self)
         Gui.pushMessage(self.describe() + " dies")
@@ -57,7 +59,6 @@ class Actor(Object):
     def interactDir(self, map, dir, type=None):
         tile = map.getTile(self.cell.pos + dir)
         if type is 'ATTACK':
-            self.main.sound['PUNCH'].play()
             tile.addEffect(Effect(char='X', time=2))
 
         if len(tile.object) > 0:
@@ -85,13 +86,11 @@ class Player(Actor):
 
         self.fg = [225, 150, 50]
         self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Lighter(carrier=self),
-                          Key(carrier=self,tier=5), Gun(carrier=self), Explosive(carrier=self)]
+                          Key(carrier=self,tier=5), Shotgun(carrier=self), Explosive(carrier=self)]
 
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir
         if self.moveTo(targetPos):
-            self.main.sound['STEP'].set_volume(0.05)
-            self.main.sound['STEP'].play()
             self.main.gui.moveOffset(dir)
             return np.abs(dir[X]) + np.abs(dir[Y])
         else:
@@ -102,55 +101,6 @@ class Player(Actor):
 
     def describe(self):
         return "You"
-
-
-class NPC(Actor):
-    def __init__(self, cell=None, main=None, char='@'):
-        Actor.__init__(self, cell, main, char=char)
-
-        self.ai = Idle(self)
-
-    def act(self, map=None):
-        if self.main.tic % 3 == 0:
-            self.ai.switchChar()
-
-        if self.cooldown > 0:
-            self.cooldown -= 1
-        elif len(self.actions) > 0:
-            act = self.actions.pop(0)
-            if act['TYPE'] is 'MOVE':
-                dir = act['DIR']
-                self.cooldown += self.moveDir(act['DIR'])
-            elif act['TYPE'] in ['USE','ATTACK']:
-                dir = act['DIR']
-                self.cooldown += self.interactDir(map, act['DIR'], act['TYPE'])
-
-        elif len(self.actions) == 0:
-            self.actions = self.ai.decide(map)
-
-    def interact(self, actor=None, dir=None, type=None):
-        if type is 'ATTACK':
-            self.die()
-            return 10
-        elif type is 'USE':
-            Gui.pushMessage('Hi, how are you?',(50,255,50))
-            self.ai = Waiting(self)
-            return 5
-        else:
-            return 0
-
-    def describe(self):
-        return "Someone" + self.ai.describe()
-
-
-class Drone(NPC):
-    def __init__(self, cell=None, main=None, owner=None):
-        NPC.__init__(self, cell, main, char='*')
-
-        self.ai = Follow(self, None, target = owner)
-
-    def describe(self):
-        return "Your trusty drone" + self.ai.describe()
 
 
 class Corpse(Object):

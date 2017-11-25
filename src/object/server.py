@@ -5,12 +5,12 @@ import random as rd
 from src.object.object import Object
 from src.render import Render
 
+
 class Terminal(Object):
-    def __init__(self, cell):
+    def __init__(self, cell=None, tier=0):
         Object.__init__(self, cell, char=20, color=COLOR['MEDIUMGREEN'])
 
         self.on = True
-        self.cell.grid = True
         self.connection = []
 
     def interact(self, actor=None, dir=None, type=None):
@@ -23,6 +23,14 @@ class Terminal(Object):
 
     def describe(self):
         return "Terminal"
+
+    def authorize(self, actor):
+        for item in actor.inventory:
+            if isinstance(item, Key) and item.tier == self.tier:
+                Gui.pushMessage("Access granted")
+                return True
+        Gui.pushMessage("Access denied", COLOR['RED'])
+        return False
 
     def connect(self, obj):
         self.cell.grid = True
@@ -37,8 +45,37 @@ class Terminal(Object):
             obj.connection.remove(self)
 
 
+class MasterSwitch(Terminal):
+    def __init__(self, cell=None):
+        Terminal.__init__(self, cell)
+
+        self.char = 33
+        self.block = [False, False, False]
+
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+
+        self.toggle(actor.main.map)
+        return 5
+
+    def toggle(self, map):
+        if self.on:
+            self.char = 173
+            for obj in self.cell.room.getObjects(map):
+                setattr(obj, 'on', False)
+        elif not self.on:
+            self.char = 33
+            for obj in self.cell.room.getObjects(map):
+                setattr(obj, 'on', True)
+
+    def describe(self):
+        return "Switch"
+
+
 class Server(Terminal):
-    def __init__(self, cell):
+    def __init__(self, cell=None):
         Terminal.__init__(self, cell)
 
         self.char = 19
@@ -60,3 +97,27 @@ class Server(Terminal):
 
     def describe(self):
         return "Server"
+
+
+class Rack(Object):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, 19)
+
+        self.on = True
+        self.fg = COLOR['GREEN']
+        self.block = [True, True, True]
+
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+        return 5
+
+    def physics(self, map):
+        self.fg = rd.choice([COLOR['GREEN'], COLOR['DARKGRAY']])
+
+    def connect(self, obj):
+        self.cell.grid = True
+
+    def describe(self):
+        return "Server Rack"

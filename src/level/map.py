@@ -113,6 +113,12 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
             for y in range(self.y[MIN], self.y[MAX]):
                 yield map.tile[x][y]
 
+    def getObjects(self, map):
+        for x in range(self.x[MIN], self.x[MAX]):
+            for y in range(self.y[MIN], self.y[MAX]):
+                for obj in map.tile[x][y].object:
+                    yield obj
+
 
 class Cell:
     def __init__(self, map, pos, wall=None):
@@ -120,9 +126,10 @@ class Cell:
         self.room = None
         self.pos = np.array(pos)
         self.wall = wall
-        self.tier = -1
         self.light = BASE_LIGHT
         self.grid = None
+
+        self.dist = -1
 
         # [MOVE, LOS, LIGHT]
         self.block = [False, False, False]
@@ -152,6 +159,12 @@ class Cell:
 
     def isEmpty(self):
         return self.object == [] and not self.wall
+
+    def atWall(self):
+        for n in self.getNeighborhood():
+            if n.wall:
+                return True
+        return False
 
     def updateRender(self):
         if not self.vision[EXP]:
@@ -231,15 +244,24 @@ class Cell:
             window.draw_char(pos[X], pos[Y], self.char, self.fg, self.bg)
 
     def drawNet(self, window, pos):
+        if self.wall:
+            bg = COLOR['DARKGRAY']
+        elif self.room is None:
+            bg = COLOR['BLACK']
+        else:
+            bg = list(TIERCOLOR[self.room.tier])
+
         if self.grid is None:
-            window.draw_char(pos[X], pos[Y], ' ', self.fg,
-                             list(TIERCOLOR[self.tier]))
+            window.draw_char(pos[X], pos[Y], self.char, COLOR['SILVER'], bg)
         elif not self.grid:
-            window.draw_char(pos[X], pos[Y], 254,
-                             COLOR['GREEN'], list(TIERCOLOR[self.tier]))
+            window.draw_char(pos[X], pos[Y], 254, COLOR['GREEN'], bg)
         elif self.grid:
-            window.draw_char(pos[X], pos[Y], ' ', list(
-                TIERCOLOR[self.tier]), COLOR['GREEN'])
+            window.draw_char(pos[X], pos[Y], ' ', bg, COLOR['GREEN'])
+
+    def drawDist(self, window, pos, distmap):
+        dist = distmap[self.pos[Y]][self.pos[X]]
+        bg = list(int(c * (1 + dist) // (2 + distmap.max())) for c in COLOR['WHITE'])
+        window.draw_char(pos[X], pos[Y], self.char, self.fg, bg)
 
     def drawHighlight(self, window, pos, color=COLOR['WHITE']):
         if self.vision[EXP]:

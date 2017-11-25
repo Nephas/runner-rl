@@ -4,7 +4,7 @@ import random as rd
 import numpy as np
 
 from src.render import Render
-
+from src.level.map import Map, Rectangle
 
 class AI:
     FOVMAP = Render.rayMap(24)
@@ -15,6 +15,7 @@ class AI:
         self.actor = actor
         self.char = actor.char
         self.color = COLOR['WHITE']
+        self.distmap = np.ones((Map.HEIGHT, Map.WIDTH)) * -1
 
         if mind is None:
             self.mind = {'AWARE': [self],
@@ -53,11 +54,7 @@ class AI:
         self.mind['FRIEND'].append(actor)
 
     def updateRoom(self, map):
-        cell = self.actor.cell
-        for room in map.tier[cell.tier]:
-            if room.contains(cell.pos):
-                self.mind['ROOM'] = room
-                break
+        self.mind['ROOM'] = self.actor.cell.room
 
     def switchState(self, aiState, target=None):
         self.actor.ai = aiState(self.actor, self.mind, target)
@@ -79,6 +76,21 @@ class AI:
 
     def decide(map):
         return []
+
+    def updateDist(self, tileMap, radius=10):
+        self.distmap = np.ones((Map.HEIGHT, Map.WIDTH)) * -1
+        boundary = [self.actor.cell]
+
+        for i in range(int(radius)):
+            newBound = []
+            for cell in boundary:
+                newBound += cell.getNeighborhood()
+
+            boundary = filter(lambda c: self.distmap[c.pos[Y], c.pos[X]] < 0 and not c.block[MOVE], newBound)
+            for cell in boundary:
+                self.distmap[cell.pos[Y], cell.pos[X]] = i
+        cell = self.actor.cell
+        self.distmap[cell.pos[Y], cell.pos[X]] = 0
 
     @staticmethod
     def castFov(tileMap, pos):
@@ -120,6 +132,12 @@ class AI:
     @staticmethod
     def findPath(map, start, target, interact=False):
         """Calculate a route from start to target, and return a list of actions to take."""
+        path = AI.simplePath(map, start, target)
+        return AI.pathToActions(path, target, interact)
+
+    @staticmethod
+    def simplePath(map, start, target):
+        """Just trying to minimize distance."""
         path = [start]
 
         dist = np.linalg.norm(path[-1] - target)
@@ -134,7 +152,10 @@ class AI:
                 break
             path.append(closestCell.pos)
             dist = np.linalg.norm(path[-1] - target)
+        return path
 
+    @staticmethod
+    def pathToActions(path, target, interact=False):
         actions = [{'TYPE': 'MOVE', 'DIR': path[i] - path[i - 1]}
                    for i in range(1, len(path))]
 
@@ -142,6 +163,21 @@ class AI:
             actions.append({'TYPE': 'USE', 'DIR': target - path[-1]})
         return actions
 
+
+    def findFloodPath(self, tileMap, start, target, interact=False):
+        """Calculate a route from start to target, and return a list of actions to take."""
+        dist = np.linalg.norm(start - target)
+        self.updateDist(tileMap, 2*dist)
+        path = [target]
+
+        for i in range(int(2*dist)):
+            possibleCells = filter(lambda c: self.distmap[c.pos[Y], c.pos[X]] >= 0, tileMap.getNeighborhood(path[-1], shape=8))
+            lowestCell = min(possibleCells, key=lambda c: self.distmap[c.pos[Y], c.pos[X]])
+            path.append(lowestCell.pos)
+            if all(path[-1] == start):
+                break
+
+        return pathToActions(reversed(path), interact)
 
 class Idle(AI):
     def __init__(self, actor, mind=None, target=None):

@@ -106,7 +106,7 @@ class Explosive(Item):
         return 3
 
     def detonate(self, map):
-        map.main.sound['EXPLOSION'].play()
+#        map.main.sound['EXPLOSION'].play()
         self.cell.addEffect(Flash(self.cell, 14))
 
         for cell in self.cell.getNeighborhood(shape=4):
@@ -125,17 +125,16 @@ class Explosive(Item):
             self.detonate(map)
 
 class Gun(Item):
-    def __init__(self, cell=None, carrier=None, tier=0):
-        Item.__init__(self, cell, carrier, char='$', color=TIERCOLOR[tier])
+    def __init__(self, cell=None, carrier=None):
+        Item.__init__(self, cell, carrier, char='$')
 
-        self.tier = tier
         self.magazine = 12
 
     def describe(self):
         return "Gun ({:})".format(self.magazine)
 
     def shoot(self, start, target):
-        self.carrier.main.sound['SHOT'].play()
+#        self.carrier.main.sound['SHOT'].play()
         self.carrier.cell.addEffect(Flash(self.carrier.cell))
 
         for cell in map(lambda p: self.carrier.main.map.getTile(p), self.rayCast(start, target)[1:]):
@@ -160,6 +159,23 @@ class Gun(Item):
 
         line = [[x, y] for x, y in zip(xLine, yLine)]
         return np.array(line)
+
+class Shotgun(Gun):
+    def __init__(self, cell=None, carrier=None):
+        Gun.__init__(self, cell, carrier)
+
+    def shoot(self, start, target):
+#        self.carrier.main.sound['SHOT'].play()
+        self.carrier.cell.addEffect(Flash(self.carrier.cell))
+
+        offsets = np.array([[0, -1], [1, 0], [0, 1], [-1, 0]])
+
+        for off in offsets:
+            for cell in map(lambda p: self.carrier.main.map.getTile(p), self.rayCast(start, target + off)[1:]):
+                cell.addEffect(Shot(cell))
+                if cell.block[LOS]:
+                    break
+
 
 class Key(Item):
     def __init__(self, cell=None, carrier=None, tier=0):

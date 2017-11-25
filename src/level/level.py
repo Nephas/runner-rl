@@ -10,12 +10,13 @@ from src.level.map import Map, Rectangle
 from src.level.room import Room
 from src.level.roomtypes import BossRoom, Corridor, Office, Dome, Hall
 
-from src.object.server import Terminal, Server
+from src.object.server import Terminal, Server, MasterSwitch
 from src.object.light import Lamp, DoorLamp
 from src.object.door import Vent, SecDoor, AutoDoor
 
 from src.render import Render
-from src.actor.actor import Player, Drone
+from src.actor.actor import Player
+from src.actor.npc import Drone
 
 
 class Level(Map):
@@ -24,10 +25,11 @@ class Level(Map):
     STRUCT = [{'CHILDREN': [0, 0], 'SIZES': [10, 20], 'SHAPES': ['Room']},
               {'CHILDREN': [1, 1], 'SIZES': [5, 15], 'SHAPES': ['Corridor']},
               {'CHILDREN': [2, 4], 'SIZES': [20, 40], 'SHAPES': ['Corridor']},
-              {'CHILDREN': [2, 4], 'SIZES': [20, 30], 'SHAPES': ['Corridor', 'Dome', 'Hall']},
-              {'CHILDREN': [3, 4], 'SIZES': [10, 20], 'SHAPES': ['Corridor', 'Room']},
+              {'CHILDREN': [2, 4], 'SIZES': [20, 30],
+                  'SHAPES': ['Corridor', 'Dome', 'Hall']},
+              {'CHILDREN': [3, 4], 'SIZES': [10, 20],
+                  'SHAPES': ['Corridor', 'Room']},
               {'CHILDREN': [4, 6], 'SIZES': [7, 15], 'SHAPES': ['Office']}]
-
 
     def __init__(self, main=None):
         Map.__init__(self, main)
@@ -158,11 +160,11 @@ class Level(Map):
             room.generateContent(self)
 
         # connect terminals
-        # for pair in it.combinations(self.getAll(Server) + self.getAll(Terminal), 2):
-        #     if rd.randint(0, 2) <= 2:
-        #         if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
-        #             pair[0].connect(pair[1])
-        #             self.layCable(pair[0].cell.pos, pair[1].cell.pos)
+        for pair in it.combinations(self.getAll(Server) + self.getAll(Terminal) + self.getAll(MasterSwitch), 2):
+            if rd.randint(0, 2) <= 2:
+                if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
+                    pair[0].connect(pair[1])
+                    self.layCable(pair[0].cell.pos, pair[1].cell.pos)
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
@@ -170,8 +172,9 @@ class Level(Map):
 
         player = Player(self.getTile(start.center), self.main)
         self.main.player = player
-#        for actor in self.main.actor:
-#            actor.ai.makeEnemy(player)
+        for actor in self.main.actor:
+            if actor.__class__.__name__ is 'Guard':
+                actor.ai.makeEnemy(player)
 
         drone = Drone(self.getTile(start.randomSpot()), self.main, player)
         drone.ai.makeFriend(player)
@@ -281,16 +284,17 @@ class Level(Map):
                 if shape is 'Corridor':
                     if direction in [UP, DOWN]:
                         w = 5
-                        h = int(1.5*rd.randint(*sizes))
+                        h = int(1.5 * rd.randint(*sizes))
                     else:
-                        w = int(1.5*rd.randint(*sizes))
+                        w = int(1.5 * rd.randint(*sizes))
                         h = 5
 
                 if shape is 'Dome':
                     w = rd.randint(*sizes)
                     h = w
 
-                offset = np.array(self.getOffset(room, direction, alignment, w, h))
+                offset = np.array(self.getOffset(
+                    room, direction, alignment, w, h))
                 rect = Rectangle(room.pos + offset, w, h)
 
                 for other in list(self.getRooms()) + room.children:
@@ -303,16 +307,19 @@ class Level(Map):
 
             if rect is not None:
                 roomClass = globals()[shape]
-                nextRoom = roomClass(rect.pos, rect.size[X], rect.size[Y], room.tier + 1, room)
+                nextRoom = roomClass(
+                    rect.pos, rect.size[X], rect.size[Y], room.tier + 1, room)
                 room.children.append(nextRoom)
                 self.tier[room.tier + 1].append(nextRoom)
                 nextRoom.carve(self)
 
                 # carve a connection
                 if direction in (UP, DOWN):
-                    self.carveDoorway(nextRoom, room, room.tier, not rect.size[X] < room.size[X])
+                    self.carveDoorway(nextRoom, room, room.tier,
+                                      not rect.size[X] < room.size[X])
                 elif direction in (LEFT, RIGHT):
-                    self.carveDoorway(nextRoom, room, room.tier, rect.size[Y] < room.size[Y])
+                    self.carveDoorway(nextRoom, room, room.tier,
+                                      rect.size[Y] < room.size[Y])
         return room.children
 
     @staticmethod
