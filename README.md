@@ -22,11 +22,16 @@ Other features implemented so far:
 * player character movement and field of view
 * simple world interactions (door opening, pushing)
 * light sources
+* simple physics
 * mouse movement
 
 Light and shadows are completely dynamic and interact with changes in the environment like 
-opening doors and moving scenery.
+opening doors and moving scenery. The physics engine can handle simple elements like Fluids, 
+Gases, Fire and environmental destruction.
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/screen.png" width="750"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/demo.gif" width="750"/>
 </p>
+
+The gif shows shooting some Fuel Barrels, shooting a lightbulb, then setting the fuel on fire.
+later, I'm placing a bomb and blow a hole in the wall towards the server room on the right.
