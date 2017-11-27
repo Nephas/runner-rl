@@ -8,7 +8,7 @@ import itertools as it
 
 from src.level.room import Room
 
-from src.object.object import Object, Obstacle, Barrel, Desk
+from src.object.object import Object, Obstacle, Barrel, Desk, Hydroponics
 from src.object.server import Terminal, Server, MasterSwitch, Rack
 from src.object.light import Lamp, FlickerLamp, SpotLight
 from src.object.item import Item, Key, PlotDevice
@@ -36,10 +36,8 @@ class Office(Room):
     def generateContent(self, map):
         self.placeAtWall(map, Server())
         self.placeAtWall(map, MasterSwitch())
-#        Server(map.getTile(rd.choice(self.edge())))
-#        MasterSwitch(map.getTile(rd.choice(self.edge())))
 
-        deskTile = map.getTile(self.randomSpot(3))
+        deskTile = map.getTile(self.randomSpot(2))
         neighbors = filter(lambda c: not c.wall, deskTile.getNeighborhood())
         rd.shuffle(neighbors)
 
@@ -49,8 +47,27 @@ class Office(Room):
         except IndexError:
             pass
 
-        Worker(map.getTile(self.randomSpot(3)), map.main)
+        Worker(map.getTile(self.randomSpot(2)), map.main)
         self.scatter(map, Key(tier=rd.randint(3, 5)), rd.randint(0, 1))
+        self.scatter(map, Lamp(), margin=2)
+
+
+class Lab(Room):
+    def __init__(self, pos, w, h, tier, parent):
+        Room.__init__(self, pos, w, h, tier, parent)
+
+    def generateContent(self, map):
+        self.placeAtWall(map, Server())
+        self.placeAtWall(map, MasterSwitch())
+
+        for i in range(3):
+            deskTile = self.placeAtWall(map, Desk())
+            neighbors = filter(lambda c: not c.wall, deskTile.getNeighborhood())
+            rd.shuffle(neighbors)
+            for cell in neighbors:
+                cell.addObject(cp.deepcopy(Desk()))
+
+        Worker(map.getTile(self.randomSpot(2)), map.main)
         self.scatter(map, Lamp(), margin=2)
 
 
@@ -66,13 +83,6 @@ class Hall(Room):
             for y in range(self.y[MIN] + 3, self.y[MAX] - 1):
                 if (x - pos[X]) % offset[X] == 0 and (y - pos[Y]) % offset[Y] == 0:
                     map.tile[x][y].addObject(FlickerLamp())
-
-        for x in range(self.x[MIN] + 3, self.x[MAX] - 3):
-            for y in range(self.y[MIN] + 3, self.y[MAX] - 3):
-                if x % 3 == 0 and y % 5 != 0:
-                    cell = map.tile[x][y]
-                    if cell.isEmpty():
-                        Rack(cell)
 
     def carve(self, map):
         self.updateCells(map)
@@ -94,6 +104,66 @@ class Hall(Room):
             for y in range(self.y[MIN] + 3, self.y[MAX] - 3):
                 if (x - self.pos[X]) % offset[X] == 0 and (y - self.pos[Y]) % offset[Y] == 0:
                     map.tile[x][y].makeWall()
+
+
+class ServerFarm(Hall):
+    def __init__(self, pos, w, h, tier, parent):
+        Hall.__init__(self, pos, w, h, tier, parent)
+
+    def generateContent(self, map):
+        offset = (2 * (self.center - self.pos) // 3).round().astype('int')
+        pos = self.pos - (offset / 2).round().astype('int')
+
+        for x in range(self.x[MIN] + 3, self.x[MAX] - 1):
+            for y in range(self.y[MIN] + 3, self.y[MAX] - 1):
+                if (x - pos[X]) % offset[X] == 0 and (y - pos[Y]) % offset[Y] == 0:
+                    map.tile[x][y].addObject(FlickerLamp())
+
+        for x in range(self.x[MIN] + 3, self.x[MAX] - 3):
+            for y in range(self.y[MIN] + 3, self.y[MAX] - 3):
+                if x % 3 == 0 and y % 5 != 0:
+                    cell = map.tile[x][y]
+                    if cell.isEmpty():
+                        Rack(cell)
+
+
+class GreenHouse(Hall):
+    def __init__(self, pos, w, h, tier, parent):
+        Hall.__init__(self, pos, w, h, tier, parent)
+
+    def generateContent(self, map):
+        offset = (2 * (self.center - self.pos) // 3).round().astype('int')
+        pos = self.pos - (offset / 2).round().astype('int')
+
+        for x in range(self.x[MIN] + 3, self.x[MAX] - 1):
+            for y in range(self.y[MIN] + 3, self.y[MAX] - 1):
+                if (x - pos[X]) % offset[X] == 0 and (y - pos[Y]) % offset[Y] == 0:
+                    map.tile[x][y].addObject(FlickerLamp())
+
+        for x in range(self.x[MIN] + 3, self.x[MAX] - 3):
+            for y in range(self.y[MIN] + 3, self.y[MAX] - 3):
+                if (x % 4 in [0, 1, 2]) and y % 5 != 0:
+                    cell = map.tile[x][y]
+                    if cell.isEmpty():
+                        cell.addObject(Hydroponics())
+
+
+class Storage(Hall):
+    def __init__(self, pos, w, h, tier, parent):
+        Hall.__init__(self, pos, w, h, tier, parent)
+
+    def generateContent(self, map):
+        offset = (2 * (self.center - self.pos) // 3).round().astype('int')
+        pos = self.pos - (offset / 2).round().astype('int')
+
+        for x in range(self.x[MIN] + 3, self.x[MAX] - 1):
+            for y in range(self.y[MIN] + 3, self.y[MAX] - 1):
+                if (x - pos[X]) % offset[X] == 0 and (y - pos[Y]) % offset[Y] == 0:
+                    map.tile[x][y].addObject(FlickerLamp())
+
+        for i in range(rd.randint(4, 8)):
+            self.cluster(map, self.randomSpot(3), rd.choice(
+                [Barrel(), Obstacle()]), rd.randint(2, 12))
 
 
 class Dome(Room):

@@ -91,6 +91,16 @@ class Desk(Object):
         return "Desk"
 
 
+class Hydroponics(Object):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, char=';', color=COLOR['GREEN'])
+
+        self.block = [False, True, True]
+
+    def describe(self):
+        return "Hydroponics"
+
+
 class Obstacle(Object):
     def __init__(self, cell=None):
         Object.__init__(self, cell, char=10, color=(200, 200, 200))

@@ -183,7 +183,7 @@ class Cell:
         if self.room is None:
             self.bg = (25, 25, 25)
         else:
-            self.bg = self.map.PALETTE[self.room.tier]
+            self.bg = self.map.palette[self.room.tier]
             self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
 
         self.char = ' '
@@ -253,16 +253,16 @@ class Cell:
         elif self.room is None:
             bg = COLOR['BLACK']
         else:
-            bg = list(self.map.PALETTE[self.room.tier])
+            bg = list(self.map.palette[self.room.tier])
 
         if self.grid is None:
             window.draw_char(pos[X], pos[Y], char, COLOR['SILVER'], bg)
         elif not self.grid:
             window.draw_char(pos[X], pos[Y], 254, list(
-                self.map.COMPLEMENT[0]), bg)
+                self.map.corp.complement[0]), bg)
         elif self.grid:
             window.draw_char(pos[X], pos[Y], ' ', bg,
-                             list(self.map.COMPLEMENT[1]))
+                             list(self.map.corp.complement[1]))
 
     def drawDist(self, window, pos, distmap):
         dist = distmap[self.pos[Y]][self.pos[X]]

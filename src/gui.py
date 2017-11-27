@@ -68,7 +68,7 @@ class Gui:
             cursorTile = self.main.map.getTile(self.cursorPos)
             if cursorTile.vision[LOS] is True:
                 if cursorTile.room is not None:
-                    panel.draw_str(1, 5, cursorTile.room.describe(), tuple(self.main.map.PALETTE[cursorTile.room.tier]))
+                    panel.draw_str(1, 5, cursorTile.room.describe())
                 for i, obj in enumerate(cursorTile.object + cursorTile.effect):
                     panel.draw_str(1, 7 + 2 * i, obj.describe(), obj.fg)
 

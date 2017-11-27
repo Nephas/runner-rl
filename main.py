@@ -10,6 +10,7 @@ from src.actor.actor import Player
 import sys
 import pygame as pg
 import time as t
+import random as rd
 import tdl
 
 class Game:
@@ -43,7 +44,7 @@ class Game:
         #               'STEP': pg.mixer.Sound('sounds/step.wav')}
 
         self.render.renderStart()
-        self.map.load('1231')
+        self.map.load(random = True)
 
         self.gui.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
         self.gui.updateCursor()

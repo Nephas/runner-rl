@@ -74,6 +74,7 @@ class Room(Rectangle):
         cells = filter(lambda c: c.isEmpty() and c.atWall(), cells)
         cell = rd.choice(cells)
         cell.addObject(cp.deepcopy(obj))
+        return cell
 
     def cluster(self, map, pos, obj, n=0):
         if n > 0:

@@ -8,13 +8,14 @@ import itertools as it
 import colorsys as cs
 import hashlib as hl
 
-from src.level.map import Map, Rectangle
+from src.level.map import Map, Rectangle, Cell
+from src.level.corp import Corp
 from src.level.room import Room
-from src.level.roomtypes import BossRoom, Corridor, Office, Dome, Hall
+from src.level.roomtypes import BossRoom, Corridor, Office, Dome, Hall, ServerFarm, GreenHouse, Lab, Storage
 
 from src.object.server import Terminal, Server, MasterSwitch
 from src.object.light import Lamp, DoorLamp
-from src.object.door import Vent, SecDoor, AutoDoor
+from src.object.door import Vent, SecDoor
 
 from src.render import Render
 from src.actor.actor import Player
@@ -22,18 +23,14 @@ from src.actor.npc import Drone
 
 
 class Level(Map):
-    LAYOUT = ['CROSS', 'CORNER', 'RING', 'DUAL']
-
-    STRUCT = [{'CHILDREN': [0, 0], 'SIZES': [10, 20], 'SHAPES': ['Room']},
-              {'CHILDREN': [1, 1], 'SIZES': [5, 15], 'SHAPES': ['Corridor']},
-              {'CHILDREN': [2, 4], 'SIZES': [20, 40], 'SHAPES': ['Corridor']},
-              {'CHILDREN': [2, 4], 'SIZES': [20, 30],
-                  'SHAPES': ['Corridor', 'Dome', 'Hall']},
-              {'CHILDREN': [3, 4], 'SIZES': [10, 20],
-                  'SHAPES': ['Corridor', 'Room']},
-              {'CHILDREN': [4, 6], 'SIZES': [7, 15], 'SHAPES': ['Office']}]
-
-    PALETTE = {}
+    SHAPE = {'CORNER': [Rectangle([Map.WIDTH // 3, Map.HEIGHT // 3], 2 * Map.WIDTH // 3, 2 * Map.HEIGHT / 3)],
+             'DUAL': [Rectangle([0, 0], Map.WIDTH // 3, Map.HEIGHT // 3),
+                      Rectangle([2 * Map.WIDTH // 3, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3)],
+             'CROSS': [Rectangle([2 * Map.WIDTH // 3, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3),
+                       Rectangle([0, 0], Map.WIDTH // 3, Map.HEIGHT // 3),
+                       Rectangle([0, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3),
+                       Rectangle([2 * Map.WIDTH // 3, 0], Map.WIDTH // 3, Map.HEIGHT // 3)],
+             'RING': [Rectangle([Map.WIDTH // 3, Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3)]}
 
     def __init__(self, main=None):
         Map.__init__(self, main)
@@ -56,29 +53,35 @@ class Level(Map):
                     return False
             return target[X] in range(0, Map.WIDTH) and target[Y] in range(0, Map.HEIGHT)
 
+    def clear(self):
+        self.tile = [[Cell(self, [x, y]) for y in range(Map.HEIGHT)]
+                     for x in range(Map.WIDTH)]
+        self.tier = [[]]
+
     def getRooms(self):
         for tier in self.tier:
             for room in tier:
                 yield room
 
-    def load(self, seed):
+    def load(self, seed='Test', random=False):
         self.clear()
 
-        seed = int(hl.sha1(seed).hexdigest(), 16) % (10 ** 8)
-        rd.seed(seed)
-        np.random.seed(seed)
+        if not random:
+            seed = int(hl.sha1(seed).hexdigest(), 16) % (10 ** 8)
+            rd.seed(seed)
+            np.random.seed(seed)
+
+        self.corp = Corp()
+        self.forbidden = Level.SHAPE[self.corp.layout]
+        self.palette = self.corp.palette
+        print(self.corp)
         self.generate()
 
     def generate(self):
-        self.generateShape()
-        self.generateStart()
-
-        (Level.PALETTE, Level.COMPLEMENT) = Level.randColorPalette(
-            len(Level.STRUCT) + 1)
-
         stats = {'ROOMS': -1, 'VENTS': - 1}
-        while stats['VENTS'] < 5 or stats['ROOMS'] < 10:
-#            self.map = Level(self)
+        while stats['VENTS'] < 10 or stats['ROOMS'] < 20:
+            self.clear()
+            self.generateStart()
             self.generateRooms()
             self.generateVents()
 
@@ -87,32 +90,11 @@ class Level(Map):
 
         self.finalize()
 
-    def generateShape(self):
-        shape = rd.choice(Level.LAYOUT)
-        self.forbidden = []
-        if shape is 'CORNER':
-            self.forbidden = [Rectangle(
-                [Map.WIDTH // 3, Map.HEIGHT // 3], 2 * Map.WIDTH // 3, 2 * Map.HEIGHT / 3)]
-        elif shape is 'DUAL':
-            self.forbidden = [Rectangle([0, 0], Map.WIDTH // 3, Map.HEIGHT // 3),
-                              Rectangle([2 * Map.WIDTH // 3, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3)]
-        elif shape is 'CROSS':
-            self.forbidden = [Rectangle([2 * Map.WIDTH // 3, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3),
-                              Rectangle([0, 0], Map.WIDTH //
-                                        3, Map.HEIGHT // 3),
-                              Rectangle([0, 2 * Map.HEIGHT // 3],
-                                        Map.WIDTH // 3, Map.HEIGHT // 3),
-                              Rectangle([2 * Map.WIDTH // 3, 0], Map.WIDTH // 3, Map.HEIGHT // 3)]
-        elif shape is 'RING':
-            self.forbidden = [
-                Rectangle([Map.WIDTH // 3, Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3)]
-        return shape
-
     def generateStart(self):
         self.tier = [[]]
 
-        w = rd.randint(*Level.STRUCT[0]['SIZES'])
-        h = rd.randint(*Level.STRUCT[0]['SIZES'])
+        w = rd.randint(*self.corp.struct[0]['SIZES'])
+        h = rd.randint(*self.corp.struct[0]['SIZES'])
         margin = 8
 
         while True:
@@ -129,7 +111,7 @@ class Level(Map):
         # recursively spread room
         Render.printImage(self, "gif/levelgen{:02}.bmp".format(0))
 
-        for i in range(1, len(Level.STRUCT)):
+        for i in range(1, len(self.corp.struct)):
             Render.printImage(self, "gif/levelgen{:02}.bmp".format(i))
 
             self.tier.append([])
@@ -279,9 +261,9 @@ class Level(Map):
         return True
 
     def propagateRoom(self, room, tier):
-        children = Level.STRUCT[tier]['CHILDREN']
-        sizes = Level.STRUCT[tier]['SIZES']
-        shapes = Level.STRUCT[tier]['SHAPES']
+        children = self.corp.struct[tier]['CHILDREN']
+        sizes = self.corp.struct[tier]['SIZES']
+        shapes = self.corp.struct[tier]['SHAPES']
 
         directions = [UP, DOWN, LEFT, RIGHT]
 
@@ -290,7 +272,7 @@ class Level(Map):
             shape = rd.choice(shapes)
 
             # number of tries to find a valid child
-            for i in range(100):
+            for i in range(250):
                 direction = rd.choice(directions)
                 alignment = rd.choice([MIN, MAX])
 
@@ -304,6 +286,10 @@ class Level(Map):
                     else:
                         w = int(1.5 * rd.randint(*sizes))
                         h = 5
+                # elif i % 25 == 0:
+                #     sizes = (np.array(sizes)*0.99).astype('int')
+                #     sizes[0] = max(7,sizes[0])
+                #     sizes[1] = max(7,sizes[1])
 
                 if shape is 'Dome':
                     w = rd.randint(*sizes)

@@ -203,7 +203,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
                     # set the colour accordingly
                     for p in tile:
                         pixels[p[X], p[Y]] = tuple(
-                            map.PALETTE[map.tile[x][y].room.tier])
+                            map.palette[map.tile[x][y].room.tier])
                 elif map.tile[x][y].wall is True:
                     for p in tile:
                         # set the colour accordingly
@@ -215,12 +215,12 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
                 if map.tile[x][y].grid is False:
                     # set the colour accordingly
-                    pixels[3 * x + 1, 3 * y + 1] = tuple(map.COMPLEMENT[0])
+                    pixels[3 * x + 1, 3 * y + 1] = tuple(map.corp.complement[0])
                 elif map.tile[x][y].grid is True:
                     for p in tile:
                         # set the colour accordingly
                         pixels[p[X], p[Y]] = tuple(
-                            (0.5 * map.COMPLEMENT[0]).astype('int'))
+                            (0.5 * map.corp.complement[0]).astype('int'))
 
         for room in map.tier[-1]:
             if room.function is not None:
