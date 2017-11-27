@@ -183,7 +183,7 @@ class Cell:
         if self.room is None:
             self.bg = (25, 25, 25)
         else:
-            self.bg = TIERCOLOR[self.room.tier]
+            self.bg = self.map.PALETTE[self.room.tier]
             self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
 
         self.char = ' '
@@ -198,6 +198,8 @@ class Cell:
             except:
                 pass
 
+        if self.block[LOS]:
+            self.bg = (25, 25, 25)
 
     def makeWall(self):
         self.object = []
@@ -217,8 +219,8 @@ class Cell:
             offsets = [np.array([i, j]) for i in [-1, 0, 1]
                        for j in [-1, 0, 1]]
         else:
-            offsets = [np.array([i, j]) for i in range(-1*shape, shape)
-                       for j in range(-1*shape, shape)]
+            offsets = [np.array([i, j]) for i in range(-1 * shape, shape)
+                       for j in range(-1 * shape, shape)]
             offsets = filter(lambda off: np.linalg.norm(off) < shape, offsets)
 
         positions = map(lambda off: off + self.pos, offsets)
@@ -244,23 +246,28 @@ class Cell:
             window.draw_char(pos[X], pos[Y], self.char, self.fg, self.bg)
 
     def drawNet(self, window, pos):
+        char = self.char
         if self.wall:
             bg = COLOR['DARKGRAY']
+            char = None
         elif self.room is None:
             bg = COLOR['BLACK']
         else:
-            bg = list(TIERCOLOR[self.room.tier])
+            bg = list(self.map.PALETTE[self.room.tier])
 
         if self.grid is None:
-            window.draw_char(pos[X], pos[Y], self.char, COLOR['SILVER'], bg)
+            window.draw_char(pos[X], pos[Y], char, COLOR['SILVER'], bg)
         elif not self.grid:
-            window.draw_char(pos[X], pos[Y], 254, COLOR['GREEN'], bg)
+            window.draw_char(pos[X], pos[Y], 254, list(
+                self.map.COMPLEMENT[0]), bg)
         elif self.grid:
-            window.draw_char(pos[X], pos[Y], ' ', bg, COLOR['GREEN'])
+            window.draw_char(pos[X], pos[Y], ' ', bg,
+                             list(self.map.COMPLEMENT[1]))
 
     def drawDist(self, window, pos, distmap):
         dist = distmap[self.pos[Y]][self.pos[X]]
-        bg = list(int(c * (1 + dist) // (2 + distmap.max())) for c in COLOR['WHITE'])
+        bg = list(int(c * (1 + dist) // (2 + distmap.max()))
+                  for c in COLOR['WHITE'])
         window.draw_char(pos[X], pos[Y], self.char, self.fg, bg)
 
     def drawHighlight(self, window, pos, color=COLOR['WHITE']):

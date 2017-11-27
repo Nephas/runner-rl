@@ -5,6 +5,8 @@ import numpy as np
 import random as rd
 import copy as cp
 import itertools as it
+import colorsys as cs
+import hashlib as hl
 
 from src.level.map import Map, Rectangle
 from src.level.room import Room
@@ -30,6 +32,8 @@ class Level(Map):
               {'CHILDREN': [3, 4], 'SIZES': [10, 20],
                   'SHAPES': ['Corridor', 'Room']},
               {'CHILDREN': [4, 6], 'SIZES': [7, 15], 'SHAPES': ['Office']}]
+
+    PALETTE = {}
 
     def __init__(self, main=None):
         Map.__init__(self, main)
@@ -57,15 +61,24 @@ class Level(Map):
             for room in tier:
                 yield room
 
-    def generate(self, seed):
-        rd.seed(seed)
+    def load(self, seed):
+        self.clear()
 
+        seed = int(hl.sha1(seed).hexdigest(), 16) % (10 ** 8)
+        rd.seed(seed)
+        np.random.seed(seed)
+        self.generate()
+
+    def generate(self):
         self.generateShape()
         self.generateStart()
 
+        (Level.PALETTE, Level.COMPLEMENT) = Level.randColorPalette(
+            len(Level.STRUCT) + 1)
+
         stats = {'ROOMS': -1, 'VENTS': - 1}
         while stats['VENTS'] < 5 or stats['ROOMS'] < 10:
-            self.map = Level(self)
+#            self.map = Level(self)
             self.generateRooms()
             self.generateVents()
 
@@ -96,6 +109,8 @@ class Level(Map):
         return shape
 
     def generateStart(self):
+        self.tier = [[]]
+
         w = rd.randint(*Level.STRUCT[0]['SIZES'])
         h = rd.randint(*Level.STRUCT[0]['SIZES'])
         margin = 8
@@ -170,14 +185,14 @@ class Level(Map):
         start = rd.choice(self.tier[-1])
         start.function = "start"
 
-        player = Player(self.getTile(start.center), self.main)
-        self.main.player = player
+        self.getTile(start.center).addObject(self.main.player)
+
         for actor in self.main.actor:
             if actor.__class__.__name__ is 'Guard':
-                actor.ai.makeEnemy(player)
+                actor.ai.makeEnemy(self.main.player)
 
-        drone = Drone(self.getTile(start.randomSpot()), self.main, player)
-        drone.ai.makeFriend(player)
+        drone = Drone(self.getTile(start.randomSpot()), self.main, self.main.player)
+        drone.ai.makeFriend(self.main.player)
 
         exRooms = filter(lambda r: r.function is None, self.tier[-1])
         rd.shuffle(exRooms)
@@ -199,7 +214,6 @@ class Level(Map):
         positions = self.getConnection(room1.center, room2.center, horizontal)
 
         # carve wide tunnels for corridors and circular rooms
-#        if room1.__class__.__name__ in ['Corridor', 'Dome'] or room2.__class__.__name__ in ['Corridor', 'Dome']:
         for pos in positions:
             if pos not in room1.border() or pos in room2.border():
                 for cell in self.getNeighborhood(pos, shape=8):
@@ -269,13 +283,15 @@ class Level(Map):
         sizes = Level.STRUCT[tier]['SIZES']
         shapes = Level.STRUCT[tier]['SHAPES']
 
+        directions = [UP, DOWN, LEFT, RIGHT]
+
         # number of child rooms
         for i in range(rd.randint(*children)):
             shape = rd.choice(shapes)
 
             # number of tries to find a valid child
             for i in range(100):
-                direction = rd.choice([UP, DOWN, LEFT, RIGHT])
+                direction = rd.choice(directions)
                 alignment = rd.choice([MIN, MAX])
 
                 w = rd.randint(*sizes)
@@ -306,6 +322,9 @@ class Level(Map):
                     break
 
             if rect is not None:
+                if shape is 'Corridor':
+                    directions.remove(direction)
+
                 roomClass = globals()[shape]
                 nextRoom = roomClass(
                     rect.pos, rect.size[X], rect.size[Y], room.tier + 1, room)
@@ -352,3 +371,25 @@ class Level(Map):
         else:             # vertical first:
             return [[pos1[X], y] for y in range(min(pos1[Y], pos2[Y]), max(
                 pos1[Y], pos2[Y]) + 1)] + [[x, pos2[Y]] for x in range(min(pos1[X], pos2[X]), max(pos1[X], pos2[X]) + 1)]
+
+    @staticmethod
+    def randColorPalette(length):
+        startcol = [rd.random(), 0.5, 0.9]
+
+        colors = []
+        for i in np.linspace(0, 1 / 12., length):
+            col = startcol
+            col[0] = (col[0] + i) % 1.0
+            colors.append((255 * np.array(cs.hsv_to_rgb(*col))).astype('int'))
+
+        startcol[0] += 0.5
+        startcol[1] = 0.9
+
+        complement = []
+        for i in np.linspace(0, 1 / 12., length):
+            col = startcol
+            col[0] = (col[0] + i) % 1.0
+            complement.append(
+                (255 * np.array(cs.hsv_to_rgb(*col))).astype('int'))
+
+        return (colors + [np.array((10, 10, 10))], complement + [np.array((10, 10, 10))])

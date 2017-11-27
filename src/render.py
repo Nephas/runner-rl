@@ -75,7 +75,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
                 cell.drawNet(panel, cell.pos - gui.mapOffset)
         elif self.mapLayer == 2:
             for cell in gui.getCells(map):
-                cell.drawDist(panel, cell.pos - gui.mapOffset, self.main.player.ai.distmap)
+                cell.drawDist(panel, cell.pos - gui.mapOffset,
+                              self.main.player.ai.distmap)
 
         try:
             cell = map.getTile(self.main.player.cell.pos + gui.cursorDir)
@@ -101,11 +102,10 @@ class Render:  # a rectangle on the map. used to characterize a room.
     def rayCast(start, end):
         nPoints = np.max(np.abs(end - start)) + 1
 
-        xLine = np.linspace(start[X], end[X], nPoints).round().astype('int')
-        yLine = np.linspace(start[Y], end[Y], nPoints).round().astype('int')
-
+        xLine = np.linspace(start[X], end[X], nPoints)
+        yLine = np.linspace(start[Y], end[Y], nPoints)
         line = [[x, y] for x, y in zip(xLine, yLine)]
-        return np.array(line)
+        return np.array(line).round().astype('int')
 
     @staticmethod
     def rayMap(r):
@@ -119,7 +119,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
     def circleCast(r):
         circle = []
 
-        for phi in np.linspace(0, 2. * np.pi, int(r) * 20):
+        for phi in np.linspace(0, 2. * np.pi, int(r) * 30):
             end = (r * np.array([np.cos(phi), np.sin(phi)])).astype('int')
             if len(circle) == 0 or not all(circle[-1] == end):
                 circle.append(end)
@@ -175,7 +175,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
         return np.array(circle)
 
     @staticmethod
-    def coneMap(r, dir, width=np.pi*0.5):
+    def coneMap(r, dir, width=np.pi * 0.5):
         arc = []
         cone = []
         start = np.array([0, 0])
@@ -203,7 +203,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
                     # set the colour accordingly
                     for p in tile:
                         pixels[p[X], p[Y]] = tuple(
-                            TIERCOLOR[map.tile[x][y].room.tier])
+                            map.PALETTE[map.tile[x][y].room.tier])
                 elif map.tile[x][y].wall is True:
                     for p in tile:
                         # set the colour accordingly
@@ -215,11 +215,12 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
                 if map.tile[x][y].grid is False:
                     # set the colour accordingly
-                    pixels[3 * x + 1, 3 * y + 1] = COLOR['GREEN']
+                    pixels[3 * x + 1, 3 * y + 1] = tuple(map.COMPLEMENT[0])
                 elif map.tile[x][y].grid is True:
                     for p in tile:
                         # set the colour accordingly
-                        pixels[p[X], p[Y]] = COLOR['MEDIUMGREEN']
+                        pixels[p[X], p[Y]] = tuple(
+                            (0.5 * map.COMPLEMENT[0]).astype('int'))
 
         for room in map.tier[-1]:
             if room.function is not None:

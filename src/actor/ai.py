@@ -6,6 +6,7 @@ import numpy as np
 from src.render import Render
 from src.level.map import Map, Rectangle
 
+
 class AI:
     FOVMAP = Render.rayMap(24)
     FOV_NEIGHBORHOOD = np.array(
@@ -16,6 +17,7 @@ class AI:
         self.char = actor.char
         self.color = COLOR['WHITE']
         self.distmap = np.ones((Map.HEIGHT, Map.WIDTH)) * -1
+        self.node = None
 
         if mind is None:
             self.mind = {'AWARE': [self],
@@ -56,8 +58,8 @@ class AI:
     def updateRoom(self, map):
         self.mind['ROOM'] = self.actor.cell.room
 
-    def switchState(self, aiState, target=None):
-        self.actor.ai = aiState(self.actor, self.mind, target)
+    def switchState(self, aiState):
+        self.actor.ai = aiState(self.actor, self.mind)
         self.actor.fg = self.actor.ai.color
 
     def describe(self):
@@ -74,23 +76,29 @@ class AI:
             else:
                 self.actor.char = '?'
 
-    def decide(map):
+    def decide(self, map):
         return []
 
-    def updateDist(self, tileMap, radius=10):
-        self.distmap = np.ones((Map.HEIGHT, Map.WIDTH)) * -1
-        boundary = [self.actor.cell]
+    def chooseOption(self, index):
+        return 0
+
+
+    @staticmethod
+    def getDistmap(tileMap, pos, radius=10):
+        distmap = np.ones((Map.HEIGHT, Map.WIDTH)) * -1
+        boundary = [pos]
 
         for i in range(int(radius)):
             newBound = []
             for cell in boundary:
                 newBound += cell.getNeighborhood()
 
-            boundary = filter(lambda c: self.distmap[c.pos[Y], c.pos[X]] < 0 and not c.block[MOVE], newBound)
+            boundary = filter(
+                lambda c: distmap[c.pos[Y], c.pos[X]] < 0 and not c.block[MOVE], newBound)
             for cell in boundary:
-                self.distmap[cell.pos[Y], cell.pos[X]] = i
-        cell = self.actor.cell
-        self.distmap[cell.pos[Y], cell.pos[X]] = 0
+                distmap[cell.pos[Y], cell.pos[X]] = i
+        distmap[pos[Y], pos[X]] = 0
+        return distmap
 
     @staticmethod
     def castFov(tileMap, pos):
@@ -108,11 +116,12 @@ class AI:
                             blockPoint = baseLine[i]
                             break
                         else:
-                            neighbors = map(lambda p: tileMap.getTile(p), AI.FOV_NEIGHBORHOOD + point) + [cell]
+                            neighbors = map(lambda p: tileMap.getTile(
+                                p), AI.FOV_NEIGHBORHOOD + point) + [cell]
 
                             if cell.light > BASE_LIGHT:
                                 cell.vision = [True, True]
-                                for neighbor in filter(lambda n: n.block[LOS], neighbors):
+                                for neighbor in neighbors:
                                     neighbor.vision = [True, True]
                             else:
                                 for neighbor in filter(lambda n: n.block[LOS], neighbors):
@@ -141,18 +150,38 @@ class AI:
         path = [start]
 
         dist = np.linalg.norm(path[-1] - target)
-        while dist != 0 and len(path) < 32:
+        try:
+            while dist != 0 and len(path) < 32:
+                possibleCells = filter(
+                    lambda c: not c.block[MOVE], map.getNeighborhood(path[-1], shape=8))
+                closestCell = min(
+                    possibleCells, key=lambda c: np.linalg.norm(target - c.pos))
+                if dist <= 1.5 and map.getTile(target).block[MOVE]:
+                    break
+                if all(closestCell.pos == path[-1]):
+                    break
+                path.append(closestCell.pos)
+                dist = np.linalg.norm(path[-1] - target)
+            return path
+        except ValueError:
+            return []
+
+    @staticmethod
+    def findFloodPath(tileMap, start, target, radius):
+        """Calculate a route from start to target, and return a list of actions to take."""
+        dist = np.linalg.norm(start - target)
+        distmap = AI.getDistmap(tileMap, pos, radius)
+        path = [target]
+
+        for i in range(int(2 * dist)):
             possibleCells = filter(
-                lambda c: not c.block[MOVE], map.getNeighborhood(path[-1], shape=8))
-            closestCell = min(
-                possibleCells, key=lambda c: np.linalg.norm(target - c.pos))
-            if dist <= 1.5 and map.getTile(target).block[MOVE]:
+                lambda c: distmap[c.pos[Y], c.pos[X]] >= 0, tileMap.getNeighborhood(path[-1], shape=8))
+            lowestCell = min(
+                possibleCells, key=lambda c: distmap[c.pos[Y], c.pos[X]])
+            path.append(lowestCell.pos)
+            if all(path[-1] == start):
                 break
-            if all(closestCell.pos == path[-1]):
-                break
-            path.append(closestCell.pos)
-            dist = np.linalg.norm(path[-1] - target)
-        return path
+        return reversed(path)
 
     @staticmethod
     def pathToActions(path, target, interact=False):
@@ -163,21 +192,6 @@ class AI:
             actions.append({'TYPE': 'USE', 'DIR': target - path[-1]})
         return actions
 
-
-    def findFloodPath(self, tileMap, start, target, interact=False):
-        """Calculate a route from start to target, and return a list of actions to take."""
-        dist = np.linalg.norm(start - target)
-        self.updateDist(tileMap, 2*dist)
-        path = [target]
-
-        for i in range(int(2*dist)):
-            possibleCells = filter(lambda c: self.distmap[c.pos[Y], c.pos[X]] >= 0, tileMap.getNeighborhood(path[-1], shape=8))
-            lowestCell = min(possibleCells, key=lambda c: self.distmap[c.pos[Y], c.pos[X]])
-            path.append(lowestCell.pos)
-            if all(path[-1] == start):
-                break
-
-        return pathToActions(reversed(path), interact)
 
 class Idle(AI):
     def __init__(self, actor, mind=None, target=None):
@@ -195,7 +209,7 @@ class Idle(AI):
                     self.mind['TARGET'] == obj
                     return []
                 elif obj is self.mind['TARGET']:
-                    self.switchState(Attack, obj)
+                    self.switchState(Attack)
                     return []
 
         if len(self.actor.actions) == 0:
@@ -204,7 +218,7 @@ class Idle(AI):
                 for actor in self.mind['AWARE']:
                     if actor in self.mind['ENEMY']:
                         self.mind['TARGET'] = actor
-                        self.switchState(Attack, actor)
+                        self.switchState(Attack)
                         break
                 self.counter -= 1
                 return []
@@ -215,7 +229,7 @@ class Idle(AI):
 
 
 class Stunned(AI):
-    def __init__(self, actor, mind=None, target=None):
+    def __init__(self, actor, mind=None):
         AI.__init__(self, actor, mind)
 
         self.counter = 10
@@ -231,10 +245,8 @@ class Stunned(AI):
 
 
 class Follow(AI):
-    def __init__(self, actor, mind, target):
+    def __init__(self, actor, mind):
         AI.__init__(self, actor, mind)
-
-        self.target = target
 
     def decide(self, map):
         if len(self.actor.actions) == 0:
@@ -243,12 +255,15 @@ class Follow(AI):
             else:
                 return AI.findPath(map, self.actor.cell.pos, self.target.cell.pos)[0:3]
 
+    def setLeader(self, actor):
+        self.target = actor
+
 
 class Attack(AI):
-    def __init__(self, actor, mind, target):
+    def __init__(self, actor, mind):
         AI.__init__(self, actor, mind)
 
-        self.target = target
+        self.target = mind['TARGET']
         self.color = COLOR['RED']
 
     def decide(self, map):
@@ -256,28 +271,44 @@ class Attack(AI):
             self.lookAround(map)
             if self.target in self.mind['AWARE']:
                 direction = self.target.cell.pos - self.actor.cell.pos
-                if np.linalg.norm(direction) < 2:
+                dist = np.linalg.norm(direction)
+                if dist < 2:
                     return [{'TYPE': 'ATTACK', 'DIR': direction}]
+                elif self.hasGun() and dist < 12:
+                    return [{'TYPE': 'ITEM',
+                             'INDEX': self.getGun(),
+                             'DIR': direction,
+                             'TARGET': self.target.cell.pos}]
                 else:
                     return AI.findPath(map, self.actor.cell.pos, self.target.cell.pos)[0:3]
             else:
-                self.switchState(Chase, self.target)
+                self.switchState(Chase)
                 return []
+
+    def hasGun(self):
+        for item in self.actor.inventory:
+            if item.__class__.__name__ is 'Gun':
+                return True
+
+    def getGun(self):
+        for i, item in enumerate(self.actor.inventory):
+            if item.__class__.__name__ is 'Gun':
+                return i
 
 
 class Chase(AI):
-    def __init__(self, actor, mind, target):
+    def __init__(self, actor, mind):
         AI.__init__(self, actor, mind)
 
-        self.target = target
-        self.lastPos = target.cell.pos
+        self.target = mind['TARGET']
+        self.lastPos = self.target.cell.pos
         self.color = COLOR['ORANGE']
 
     def decide(self, map):
         if len(self.actor.actions) == 0:
             self.lookAround(map)
             if self.target in self.mind['AWARE']:
-                self.switchState(Attack, self.target)
+                self.switchState(Attack)
                 return AI.findPath(map, self.actor.cell.pos, self.target.cell.pos)[0:3]
             else:
                 if all(self.actor.cell.pos == self.lastPos):

@@ -7,8 +7,7 @@ from src.level.map import Map, Rectangle
 
 
 class Gui:
-    MESSAGES = [
-        ('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
+    MESSAGES = [('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
 
     def __init__(self, main):
         self.main = main
@@ -69,7 +68,7 @@ class Gui:
             cursorTile = self.main.map.getTile(self.cursorPos)
             if cursorTile.vision[LOS] is True:
                 if cursorTile.room is not None:
-                    panel.draw_str(1, 5, cursorTile.room.describe(), tuple(TIERCOLOR[cursorTile.room.tier]))
+                    panel.draw_str(1, 5, cursorTile.room.describe(), tuple(self.main.map.PALETTE[cursorTile.room.tier]))
                 for i, obj in enumerate(cursorTile.object + cursorTile.effect):
                     panel.draw_str(1, 7 + 2 * i, obj.describe(), obj.fg)
 
@@ -81,7 +80,13 @@ class Gui:
             if pos >= panel.height - 1:
                 break
 
-            panel.draw_str(1, pos, str(i) + ': ' + item.describe(), item.fg)
+            if i == 0:
+                panel.draw_str(1, pos, 'SPACE: ' + item.describe(), item.fg, COLOR['DARKGRAY'])
+            elif i <= 4:
+                panel.draw_str(1, pos, '    {:}: '.format(i) + item.describe(), item.fg)
+            else:
+                panel.draw_str(1, pos, '       ' + item.describe(), item.fg)
+
 
     def renderMessage(self, panel):
         panel.clear(bg=COLOR['BLACK'])

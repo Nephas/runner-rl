@@ -25,7 +25,7 @@ class Vent(Object):
 
 class Door(Object):
     def __init__(self, cell=None, tier=0):
-        Object.__init__(self, cell, char=178, color=TIERCOLOR[tier])
+        Object.__init__(self, cell, char=178, color=COLOR['GRAY'])
 
         self.tier = tier
         self.closed = True

@@ -9,10 +9,13 @@ from src.effect.effect import Fuel
 
 class Object(object):
     PRIORITY = {'Object': 4,
-                'Debris': 4,
+                'Debris': 1,
                 'Item': 8,
                 'Actor': 16,
                 'NPC': 16,
+                'Worker': 16,
+                'Guard': 24,
+                'Grenade': 24,
                 'Obstacle': 16,
                 'Player': 32}
 
@@ -31,7 +34,7 @@ class Object(object):
         try:
             self.priority = Object.PRIORITY[self.__class__.__name__]
         except KeyError:
-            self.priority = 1
+            self.priority = 4
 
     def moveTo(self, pos):
         if self.cell.map.tile[pos[X]][pos[Y]].block[MOVE]:

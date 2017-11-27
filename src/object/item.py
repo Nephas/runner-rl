@@ -126,7 +126,7 @@ class Explosive(Item):
 
 class Gun(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, char='$')
+        Item.__init__(self, cell, carrier, char=169)
 
         self.magazine = 12
 
@@ -154,11 +154,51 @@ class Gun(Item):
     def rayCast(start, end):
         nPoints = np.max(np.abs(end - start)) + 1
 
-        xLine = np.linspace(start[X], end[X], nPoints).round().astype('int')
-        yLine = np.linspace(start[Y], end[Y], nPoints).round().astype('int')
-
+        xLine = np.linspace(start[X], end[X], nPoints).round()
+        yLine = np.linspace(start[Y], end[Y], nPoints).round()
         line = [[x, y] for x, y in zip(xLine, yLine)]
-        return np.array(line)
+        return np.array(line).astype('int')
+
+class Grenade(Explosive):
+    def __init__(self, cell=None, carrier=None):
+        Explosive.__init__(self, cell, carrier)
+
+        self.char = 235
+        self.path = []
+
+    def describe(self):
+        return 'Grenade'
+
+    def throw(self, start, target):
+        self.path = [start]
+        for i, cell in enumerate(map(lambda p: self.carrier.main.map.getTile(p), self.rayCast(start, target)[1:])):
+            if i % 2 == 0:
+                self.path.append(cell.pos)
+            if cell.block[MOVE]:
+                break
+                self.path.append(cell.pos)
+        self.drop()
+
+    def physics(self, map):
+        super(Grenade, self).physics(map)
+
+        if len(self.path) > 0:
+            self.moveTo(self.path[0])
+            del self.path[0]
+
+    def use(self, action):
+        self.counter = 10
+        self.throw(self.carrier.cell.pos, action['TARGET'])
+        return 5
+
+    @staticmethod
+    def rayCast(start, end):
+        nPoints = np.max(np.abs(end - start)) + 1
+
+        xLine = np.linspace(start[X], end[X], nPoints).round()
+        yLine = np.linspace(start[Y], end[Y], nPoints).round()
+        line = [[x, y] for x, y in zip(xLine, yLine)]
+        return np.array(line).astype('int')
 
 class Shotgun(Gun):
     def __init__(self, cell=None, carrier=None):
@@ -179,7 +219,7 @@ class Shotgun(Gun):
 
 class Key(Item):
     def __init__(self, cell=None, carrier=None, tier=0):
-        Item.__init__(self, cell, carrier, char='$', color=TIERCOLOR[tier])
+        Item.__init__(self, cell, carrier, char='$')
 
         self.tier = tier
 

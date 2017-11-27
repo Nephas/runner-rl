@@ -5,6 +5,7 @@ from src.level.level import Level
 from src.input import Input
 from src.gui import Gui
 from src.render import Render
+from src.actor.actor import Player
 
 import sys
 import pygame as pg
@@ -18,7 +19,6 @@ class Game:
     FRAME_LENGTH = 1. / LIMIT_FPS
 
     def __init__(self):
-        self.player = None
         self.render = Render(self)
         self.input = Input(self)
         self.gui = Gui(self)
@@ -26,11 +26,14 @@ class Game:
         self.sound = {}
 
         self.actor = []
+        self.player = Player(None, self)
 
         self.lastTic = t.time()
         self.tic = 0
 
     def initialize(self):
+        self.actor = [self.player]
+
         tdl.setFPS(self.LIMIT_FPS)
         pg.init()
         # self.sound = {'SHOT': pg.mixer.Sound('sounds/shot.wav'),
@@ -40,8 +43,7 @@ class Game:
         #               'STEP': pg.mixer.Sound('sounds/step.wav')}
 
         self.render.renderStart()
-
-        self.map.generate('Evil-Corp7')
+        self.map.load('1231')
 
         self.gui.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
         self.gui.updateCursor()

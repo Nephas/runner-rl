@@ -1,10 +1,11 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.object.item import Item, Key, FogCloak, Canister, Lighter, Explosive, Gun, Shotgun
+from src.object.item import Item, Key, FogCloak, Canister, Lighter, Explosive, Gun, Shotgun, Grenade
 from src.effect.effect import Effect
 
 from src.actor.ai import AI, Idle, Follow
+from src.actor.conversation import Conversation
 from src.actor.body import Body
 from src.gui import Gui
 
@@ -42,6 +43,11 @@ class Actor(Object):
         if type is 'ATTACK':
             self.die()
             return 10
+        elif type is 'USE' and self.__class__.__name__ is not 'Player':
+            self.ai.switchState(Conversation)
+            self.ai.mind['TARGET'] = actor
+            actor.ai.mind['TARGET'] = self
+            return 3
         else:
             return 0
 
@@ -56,11 +62,10 @@ class Actor(Object):
         Corpse(self.cell, self)
         Gui.pushMessage(self.describe() + " dies")
 
-    def interactDir(self, map, dir, type=None):
+    def interactWith(self, map, dir, type=None):
         tile = map.getTile(self.cell.pos + dir)
         if type is 'ATTACK':
             tile.addEffect(Effect(char='X', time=2))
-
         if len(tile.object) > 0:
             return tile.object[0].interact(self, dir, type)
         return 0
@@ -77,7 +82,12 @@ class Actor(Object):
                 self.cooldown += self.inventory[act['INDEX']].use(act)
             elif act['TYPE'] in ['USE','ATTACK']:
                 dir = act['DIR']
-                self.cooldown += self.interactDir(tileMap, act['DIR'], act['TYPE'])
+                self.cooldown += self.interactWith(tileMap, act['DIR'], act['TYPE'])
+            elif act['TYPE'] is 'TALK':
+                self.cooldown += act['TARGET'].ai.chooseOption(act['INDEX'])
+
+        elif len(self.actions) == 0:
+            self.actions = self.ai.decide(tileMap)
 
 
 class Player(Actor):
@@ -85,8 +95,9 @@ class Player(Actor):
         Actor.__init__(self, cell, main, char='@')
 
         self.fg = [225, 150, 50]
-        self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Lighter(carrier=self),
-                          Key(carrier=self,tier=5), Shotgun(carrier=self), Explosive(carrier=self)]
+        self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Grenade(carrier=self),
+                          Lighter(carrier=self), Key(carrier=self,tier=5), Shotgun(carrier=self),
+                          Explosive(carrier=self)]
 
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir
@@ -94,7 +105,7 @@ class Player(Actor):
             self.main.gui.moveOffset(dir)
             return np.abs(dir[X]) + np.abs(dir[Y])
         else:
-            return self.interactDir(self.main.map, dir)
+            return self.interactWith(self.main.map, dir)
 
     def castFov(self, map):
         self.ai.castFov(map, self.cell.pos)

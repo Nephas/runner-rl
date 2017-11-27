@@ -17,7 +17,7 @@ class Input:
     # [function, qualifier, help string]
     KEYMAP = coll.OrderedDict([
         ('ESCAPE', ('toggleQuit', None, "Quit game")),
-        ('SPACE',  ('playerAttack', None, "Attack Cursor Position")),
+        ('SPACE',  ('useItem', 0, "Use item slot")),
         ('TEXT_p', ('togglePause', None, "Pause Game")),
         ('TEXT_t', ('toggleDebug', None, "Enter debug console")),
         ('TEXT_m', ('cycleMap', None, "Cycle Map modes")),
@@ -30,11 +30,11 @@ class Input:
         ('TEXT_s', ('movePlayer', 'DOWN', "Player Movement")),
         ('TEXT_a', ('movePlayer', 'LEFT', "Player Movement")),
         ('TEXT_d', ('movePlayer', 'RIGHT', "Player Movement")),
-        ('TEXT_1', ('useItem', 1, "Use item slot")),
-        ('TEXT_2', ('useItem', 2, "Use item slot")),
-        ('TEXT_3', ('useItem', 3, "Use item slot")),
-        ('TEXT_4', ('useItem', 4, "Use item slot")),
-        ('TEXT_5', ('useItem', 5, "Use item slot"))])
+        ('TEXT_r', ('restart', None, "Reload Level")),
+        ('TEXT_1', ('dialogChoice', 1, "Answer Dialogue")),
+        ('TEXT_2', ('dialogChoice', 2, "Answer Dialogue")),
+        ('TEXT_3', ('dialogChoice', 3, "Answer Dialogue")),
+        ('TEXT_0', ('dialogChoice', 0, "Answer Dialogue"))])
 
     def __init__(self, main):
         self.main = main
@@ -75,6 +75,10 @@ class Input:
     def togglePause(self, qualifier=None):
         self.pause = not self.pause
 
+    def restart(self, qualifier=None):
+        self.main.initialize()
+        self.main.run()
+
     def cycleHelp(self, qualifier=None):
         self.help = (self.help + 1) % 8
 
@@ -96,10 +100,15 @@ class Input:
     def useItem(self, index):
         if index < len(self.main.player.inventory):
             self.main.player.actions = [{'TYPE': 'ITEM',
-                                         'INDEX': index,
+                                         'INDEX': index + self.main.gui.inventoryOffset,
                                          'DIR': self.main.gui.cursorDir,
                                          'TARGET': self.main.gui.cursorPos}]
 
+    def dialogChoice(self, index):
+        self.main.player.actions = [{'TYPE': 'TALK',
+                                     'INDEX': index,
+                                     'DIR': self.main.gui.cursorDir,
+                                     'TARGET': self.main.player.ai.mind['TARGET']}]
 
     def handleMouse(self, event):
         self.main.gui.updateCursor(event.cell)

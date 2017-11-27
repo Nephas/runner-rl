@@ -8,7 +8,7 @@ from src.gui import Gui
 class Effect(object):
     PRIORITY = {'Effect': 24,
                 'Fluid': 2,
-                'Fuel': 4,
+                'Fuel': 12,
                 'Fog': 24,
                 'Fire': 24,
                 'Shot': 24}
