@@ -24,9 +24,13 @@ class Corridor(Room):
         Guard(map.getTile(self.randomSpot(1)), map.main)
         map.getTile(self.center).addObject(Lamp())
 
-    def carve(self, map):
-        self.updateCells(map)
-        pass
+    def carve(self, tileMap):
+        self.updateCells(tileMap)
+
+        # create a boundary wall
+        for cell in map(lambda p: tileMap.getTile(p), self.border()):
+            if cell.wall is None:
+                cell.makeWall()
 
 
 class Office(Room):

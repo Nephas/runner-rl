@@ -45,7 +45,7 @@ class Corp:
                             {'CHILDREN': [2, 4], 'SIZES': [20, 40], 'SHAPES': ['Corridor']},
                             {'CHILDREN': [2, 4], 'SIZES': [20, 30], 'SHAPES': ['Corridor', 'Dome', 'Hall']},
                             {'CHILDREN': [3, 4], 'SIZES': [10, 20], 'SHAPES': ['Corridor', 'Room']},
-                            {'CHILDREN': [4, 6], 'SIZES': [7, 15], 'SHAPES': ['Office', 'Lab']}],
+                            {'CHILDREN': [4, 6], 'SIZES': [7, 12], 'SHAPES': ['Office', 'Lab']}],
                'Robotics': [{'CHILDREN': [0, 0], 'SIZES': [10, 20], 'SHAPES': ['Room']},
                             {'CHILDREN': [1, 1], 'SIZES': [5, 15], 'SHAPES': ['Corridor']},
                             {'CHILDREN': [2, 4], 'SIZES': [20, 40], 'SHAPES': ['Corridor']},
@@ -57,13 +57,13 @@ class Corp:
                             {'CHILDREN': [2, 4], 'SIZES': [20, 40], 'SHAPES': ['Corridor']},
                             {'CHILDREN': [2, 4], 'SIZES': [20, 30], 'SHAPES': ['ServerFarm']},
                             {'CHILDREN': [3, 4], 'SIZES': [10, 20], 'SHAPES': ['Corridor', 'Room']},
-                            {'CHILDREN': [4, 6], 'SIZES': [7, 15], 'SHAPES': ['Office']}],
+                            {'CHILDREN': [4, 6], 'SIZES': [5, 12], 'SHAPES': ['Office']}],
               'Nutrition': [{'CHILDREN': [0, 0], 'SIZES': [10, 20], 'SHAPES': ['Room']},
                             {'CHILDREN': [1, 1], 'SIZES': [5, 15], 'SHAPES': ['Corridor']},
                             {'CHILDREN': [2, 4], 'SIZES': [20, 40], 'SHAPES': ['Corridor']},
                             {'CHILDREN': [2, 4], 'SIZES': [20, 30], 'SHAPES': ['Dome', 'GreenHouse']},
                             {'CHILDREN': [3, 4], 'SIZES': [10, 20], 'SHAPES': ['Corridor', 'Room']},
-                            {'CHILDREN': [4, 6], 'SIZES': [7, 15], 'SHAPES': ['Lab']}]}
+                            {'CHILDREN': [4, 6], 'SIZES': [7, 10], 'SHAPES': ['Lab']}]}
 
     LAYOUT = ['CROSS', 'CORNER', 'RING', 'DUAL']
 

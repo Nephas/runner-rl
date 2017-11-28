@@ -39,6 +39,7 @@ class Room(Rectangle):
 
     def fill(self, map):
         for cell in self.getCells(map):
+            cell.room = None
             cell.makeWall()
 
     def generateContent(self, map):
@@ -53,11 +54,15 @@ class Room(Rectangle):
 
     def scatter(self, map, obj, n=1, margin=1):
         i = 0
-        while i < n:
+        for j in range(500):
             cell = map.getTile(self.randomSpot(margin))
             if cell.isEmpty():
                 cell.addObject(cp.deepcopy(obj))
                 i += 1
+            if i >= n:
+                break
+                return True
+        return False
 
     def edge(self):
         positions = []
@@ -82,7 +87,7 @@ class Room(Rectangle):
             if cell.isEmpty():
                 cell.addObject(cp.deepcopy(obj))
                 n -= 1
-            self.cluster(map, rd.choice(map.getNeighborhood(pos)).pos, obj, n)
+            self.cluster(map, rd.choice(list(map.getTile(pos).getNeighborhood())).pos, obj, n)
 
     def distribute(self, map, obj, dx=5, dy=5, margin=1):
         count = 0

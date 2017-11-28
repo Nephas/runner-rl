@@ -116,8 +116,7 @@ class AI:
                             blockPoint = baseLine[i]
                             break
                         else:
-                            neighbors = map(lambda p: tileMap.getTile(
-                                p), AI.FOV_NEIGHBORHOOD + point) + [cell]
+                            neighbors = cell.getNeighborhood('LARGE')
 
                             if cell.light > BASE_LIGHT:
                                 cell.vision = [True, True]
@@ -128,8 +127,11 @@ class AI:
                                     neighbor.vision = [True, False]
             except IndexError:
                 pass
-        for cell in tileMap.getTile(pos).getNeighborhood('LARGE'):
-            cell.vision = [True, True]
+
+        cell = tileMap.getTile(pos)
+        cell.vision = [True, True]
+        for neighbor in cell.getNeighborhood('LARGE'):
+            neighbor.vision = [True, True]
 
     @staticmethod
     def hasLos(map, start, end):
@@ -153,7 +155,7 @@ class AI:
         try:
             while dist != 0 and len(path) < 32:
                 possibleCells = filter(
-                    lambda c: not c.block[MOVE], map.getNeighborhood(path[-1], shape=8))
+                    lambda c: not c.block[MOVE], map.getTile(path[-1]).getNeighborhood('LARGE'))
                 closestCell = min(
                     possibleCells, key=lambda c: np.linalg.norm(target - c.pos))
                 if dist <= 1.5 and map.getTile(target).block[MOVE]:

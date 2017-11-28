@@ -30,6 +30,16 @@ class Map:
     def getTile(self, pos):
         return self.tile[pos[X]][pos[Y]]
 
+    def allTiles(self):
+        for x in range(0, Map.WIDTH):
+            for y in range(0, Map.HEIGHT):
+                yield self.tile[x][y]
+
+    def allPositions(self):
+        for x in range(0, Map.WIDTH):
+            for y in range(0, Map.HEIGHT):
+                yield np.array([x, y])
+
     def updatePhysics(self):
         rect = Rectangle(self.main.player.cell.pos -
                          Map.PHYSICSRANGE, *(2 * Map.PHYSICSRANGE))
@@ -61,16 +71,8 @@ class Map:
         else:
             return self.getObjects()
 
-    def getNeighborhood(self, pos, shape=4):
-        if shape == 4:
-            offsets = np.array([[0, -1], [1, 0], [0, 1], [-1, 0]])
-        if shape == 8:
-            offsets = [np.array([i, j]) for i in [-1, 0, 1]
-                       for j in [-1, 0, 1]]
-        positions = map(lambda off: off + pos, offsets)
-        return map(lambda p: self.getTile(p), filter(lambda p: self.contains(p), positions))
-
-    def contains(self, pos):
+    @staticmethod
+    def contains(pos):
         return pos[X] in range(0, Map.WIDTH) and pos[Y] in range(0, Map.HEIGHT)
 
 
@@ -81,6 +83,7 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
         self.x = [max(0, pos[X]), min(Map.WIDTH, pos[X] + w)]
         self.y = [max(0, pos[Y]), min(Map.HEIGHT, pos[Y] + h)]
         self.center = (self.pos + self.size / 2).round().astype('int')
+        self.area = w * h
 
     def intersects(self, other):  # returns true if this rectangle intersects with another one
         return not (self.x[MAX] <= other.x[MIN] or other.x[MAX] <= self.x[MIN] or self.y[MAX] <= other.y[MIN] or
@@ -129,8 +132,6 @@ class Cell:
         self.light = BASE_LIGHT
         self.grid = None
 
-        self.dist = -1
-
         # [MOVE, LOS, LIGHT]
         self.block = [False, False, False]
         # [EXP, LOS]
@@ -144,6 +145,18 @@ class Cell:
         self.char = ' '
         self.bg = COLOR['BLACK']
         self.fg = COLOR['WHITE']
+
+        self.neighborhood = {'SMALL': [],
+                             'LARGE': []}
+        self.calcNeighborhood()
+
+    def calcNeighborhood(self):
+        self.neighborhood['SMALL'] = filter(lambda p: Map.contains(p),
+                                            map(lambda off: off + self.pos,
+                                                np.array([[0, -1], [1, 0], [0, 1], [-1, 0]])))
+        self.neighborhood['LARGE'] = self.neighborhood['SMALL'] + filter(lambda p: Map.contains(p),
+                                                                         map(lambda off: off + self.pos,
+                                                                             np.array([[1, 1], [1, -1], [-1, -1], [-1, 1]])))
 
     def addObject(self, obj):
         self.object.append(obj)
@@ -213,18 +226,16 @@ class Cell:
         self.char = ' '
 
     def getNeighborhood(self, shape='SMALL'):
-        if shape is 'SMALL':
-            offsets = np.array([[0, -1], [1, 0], [0, 1], [-1, 0]])
-        elif shape is 'LARGE':
-            offsets = [np.array([i, j]) for i in [-1, 0, 1]
-                       for j in [-1, 0, 1]]
+        if shape in self.neighborhood:
+            for cell in map(lambda p: self.map.getTile(p), self.neighborhood[shape]):
+                yield cell
         else:
             offsets = [np.array([i, j]) for i in range(-1 * shape, shape)
                        for j in range(-1 * shape, shape)]
             offsets = filter(lambda off: np.linalg.norm(off) < shape, offsets)
-
-        positions = map(lambda off: off + self.pos, offsets)
-        return map(lambda p: self.map.getTile(p), filter(lambda p: self.map.contains(p), positions))
+            positions = map(lambda off: off + self.pos, offsets)
+            for pos in positions:
+                yield self.map.getTile(pos)
 
     def updatePhysics(self):
         if self.wall:
@@ -270,7 +281,7 @@ class Cell:
                   for c in COLOR['WHITE'])
         window.draw_char(pos[X], pos[Y], self.char, self.fg, bg)
 
-    def drawHighlight(self, window, pos, color=COLOR['WHITE']):
+    def drawHighlight(self, window, pos, color=COLOR['SILVER']):
         if self.vision[EXP]:
             window.draw_char(pos[X], pos[Y], self.char, self.fg, color)
         else:
@@ -301,10 +312,10 @@ class Wall:
     @staticmethod
     def getChar(pos, tileMap):
         align = ''
-        neighborhood = tileMap.getNeighborhood(pos)
+        neighborhood = tileMap.getTile(pos).getNeighborhood()
 
-        if len(neighborhood) == 4:
-            for cell in neighborhood:
+        if len(list(neighborhood)) == 4:
+            for cell in tileMap.getTile(pos).getNeighborhood():
                 if cell.wall is None or cell.wall:
                     align += 't'
                 else:

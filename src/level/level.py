@@ -75,11 +75,12 @@ class Level(Map):
         self.forbidden = Level.SHAPE[self.corp.layout]
         self.palette = self.corp.palette
         print(self.corp)
+        print('\n')
         self.generate()
 
     def generate(self):
-        stats = {'ROOMS': -1, 'VENTS': - 1}
-        while stats['VENTS'] < 10 or stats['ROOMS'] < 20:
+        stats = {'ROOMS': -1, 'VENTS': -1, 'CORRIDORS': -1, 'AREA': -1}
+        while stats['VENTS'] < 10 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
             self.clear()
             self.generateStart()
             self.generateRooms()
@@ -136,20 +137,19 @@ class Level(Map):
                         self.carveVent(pair[0], pair[1], False)
 
     def countMetrics(self):
-        stats = {'ROOMS': 0, 'VENTS': 0, 'CORRIDORS': 0}
+        stats = {'ROOMS': 0, 'VENTS': 0, 'CORRIDORS': 0, 'AREA': 0}
         stats['VENTS'] = len(self.getAll('Vent')) / 2
         for tier in self.tier:
             for room in tier:
                 stats['ROOMS'] += 1
+                stats['AREA'] += room.area
                 if room.__class__.__name__ is 'Corridor':
                     stats['CORRIDORS'] += 1
         return stats
 
     def finalize(self):
-        for x in range(0, Map.WIDTH):
-            for y in range(0, Map.HEIGHT):
-                if self.contains([x, y]) and not self.tile[x][y].wall is False:
-                    self.tile[x][y].makeWall()
+        self.forbidden = []
+        self.smoothWalls(2)
 
         for room in self.getRooms():
             room.carve(self)
@@ -183,6 +183,26 @@ class Level(Map):
 
         Render.printImage(self, "gif/levelgen99.bmp")
 
+    def smoothWalls(self, times=2):
+        for i in range(times):
+            wallMap = np.zeros((Map.WIDTH, Map.HEIGHT))
+            for cell in self.allTiles():
+                if cell.wall:
+                    for neighbor in cell.getNeighborhood('LARGE'):
+                        if neighbor.wall is None:
+                            wallMap[neighbor.pos[X],neighbor.pos[Y]] = 1
+
+            for cell in self.allTiles():
+                if wallMap[cell.pos[X], cell.pos[Y]] != 0:
+                    cell.makeWall()
+
+        for cell in self.allTiles():
+            if cell.wall is None and len(filter(lambda c: c.wall, cell.getNeighborhood('LARGE'))) >= 6:
+                cell.makeWall()
+            elif cell.wall is True:
+                cell.makeWall()
+
+
     def layCable(self, pos1, pos2, horizontal=True):
         for pos in self.getConnection(pos1, pos2, horizontal):
             if not self.contains(pos):
@@ -198,7 +218,7 @@ class Level(Map):
         # carve wide tunnels for corridors and circular rooms
         for pos in positions:
             if pos not in room1.border() or pos in room2.border():
-                for cell in self.getNeighborhood(pos, shape=8):
+                for cell in self.getTile(pos).getNeighborhood(shape='LARGE'):
                     if list(cell.pos) not in room1.border():
                         cell.removeWall()
 
@@ -211,7 +231,7 @@ class Level(Map):
                 cell.addObject(door)
             if pos in room2.border():
                 flag = False
-                for cell in self.getNeighborhood(pos, shape=4):
+                for cell in self.getTile(pos).getNeighborhood():
                     if list(cell.pos) in room2.border():
                         if not flag:
                             term = Terminal(cell)
@@ -239,7 +259,7 @@ class Level(Map):
                             return False
             if crossings > 2:
                 return False
-            for neighbor in self.getNeighborhood(pos):
+            for neighbor in self.getTile(pos).getNeighborhood():
                 if neighbor.object != []:
                     return False
 
@@ -255,7 +275,7 @@ class Level(Map):
                 self.getTile(pos).addObject(Vent())
 
             # walls for vent tunnels
-            for cell in self.getNeighborhood(pos):
+            for cell in self.getTile(pos).getNeighborhood('LARGE'):
                 if cell.wall is None:
                     cell.makeWall()
         return True
@@ -272,7 +292,7 @@ class Level(Map):
             shape = rd.choice(shapes)
 
             # number of tries to find a valid child
-            for i in range(250):
+            for i in range(100):
                 direction = rd.choice(directions)
                 alignment = rd.choice([MIN, MAX])
 
@@ -286,17 +306,12 @@ class Level(Map):
                     else:
                         w = int(1.5 * rd.randint(*sizes))
                         h = 5
-                # elif i % 25 == 0:
-                #     sizes = (np.array(sizes)*0.99).astype('int')
-                #     sizes[0] = max(7,sizes[0])
-                #     sizes[1] = max(7,sizes[1])
 
                 if shape is 'Dome':
                     w = rd.randint(*sizes)
                     h = w
 
-                offset = np.array(self.getOffset(
-                    room, direction, alignment, w, h))
+                offset = np.array(self.getOffset(room, direction, alignment, w, h))
                 rect = Rectangle(room.pos + offset, w, h)
 
                 for other in list(self.getRooms()) + room.children:

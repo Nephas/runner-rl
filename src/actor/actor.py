@@ -83,7 +83,7 @@ class Actor(Object):
             elif act['TYPE'] in ['USE','ATTACK']:
                 dir = act['DIR']
                 self.cooldown += self.interactWith(tileMap, act['DIR'], act['TYPE'])
-            elif act['TYPE'] is 'TALK':
+            elif act['TYPE'] is 'TALK' and act['TARGET'] is not None:
                 self.cooldown += act['TARGET'].ai.chooseOption(act['INDEX'])
 
         elif len(self.actions) == 0:
