@@ -5,6 +5,7 @@ from src.object.item import Item, Key, FogCloak, Canister, Lighter, Explosive, G
 from src.effect.effect import Effect
 
 from src.actor.ai import AI, Idle, Follow
+from src.actor.person import Person
 from src.actor.conversation import Conversation
 from src.actor.body import Body
 from src.gui import Gui
@@ -27,6 +28,7 @@ class Actor(Object):
         self.main.actor.append(self)
 
         self.ai = AI(self)
+        self.person = Person(self)
         self.body = Body(self)
 
     def describe(self):
@@ -52,15 +54,20 @@ class Actor(Object):
             return 0
 
     def destroy(self):
+        if self.__class__.__name__ in ['Corpse','Debris']:
+            return
         self.die()
 
     def die(self):
-        self.cell.object.remove(self)
-        for item in self.inventory:
-            item.drop()
-        self.main.actor.remove(self)
-        Corpse(self.cell, self)
-        Gui.pushMessage(self.describe() + " dies")
+        if self.__class__.__name__ in ['Corpse','Debris']:
+            return
+        else:
+            self.cell.object.remove(self)
+            for item in self.inventory:
+                item.drop()
+            self.main.actor.remove(self)
+            Corpse(self.cell, self)
+            Gui.pushMessage(self.describe() + " dies")
 
     def interactWith(self, map, dir, type=None):
         tile = map.getTile(self.cell.pos + dir)
@@ -85,6 +92,8 @@ class Actor(Object):
                 self.cooldown += self.interactWith(tileMap, act['DIR'], act['TYPE'])
             elif act['TYPE'] is 'TALK' and act['TARGET'] is not None:
                 self.cooldown += act['TARGET'].ai.chooseOption(act['INDEX'])
+            elif act['TYPE'] is 'GRID':
+                self.cooldown += self.agent.moveTo(act['TARGET'])
 
         elif len(self.actions) == 0:
             self.actions = self.ai.decide(tileMap)

@@ -17,6 +17,9 @@ EXP = 0
 LOS = 1
 LIGHT = 2
 
+VIS = 0
+GRID = 1
+
 WIDTH = 0
 HEIGHT = 1
 

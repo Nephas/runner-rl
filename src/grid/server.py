@@ -2,6 +2,7 @@ from src.globals import *
 
 import random as rd
 
+from src.grid.agent import Agent
 from src.object.object import Object
 from src.render import Render
 
@@ -12,13 +13,14 @@ class Terminal(Object):
 
         self.on = True
         self.connection = []
+        self.agents = []
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':
             self.destroy()
             return 5
 
-        self.connection[0].interact(actor)
+        self.enter(actor)
         return 3
 
     def describe(self):
@@ -32,12 +34,17 @@ class Terminal(Object):
         Gui.pushMessage("Access denied", COLOR['RED'])
         return False
 
+    def enter(self, actor):
+        actor.agent = Agent(actor, self)
+        self.agents.append(actor.agent)
+        actor.main.render.mapLayer = 1
+
     def connect(self, obj):
-        self.cell.grid = True
+        self.cell.grid = self
         self.connection.append(obj)
         if isinstance(obj, Terminal):
             obj.connection.append(self)
-            obj.cell.grid = True
+            obj.cell.grid = obj
 
     def disconnect(self, obj):
         self.connection.remove(obj)
@@ -82,16 +89,6 @@ class Server(Terminal):
         self.fg = COLOR['GREEN']
         self.block = [True, True, True]
 
-    def interact(self, actor=None, dir=None, type=None):
-        if type is 'ATTACK':
-            self.destroy()
-            return 5
-
-        for obj in self.connection:
-            obj.cell.vision = [True, True]
-            actor.main.gui.pushMessage(obj.describe(), obj.fg)
-        return 5
-
     def physics(self, map):
         self.fg = rd.choice([COLOR['GREEN'], COLOR['DARKGRAY']])
 
@@ -107,17 +104,11 @@ class Rack(Object):
         self.fg = COLOR['GREEN']
         self.block = [True, True, True]
 
-    def interact(self, actor=None, dir=None, type=None):
-        if type is 'ATTACK':
-            self.destroy()
-            return 5
-        return 5
-
     def physics(self, map):
         self.fg = rd.choice([COLOR['GREEN'], COLOR['DARKGRAY']])
 
     def connect(self, obj):
-        self.cell.grid = True
+        self.cell.grid = self
 
     def describe(self):
         return "Server Rack"

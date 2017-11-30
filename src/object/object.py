@@ -61,9 +61,12 @@ class Object(object):
         pass
 
     def destroy(self):
-        Gui.pushMessage('The ' + self.describe() + ' is destroyed')
-        self.cell.object.remove(self)
-        Debris(self.cell, self)
+        if self.__class__.__name__ is 'Debris':
+            return
+        else:
+            Gui.pushMessage('The ' + self.describe() + ' is destroyed')
+            self.cell.object.remove(self)
+            Debris(self.cell, self)
 
 
 class Debris(Object):
