@@ -116,10 +116,15 @@ class Input:
     def handleClick(self, event):
         self.main.player.actions = []
 
-        if event.button is 'LEFT' and len(self.main.player.actions) < 2:
-            self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.gui.cursorPos, False)
-        elif event.button is 'RIGHT' and len(self.main.player.actions) < 2:
-            self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.gui.cursorPos, True)
+        if self.main.render.mapLayer == 0:
+            if event.button is 'LEFT' and len(self.main.player.actions) < 2:
+                self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.gui.cursorPos, False)
+            elif event.button is 'RIGHT' and len(self.main.player.actions) < 2:
+                self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.gui.cursorPos, True)
+        elif self.main.gui.mapLayer == 1:
+            self.main.player.actions = [{'TYPE': 'GRID',
+                                         'DIR': self.main.gui.cursorDir,
+                                         'TARGET': self.main.gui.cursorPos}]
 
     def handleScroll(self, event):
         if event.button is 'SCROLLUP':

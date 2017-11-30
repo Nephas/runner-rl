@@ -2,5 +2,8 @@
 src/*.pyc
 sounds/
 dist/
+music/
 gif/
 graphics/
+*.aux
+*.log

@@ -13,7 +13,7 @@ from src.level.corp import Corp
 from src.level.room import Room
 from src.level.roomtypes import BossRoom, Corridor, Office, Dome, Hall, ServerFarm, GreenHouse, Lab, Storage
 
-from src.object.server import Terminal, Server, MasterSwitch
+from src.grid.server import Terminal, Server, MasterSwitch
 from src.object.light import Lamp, DoorLamp
 from src.object.door import Vent, SecDoor
 
@@ -209,7 +209,7 @@ class Level(Map):
                 return False
             cell = self.getTile(pos)
             if cell.grid is None:
-                cell.grid = False
+                cell.grid = True
         return True
 
     def carveDoorway(self, room1, room2, tunnelTier=-1, horizontal=True):

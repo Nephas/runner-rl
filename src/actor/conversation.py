@@ -1,3 +1,5 @@
+import random as rd
+
 from src.actor.ai import AI, Idle, Attack
 
 
@@ -41,6 +43,7 @@ class Conversation(AI):
             self.choice = None
         return 1
 
+
 class Node(object):
     def __init__(self, parent, statement='Hi', actor=None):
         self.actor = actor
@@ -62,8 +65,42 @@ class Greeting(Node):
     def __init__(self, actor=None):
         Node.__init__(self, None, statement='Hi', actor=actor)
 
+        self.next = [Loop(self, actor),
+                     Goodbye(self, actor)]
+
+
+class Loop(Node):
+    def __init__(self, parent, actor=None):
+        Node.__init__(self, None, statement='Wanna know anything?', actor=actor)
+
+        self.short = 'Ask more.'
         self.next = [Goodbye(self, actor),
+                     Introduce(self, actor),
+                     Interests(self, actor),
                      Provoke(self, actor)]
+
+        for node in self.next:
+            if node.next is None:
+                node.next = self.next
+
+
+class Introduce(Node):
+    def __init__(self, parent, actor=None):
+        Node.__init__(self, parent, statement=None, actor=actor)
+
+        self.short = 'Introduce'
+        self.statement = 'I am {:}. Nice to meet you.'.format(self.actor.person.getName())
+        self.next = None
+
+
+class Interests(Node):
+    def __init__(self, parent, actor=None):
+        Node.__init__(self, parent, statement=None, actor=actor)
+
+        self.short = 'Interests'
+        self.statement = 'My favorite pastime is {:}.'.format(rd.choice(self.actor.person.interest))
+        self.next = None
+
 
 class Provoke(Node):
     def __init__(self, parent, actor=None):
@@ -73,9 +110,10 @@ class Provoke(Node):
         self.next = []
 
     def effect(self):
-        self.actor.main.gui.pushMessage('-' * 20)
         self.actor.ai.say(self.statement)
+        self.actor.main.gui.pushMessage('-' * 20)
         self.actor.ai.switchState(Attack)
+
 
 class Goodbye(Node):
     def __init__(self, parent, actor=None):
@@ -84,7 +122,7 @@ class Goodbye(Node):
         self.short = 'Goodbye'
 
     def effect(self):
-        self.actor.main.gui.pushMessage('-' * 20)
         self.actor.ai.say(self.statement)
+        self.actor.main.gui.pushMessage('-' * 20)
         self.actor.ai.switchState(Idle)
         self.actor.ai.mind['TARGET'] = None

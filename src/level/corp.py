@@ -21,6 +21,9 @@ class Corp:
                'Robotics',
                'Data Services']
 
+#               'Arcology',
+#               'Ruin'
+
 #               'Electronics',
 #               'Medicare',
 #               'Biotech',

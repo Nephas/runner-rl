@@ -73,10 +73,6 @@ class Render:  # a rectangle on the map. used to characterize a room.
         elif self.mapLayer == 1:
             for cell in gui.getCells(map):
                 cell.drawNet(panel, cell.pos - gui.mapOffset)
-        elif self.mapLayer == 2:
-            for cell in gui.getCells(map):
-                cell.drawDist(panel, cell.pos - gui.mapOffset,
-                              self.main.player.ai.distmap)
 
         try:
             cell = map.getTile(self.main.player.cell.pos + gui.cursorDir)
@@ -213,10 +209,10 @@ class Render:  # a rectangle on the map. used to characterize a room.
                         # set the colour accordingly
                         pixels[p[X], p[Y]] = COLOR['BLACK']
 
-                if map.tile[x][y].grid is False:
+                if map.tile[x][y].grid is True:
                     # set the colour accordingly
                     pixels[3 * x + 1, 3 * y + 1] = tuple(map.corp.complement[0])
-                elif map.tile[x][y].grid is True:
+                elif map.tile[x][y].grid is not None:
                     for p in tile:
                         # set the colour accordingly
                         pixels[p[X], p[Y]] = tuple(

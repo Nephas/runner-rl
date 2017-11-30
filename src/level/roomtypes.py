@@ -9,7 +9,7 @@ import itertools as it
 from src.level.room import Room
 
 from src.object.object import Object, Obstacle, Barrel, Desk, Hydroponics
-from src.object.server import Terminal, Server, MasterSwitch, Rack
+from src.grid.server import Terminal, Server, MasterSwitch, Rack
 from src.object.light import Lamp, FlickerLamp, SpotLight
 from src.object.item import Item, Key, PlotDevice
 

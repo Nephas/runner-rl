@@ -7,7 +7,7 @@ import copy as cp
 import itertools as it
 
 from src.object.object import Object, Obstacle, Barrel, Desk
-from src.object.server import Terminal, Server
+from src.grid.server import Terminal, Server
 from src.object.door import Vent, SecDoor, AutoDoor
 from src.object.item import Item, Key, PlotDevice
 
