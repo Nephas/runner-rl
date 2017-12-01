@@ -1,9 +1,12 @@
 # runner-rl
 Game Prototype: a cyberpunk roguelike of stealth, hacking and evil megacorps
 
-At the moment there is mostly a 'physics engine':
+There is a [Design Document](https://github.com/Nephas/runner-rl/blob/master/docs/design.pdf) to 
+outline the creative vision.
 
-A level generator:
+At the moment there is mostly a 'physics engine' and a level generator:
+
+Level generation:
 It produces levels as abstract tree of rooms at different tiers. The player starts on 
 the outermost tier of the tree and moves towards a central 'goal room' which will enable 
 placement of progressively strong enemies, items and key finding 'puzzles.
@@ -24,6 +27,7 @@ Other features implemented so far:
 * light sources
 * simple physics
 * mouse movement
+* dialogue tree system
 
 Light and shadows are completely dynamic and interact with changes in the environment like 
 opening doors and moving scenery. The physics engine can handle simple elements like Fluids, 
