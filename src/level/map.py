@@ -173,6 +173,12 @@ class Cell:
     def isEmpty(self):
         return self.object == [] and not self.wall
 
+    def hasDoor(self):
+        for obj in self.object:
+            if obj.__class__.__name__ in ['Door', 'SecDoor', 'Vent']:
+                return True
+        return False
+
     def atWall(self):
         for n in self.getNeighborhood():
             if n.wall:
@@ -287,22 +293,16 @@ class Cell:
 
 
 class Wall:
-    ALIGNMAP = {'ffff': 206,
-                'tttt': 206,
-                'tftf': 186,
-                'ftft': 205,
-                'ttff': 200,
-                'fftt': 187,
-                'fttf': 201,
-                'tfft': 188,
-                'tfff': 186,
-                'ftff': 205,
-                'fftf': 186,
-                'ffft': 205,
-                'fttt': 203,
-                'tftt': 185,
-                'ttft': 202,
-                'tttf': 204}
+    ALIGNMAP = {'UP_LEFT': 188,
+                'UP_RIGHT': 200,
+                'DOWN_LEFT': 187,
+                'DOWN_RIGHT': 201,
+                'UP': 203,
+                'DOWN': 202,
+                'LEFT': 204,
+                'RIGHT': 185,
+                'UP_DOWN': 205,
+                'LEFT_RIGHT': 186}
 
     def __init__(self):
         pass
@@ -310,14 +310,44 @@ class Wall:
     @staticmethod
     def getChar(pos, tileMap):
         align = ''
-        neighborhood = tileMap.getTile(pos).getNeighborhood()
+        cell = tileMap.getTile(pos)
+        neighborhood = list(cell.getNeighborhood('LARGE'))
 
-        if len(list(neighborhood)) == 4:
-            for cell in tileMap.getTile(pos).getNeighborhood():
-                if cell.wall is None or cell.wall:
-                    align += 't'
-                else:
-                    align += 'f'
-            return Wall.ALIGNMAP[align]
+        surfaceString = 'UP'
+
+        floorCells = filter(lambda c: not (c.wall or c.hasDoor()), cell.getNeighborhood('SMALL'))
+        if len(floorCells) == 1:
+            surfaceDir = floorCells[0].pos - cell.pos
+
+            if surfaceDir[Y] == 1:
+                surfaceString = 'DOWN'
+            elif surfaceDir[Y] == -1:
+                surfaceString = 'UP'
+            elif surfaceDir[X] == 1:
+                surfaceString = 'RIGHT'
+            elif surfaceDir[X] == -1:
+                surfaceString = 'LEFT'
+
+        if len(floorCells) == 2:
+            surfaceDir = floorCells[0].pos - cell.pos
+            if surfaceDir[Y] == 1:
+                surfaceString = 'UP_DOWN'
+            elif surfaceDir[Y] == 0:
+                surfaceString = 'LEFT_RIGHT'
+
         else:
-            return 0
+            floorCells = filter(lambda c: not (c.wall or c.hasDoor()), cell.getNeighborhood('LARGE'))
+            if len(floorCells) == 1:
+                surfaceDir = floorCells[0].pos - cell.pos
+
+                if surfaceDir[Y] > 0:
+                    surfaceString = 'DOWN'
+                else:
+                    surfaceString = 'UP'
+
+                if surfaceDir[X] > 0:
+                    surfaceString += '_RIGHT'
+                else:
+                    surfaceString += '_LEFT'
+
+        return Wall.ALIGNMAP[surfaceString]

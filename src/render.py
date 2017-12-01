@@ -9,7 +9,7 @@ import time as t
 
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
-    TILESET = 'experimental_12x16.png'
+    TILESET = 'exp_24x24.png'
     LOGO = 'graphics/logo.txt'
 
     SCREEN = np.array([100, 40])  # [WIDTH, HEIGHT]
