@@ -40,7 +40,7 @@ class Gui:
     def moveOffset(self, dir=np.array([0, 0])):
         self.mapOffset += dir
         self.cursorPos += dir
-        (panelX, panelY) = self.main.render.mapPanel.get_size()
+        (panelX, panelY) = self.main.render.mapPanel.size
         self.mapRectangle = Rectangle(self.mapOffset, panelX, panelY)
 
     def getCells(self, map):

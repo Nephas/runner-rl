@@ -12,6 +12,7 @@ import pygame as pg
 import time as t
 import random as rd
 import tdl
+from bearlibterminal import terminal as term
 
 class Game:
     LIMIT_FPS = 20
@@ -35,7 +36,7 @@ class Game:
     def initialize(self):
         self.actor = [self.player]
 
-        tdl.setFPS(self.LIMIT_FPS)
+#        tdl.setFPS(self.LIMIT_FPS)
         pg.init()
         # self.sound = {'SHOT': pg.mixer.Sound('sounds/shot.wav'),
         #               'EXPLOSION': pg.mixer.Sound('sounds/explosion.wav'),
@@ -43,8 +44,7 @@ class Game:
         #               'PUNCH': pg.mixer.Sound('sounds/punch.wav'),
         #               'STEP': pg.mixer.Sound('sounds/step.wav')}
 
-        self.render.renderStart()
-        self.map.load(random = True)
+        self.map.load(debug=True)
 
         self.gui.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
         self.gui.updateCursor()
@@ -56,10 +56,11 @@ class Game:
         self.input.quit = False
 
         while True:
+            if self.input.quit:
+                term.close()
+                sys.exit()
             if self.input.debug:
                 break
-            if tdl.event.isWindowClosed() or self.input.quit:
-                sys.exit()
             if (self.input.pause and self.player.actions != []) or not self.input.pause:
                 if t.time() >= self.TIC_SIZE + self.lastTic:
                     for actor in self.actor:

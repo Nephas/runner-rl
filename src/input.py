@@ -7,6 +7,7 @@ import tdl
 from src.actor.ai import AI
 from src.render import Render
 
+from bearlibterminal import terminal as term
 
 class Input:
     MOVEMAP = {'UP': np.array([0, -1]),
@@ -16,7 +17,7 @@ class Input:
 
     # [function, qualifier, help string]
     KEYMAP = coll.OrderedDict([
-        ('ESCAPE', ('toggleQuit', None, "Quit game")),
+        (term.TK_ESCAPE, ('toggleQuit', None, "Quit game")),
         ('SPACE',  ('useItem', 0, "Use item slot")),
         ('TEXT_p', ('togglePause', None, "Pause Game")),
         ('TEXT_t', ('toggleDebug', None, "Enter debug console")),
@@ -44,20 +45,27 @@ class Input:
         self.help = 0
 
     def handleEvents(self):
-        try:
-            while True:
-                event = tdl.event.get().next()
+        while term.has_input():
+            event = term.read()
+            if event == 41:
+                self.quit = True
 
-                if event.type is 'KEYDOWN':
-                    self.handleKey(event)
-                elif event.type is 'MOUSEUP':
-                    self.handleClick(event)
-                elif event.type is 'MOUSEMOTION':
-                    self.handleMouse(event)
-                elif event.type is 'MOUSEDOWN':
-                    self.handleScroll(event)
-        except:
-            pass
+            print(term.read())
+
+        # try:
+        #     while True:
+        #         event = tdl.event.get().next()
+        #
+        #         if event.type is 'KEYDOWN':
+        #             self.handleKey(event)
+        #         elif event.type is 'MOUSEUP':
+        #             self.handleClick(event)
+        #         elif event.type is 'MOUSEMOTION':
+        #             self.handleMouse(event)
+        #         elif event.type is 'MOUSEDOWN':
+        #             self.handleScroll(event)
+        # except:
+        #     pass
 
     def handleKey(self, event):
         idString = event.key

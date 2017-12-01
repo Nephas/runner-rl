@@ -6,6 +6,7 @@ import random as rd
 import itertools as it
 
 from src.render import Render
+from bearlibterminal import terminal as term
 
 
 class Map:
@@ -263,9 +264,12 @@ class Cell:
                 self.block[LIGHT] = True
             obj.physics(self.map)
 
-    def drawMap(self, window, pos):
+    def drawMap(self, panel, pos):
+        char = self.char[VIS]
+
         if self.vision[EXP]:
-            window.draw_char(pos[X], pos[Y], self.char[0], self.fg, self.bg)
+            term.put(pos[X], pos[Y], 0x1004)
+#            panel.drawChar(pos, self.char[0], self.fg, self.bg)
 
     def drawNet(self, window, pos):
         if self.wall:

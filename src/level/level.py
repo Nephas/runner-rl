@@ -63,7 +63,7 @@ class Level(Map):
             for room in tier:
                 yield room
 
-    def load(self, seed='Test', random=False):
+    def load(self, seed='Test', random=False, debug = False):
         self.clear()
 
         if not random:
@@ -76,9 +76,15 @@ class Level(Map):
         self.palette = self.corp.palette
         print(self.corp)
         print('\n')
-        self.generate()
+        self.generate(debug)
 
-    def generate(self):
+    def generate(self, debug = False):
+        if debug:
+            self.clear()
+            self.generateStart()
+            self.getTile(self.tier[0][0].center).addObject(self.main.player)
+            return
+
         stats = {'ROOMS': -1, 'VENTS': -1, 'CORRIDORS': -1, 'AREA': -1}
         while stats['VENTS'] < 10 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
             self.clear()

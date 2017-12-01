@@ -6,63 +6,83 @@ import tdl
 import tcod
 import time as t
 
+from bearlibterminal import terminal as term
+
 
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
-    TILESET = 'exp_24x24.png'
+    TILES = 'exp_24x24.png'
+    FONT = 'font_12x24.png'
     LOGO = 'graphics/logo.txt'
 
-    SCREEN = np.array([100, 40])  # [WIDTH, HEIGHT]
+    SCREEN = np.array([100, 25])  # [WIDTH, HEIGHT]
     SEPARATOR = (5. / 8. * SCREEN).astype('int')
-    MAPINSET = np.array([1, 1])
+    MAPINSET = np.array([2, 1])
 
     def __init__(self, main):
         self.main = main
 
-        tdl.set_font(Render.GRAPHICSPATH + Render.TILESET, greyscale=True)
+        term.open()
 
-        self.console = tdl.init(
-            *self.SCREEN, title="RunnerRL", fullscreen=False)
-        self.console.clear(bg=[25, 25, 25])
+        term.set("window: size={:}x{:}".format(
+            Render.SCREEN[WIDTH], Render.SCREEN[HEIGHT]))
+        term.set("font: " + Render.GRAPHICSPATH +
+                 Render.FONT + ", size=12x24, codepage=437")
+        term.set("0x1000: " + Render.GRAPHICSPATH + Render.TILES +
+                 ", size=24x24, spacing=2x1, align=center")
+        term.printf(2, 2, "Hello World")
 
-        self.mapPanel = tdl.Window(
-            self.console, self.MAPINSET[X], self.MAPINSET[Y], *(self.SEPARATOR - np.array([2, 2])))
-        self.infoPanel = tdl.Window(
-            self.console, self.SEPARATOR[X], self.SEPARATOR[Y], *(self.SCREEN - self.SEPARATOR - np.array([1, 1])))
-        self.inventoryPanel = tdl.Window(
-            self.console, self.SEPARATOR[X], 1, self.SCREEN[X] - self.SEPARATOR[X] - 1, self.SEPARATOR[Y] - 2)
-        self.messagePanel = tdl.Window(
-            self.console, self.MAPINSET[X], self.SEPARATOR[Y], self.SEPARATOR[X] - 2, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
-        self.helpPanel = tdl.Window(
-            self.console, self.MAPINSET[X], self.MAPINSET[Y], self.SEPARATOR[X] - 2, self.SCREEN[Y] - 2)
+        self.mapPanel = MapPanel(
+            self.MAPINSET, *(self.SEPARATOR - np.array([4, 2])))
+        self.infoPanel = InfoPanel(
+            self.SEPARATOR, *(self.SCREEN - self.SEPARATOR - np.array([2, 1])))
+        self.inventoryPanel = InventoryPanel(
+            [self.SEPARATOR[X], 1], self.SCREEN[X] - self.SEPARATOR[X] - 2, self.SEPARATOR[Y] - 2)
+        self.messagePanel = MessagePanel([self.MAPINSET[X], self.SEPARATOR[Y]],
+                                  self.SEPARATOR[X] - 4, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
+        self.helpPanel = Panel(
+            self.MAPINSET, self.SEPARATOR[X] - 3, self.SCREEN[Y] - 2)
 
         self.mapLayer = 0
 
     def renderStart(self):
-        self.helpPanel.clear(bg=COLOR['BLACK'])
-        self.infoPanel.clear(bg=COLOR['BLACK'])
-        self.inventoryPanel.clear(bg=COLOR['BLACK'])
-        self.messagePanel.clear(bg=COLOR['BLACK'])
+        term.bkcolor(term.color_from_argb(255, 25, 25, 25))
+        term.clear()
 
-        tdl.flush()
+        self.infoPanel.clear()
+        self.inventoryPanel.clear()
+        self.messagePanel.clear()
+        self.helpPanel.clear()
+        term.refresh()
+        #
+        # tdl.flush()
 
     def renderAll(self, map, gui):
-        self.console.clear(bg=[25, 25, 25])
+        term.bkcolor(term.color_from_argb(255, 25, 25, 25))
+        term.clear()
 
-        gui.renderInfo(self.infoPanel)
-        gui.renderInventory(self.inventoryPanel)
+        self.infoPanel.render(gui, self.main)
+        self.inventoryPanel.render(gui, self.main)
+        self.messagePanel.render(gui, self.main)
+        self.mapPanel.render(map, gui)
+        term.refresh()
 
-        if self.main.input.help != 0:
-            gui.renderHelp(self.helpPanel, self.main.input.help)
-
-            self.console.blit(self.helpPanel, *self.MAPINSET)
-        else:
-            gui.renderMessage(self.messagePanel)
-            self.renderMap(self.mapPanel, map, gui)
-
-            self.console.blit(self.mapPanel, *self.MAPINSET)
-
-        tdl.flush()
+        # self.console.clear(bg=[25, 25, 25])
+        #
+        # gui.renderInfo(self.infoPanel)
+        # gui.renderInventory(self.inventoryPanel)
+        #
+        # if self.main.input.help != 0:
+        #     gui.renderHelp(self.helpPanel, self.main.input.help)
+        #
+        #     self.console.blit(self.helpPanel, *self.MAPINSET)
+        # else:
+        #     gui.renderMessage(self.messagePanel)
+        #     self.renderMap(self.mapPanel, map, gui)
+        #
+        #     self.console.blit(self.mapPanel, *self.MAPINSET)
+        #
+        # tdl.flush()
 
     def renderMap(self, panel, map, gui):
         panel.clear(bg=COLOR['BLACK'])
@@ -211,7 +231,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
 
                 if map.tile[x][y].grid is True:
                     # set the colour accordingly
-                    pixels[3 * x + 1, 3 * y + 1] = tuple(map.corp.complement[0])
+                    pixels[3 * x + 1, 3 * y +
+                           1] = tuple(map.corp.complement[0])
                 elif map.tile[x][y].grid is not None:
                     for p in tile:
                         # set the colour accordingly
@@ -264,3 +285,138 @@ class Light():
                         strength -= 1
             except IndexError:
                 pass
+
+
+class Panel:
+    def __init__(self, pos, w, h, layer=0):
+        self.pos = np.array(pos)
+        self.size = np.array([w, h])
+        self.x = [max(0, pos[X]), min(Render.SCREEN[WIDTH], pos[X] + w)]
+        self.y = [max(0, pos[Y]), min(Render.SCREEN[HEIGHT], pos[Y] + h)]
+        self.center = (self.pos + self.size / 2).round().astype('int')
+        self.layer = layer
+
+    def contains(self, pos):
+        return pos[X] in range(*self.x) and pos[Y] in range(*self.y)
+
+    def border(self):
+        positions = []
+        for x in range(self.x[MIN], self.x[MAX]):
+            positions.append([x, self.y[MIN]])
+            positions.append([x, self.y[MAX] - 1])
+        for y in range(self.y[MIN], self.y[MAX]):
+            positions.append([self.x[MIN], y])
+            positions.append([self.x[MAX] - 1, y])
+        return positions
+
+    def clear(self, color=COLOR['BLACK']):
+        term.layer = self.layer
+        term.bkcolor(term.color_from_argb(255, *color))
+        term.clear_area(self.pos[X], self.pos[Y], *self.size)
+
+    def printString(self, pos, string, color=COLOR['WHITE']):
+        term.layer = self.layer
+        term.color(term.color_from_argb(255, *color))
+        pos += self.pos
+        term.printf(pos[X], pos[Y], string)
+
+    def render(self):
+        pass
+
+
+class MapPanel(Panel):
+    SCALE = np.array([2, 1])
+
+    def __init__(self, pos, w, h, layer=0):
+        Panel.__init__(self, pos, w, h, layer=0)
+
+    def render(self, map, gui):
+        self.clear()
+#        if self.mapLayer == 0:
+        for cell in gui.getCells(map):
+            cell.drawMap(self, (cell.pos + self.pos - gui.mapOffset))
+#        elif self.mapLayer == 1:
+#        for cell in gui.getCells(map):
+#            cell.drawNet(self, cell.pos - gui.mapOffset)
+
+        # try:
+        #     cell = map.getTile(self.main.player.cell.pos + gui.cursorDir)
+        #     cursorPos = cell.pos - gui.mapOffset
+        #     cell.drawHighlight(self, cursorPos)
+        #
+        #     cell = map.getTile(gui.cursorPos)
+        #     cursorPos = cell.pos - gui.mapOffset
+        #     cell.drawHighlight(panel, cursorPos)
+        # except:
+        #     pass
+
+class InfoPanel(Panel):
+    def __init__(self, pos, w, h, layer=0):
+        Panel.__init__(self, pos, w, h, layer=0)
+
+    def render(self, gui, main):
+        self.clear()
+#        self.printString(np.array([1, 1]), "Hello World")
+
+        actions = ''
+        for i in range(1 + (main.tic % main.TIC_SEC)):
+            actions += '>'
+        actions += ' '
+        for i in range(main.player.cooldown):
+            actions += '-'
+        self.printString(np.array([1, 1]), actions)
+
+        # lighting bar
+        # for i in range(6):
+        #     self.draw_char(1 + i, 3, 7, self.main.player.cell.bg)
+        # for i in range(int(float(self.main.player.cell.light) / MAX_LIGHT * 6)):
+        # #     panel.draw_char(1 + i, 3, 15)
+
+        # if self.main.map.contains(self.cursorPos):
+        #     cursorTile = self.main.map.getTile(self.cursorPos)
+        #     if cursorTile.vision[LOS] is True:
+        #         if cursorTile.room is not None:
+        #             panel.draw_str(1, 5, cursorTile.room.describe())
+        #         for i, obj in enumerate(cursorTile.object + cursorTile.effect):
+        #             panel.draw_str(1, 7 + 2 * i, obj.describe(), obj.fg)
+
+class MessagePanel(Panel):
+    def __init__(self, pos, w, h, layer=0):
+        Panel.__init__(self, pos, w, h, layer=0)
+
+    def render(self, gui, main):
+        self.clear()
+        pos = 0
+
+        for string, color in gui.MESSAGES[gui.messageOffset:]:
+            # line wrapping in list comprehension
+            block = [string[i:i + self.size[X] - 2]
+                     for i in range(0, len(string), self.size[Y] - 2)]
+            for line in block:
+                pos += 1
+                if pos >= self.size[Y] - 1:
+                    break
+                self.printString(np.array([1, pos]), line)
+
+            pos += 1
+            if pos >= self.size[Y] - 1:
+                break
+
+class InventoryPanel(Panel):
+    def __init__(self, pos, w, h, layer=0):
+        Panel.__init__(self, pos, w, h, layer=0)
+
+    def render(self, gui, main):
+        self.clear()
+
+        for i, item in enumerate(main.player.inventory[gui.inventoryOffset:]):
+            pos = 1 + 2 * i
+            if pos >= self.size[Y] - 1:
+                break
+
+            if i == 0:
+                self.printString(np.array([1, pos]), 'SPACE: ' + item.describe(), item.fg)
+            elif i <= 4:
+                self.printString(np.array([1, pos]), '    {:}: '.format(i) + item.describe())
+            else:
+                self.printString(np.array([1, pos]), '       ' + item.describe())
