@@ -105,7 +105,7 @@ class Player(Actor):
 
         self.fg = [225, 150, 50]
         self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Grenade(carrier=self),
-                          Lighter(carrier=self), Key(carrier=self,tier=5), Shotgun(carrier=self),
+                          Lighter(carrier=self), Key(carrier=self,tier=4), Shotgun(carrier=self),
                           Explosive(carrier=self)]
 
     def moveDir(self, dir):

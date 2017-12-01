@@ -196,7 +196,7 @@ class Cell:
 
         if self.wall:
             self.bg = (50, 50, 50)
-            self.fg = (85, 85, 85)
+            self.fg = (128, 128, 128)
             return
 
         if self.room is None:
@@ -293,7 +293,8 @@ class Cell:
 
 
 class Wall:
-    ALIGNMAP = {'UP_LEFT': 188,
+    ALIGNMAP = {'CENTER': 206,
+                'UP_LEFT': 188,
                 'UP_RIGHT': 200,
                 'DOWN_LEFT': 187,
                 'DOWN_RIGHT': 201,
@@ -313,7 +314,7 @@ class Wall:
         cell = tileMap.getTile(pos)
         neighborhood = list(cell.getNeighborhood('LARGE'))
 
-        surfaceString = 'UP'
+        surfaceString = 'CENTER'
 
         floorCells = filter(lambda c: not (c.wall or c.hasDoor()), cell.getNeighborhood('SMALL'))
         if len(floorCells) == 1:
@@ -331,9 +332,9 @@ class Wall:
         if len(floorCells) == 2:
             surfaceDir = floorCells[0].pos - cell.pos
             if surfaceDir[Y] == 1:
-                surfaceString = 'UP_DOWN'
+                surfaceString = 'CENTER'
             elif surfaceDir[Y] == 0:
-                surfaceString = 'LEFT_RIGHT'
+                surfaceString = 'CENTER'
 
         else:
             floorCells = filter(lambda c: not (c.wall or c.hasDoor()), cell.getNeighborhood('LARGE'))
