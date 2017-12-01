@@ -39,3 +39,9 @@ Gases, Fire and environmental destruction.
 
 The gif shows shooting some Fuel Barrels, shooting a lightbulb, then setting the fuel on fire.
 later, I'm placing a bomb and blow a hole in the wall towards the server room on the right.
+
+Last, but definitely not least: Reddit user [Gzintu](https://www.reddit.com/user/gzintu) has started to work on this really promising tileset:
+
+<p align="left">
+  <img src="https://github.com/Nephas/runner-rl/blob/master/graphics/exp_24x24.png" width="500"/>
+</p>
