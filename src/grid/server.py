@@ -4,7 +4,7 @@ import random as rd
 
 from src.grid.agent import Agent
 from src.object.object import Object
-from src.render import Render
+from src.render.render import Render
 
 
 class Terminal(Object):

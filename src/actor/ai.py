@@ -3,7 +3,7 @@ from src.globals import *
 import random as rd
 import numpy as np
 
-from src.render import Render
+from src.render.render import Render
 from src.level.map import Map, Rectangle
 
 

@@ -2,8 +2,8 @@ from src.globals import *
 
 import random as rd
 
-from src.render import Render, Light
-from src.gui import Gui
+from src.render.render import Render, Light
+from src.render.gui import Gui
 
 class Effect(object):
     PRIORITY = {'Effect': 24,

@@ -3,15 +3,15 @@
 from src.globals import *
 from src.level.level import Level
 from src.input import Input
-from src.gui import Gui
-from src.render import Render
+from src.render.gui import Gui
+from src.render.render import Render
 from src.actor.actor import Player
 
 import sys
 import pygame as pg
 import time as t
 import random as rd
-import tdl
+
 from bearlibterminal import terminal as term
 
 class Game:
@@ -21,10 +21,10 @@ class Game:
     FRAME_LENGTH = 1. / LIMIT_FPS
 
     def __init__(self):
+        self.map = Level(self)
         self.render = Render(self)
         self.input = Input(self)
         self.gui = Gui(self)
-        self.map = Level(self)
         self.sound = {}
 
         self.actor = []
@@ -46,8 +46,8 @@ class Game:
 
         self.map.load(debug=True)
 
-        self.gui.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
-        self.gui.updateCursor()
+        self.render.mapPanel.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
+        self.render.mapPanel.updateCursor()
         self.map.updatePhysics()
         self.map.updateRender()
 

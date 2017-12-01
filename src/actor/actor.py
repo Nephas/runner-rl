@@ -8,7 +8,7 @@ from src.actor.ai import AI, Idle, Follow
 from src.actor.person import Person
 from src.actor.conversation import Conversation
 from src.actor.body import Body
-from src.gui import Gui
+from src.render.gui import Gui
 
 import random as rd
 
@@ -16,7 +16,7 @@ import random as rd
 
 
 class Actor(Object):
-    def __init__(self, cell=None, main=None, char='@', ai=None):
+    def __init__(self, cell=None, main=None, char=0x1040, ai=None):
         Object.__init__(self, cell, char=char)
 
         self.main = main
@@ -101,7 +101,7 @@ class Actor(Object):
 
 class Player(Actor):
     def __init__(self, cell=None, main=None):
-        Actor.__init__(self, cell, main, char='@')
+        Actor.__init__(self, cell, main, char=0x1040)
 
         self.fg = [225, 150, 50]
         self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Grenade(carrier=self),
@@ -111,7 +111,7 @@ class Player(Actor):
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir
         if self.moveTo(targetPos):
-            self.main.gui.moveOffset(dir)
+            self.main.render.mapPanel.moveOffset(dir)
             return np.abs(dir[X]) + np.abs(dir[Y])
         else:
             return self.interactWith(self.main.map, dir)

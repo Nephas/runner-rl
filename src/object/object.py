@@ -3,8 +3,7 @@ from src.globals import *
 import random as rd
 import copy as cp
 
-from src.render import Render
-from src.gui import Gui
+from src.render.gui import Gui
 from src.effect.effect import Fuel
 
 class Object(object):

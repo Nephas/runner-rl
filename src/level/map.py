@@ -5,7 +5,7 @@ import numpy as np
 import random as rd
 import itertools as it
 
-from src.render import Render
+from src.render.render import Render
 from bearlibterminal import terminal as term
 
 
@@ -55,7 +55,7 @@ class Map:
         self.main.player.castFov(self)
 
     def updateRender(self):
-        for cell in self.main.gui.getCells(self):
+        for cell in self.main.render.mapPanel.camera.getCells(self):
             cell.updateRender()
 
     def getObjects(self):
@@ -125,6 +125,8 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
 
 
 class Cell:
+    FLOOR = 0x10B2
+
     def __init__(self, map, pos, wall=None):
         self.map = map
         self.room = None
@@ -206,7 +208,7 @@ class Cell:
             self.bg = self.map.palette[self.room.tier]
             self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
 
-        self.char[0] = ' '
+        self.char[0] = self.FLOOR
 
         if self.object + self.effect != []:
             obj = max(self.object + self.effect, key=lambda obj: obj.priority)
@@ -225,12 +227,12 @@ class Cell:
         self.object = []
         self.wall = True
         self.block = [True, True, True]
-        self.char[0] = Wall.getChar(self.pos, self.map)
+        self.char[VIS] = Wall.getChar(self.pos, self.map)
 
     def removeWall(self):
         self.wall = False
         self.block = [False, False, False]
-        self.char[0] = ' '
+        self.char[VIS] = ' '
 
     def getNeighborhood(self, shape='SMALL'):
         if shape in self.neighborhood:
@@ -246,7 +248,7 @@ class Cell:
 
     def updatePhysics(self):
         if self.grid is True:
-            self.char[GRID] = rd.randint(191,197)
+            self.char[GRID] = rd.randint(191, 197)
         elif self.grid is not None and self.grid.agents != []:
             self.char[GRID] = self.grid.agents[0].char
 
@@ -268,7 +270,7 @@ class Cell:
         char = self.char[VIS]
 
         if self.vision[EXP]:
-            term.put(pos[X], pos[Y], 0x1004)
+            term.put(pos[X], pos[Y], self.char[VIS])
 #            panel.drawChar(pos, self.char[0], self.fg, self.bg)
 
     def drawNet(self, window, pos):
@@ -297,17 +299,17 @@ class Cell:
 
 
 class Wall:
-    ALIGNMAP = {'CENTER': 206,
-                'UP_LEFT': 188,
-                'UP_RIGHT': 200,
-                'DOWN_LEFT': 187,
-                'DOWN_RIGHT': 201,
-                'UP': 203,
-                'DOWN': 202,
-                'LEFT': 204,
-                'RIGHT': 185,
-                'UP_DOWN': 205,
-                'LEFT_RIGHT': 186}
+    ALIGNMAP = {'CENTER': 0x10CE,
+                'UP_LEFT': 0x10BC,
+                'UP_RIGHT': 0x10C8,
+                'DOWN_LEFT': 0x10BB,
+                'DOWN_RIGHT': 0x10C9,
+                'UP': 0x10CB,
+                'DOWN': 0x10CA,
+                'LEFT': 0x10CC,
+                'RIGHT': 0x10B9,
+                'UP_DOWN': 0x1194,
+                'LEFT_RIGHT': 0x1194}
 
     def __init__(self):
         pass

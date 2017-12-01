@@ -11,7 +11,6 @@ from src.grid.server import Terminal, Server
 from src.object.door import Vent, SecDoor, AutoDoor
 from src.object.item import Item, Key, PlotDevice
 
-from src.render import Render
 from src.level.map import Rectangle
 
 

@@ -17,7 +17,7 @@ from src.grid.server import Terminal, Server, MasterSwitch
 from src.object.light import Lamp, DoorLamp
 from src.object.door import Vent, SecDoor
 
-from src.render import Render
+from src.render.render import Render
 from src.actor.actor import Player
 from src.actor.npc import Drone
 

@@ -2,7 +2,7 @@ from src.globals import *
 
 from src.object.object import Object
 from src.effect.effect import Fog, Fluid, Fire, Fuel, Shot, Flash
-from src.gui import Gui
+from src.render.gui import Gui
 
 import pygame as pg
 

@@ -2,13 +2,13 @@ from src.globals import *
 
 from src.object.object import Object
 from src.object.item import Key
-from src.gui import Gui
+from src.render.gui import Gui
 
 import random as rd
 
 class Vent(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char=rd.choice([34,35]), color=(100, 100, 100))
+        Object.__init__(self, cell, char=rd.choice([0x1022, 0x1023]), color=(100, 100, 100))
 
         self.block = [False, True, False]
 
@@ -26,7 +26,7 @@ class Vent(Object):
 
 class Door(Object):
     def __init__(self, cell=None, tier=0):
-        Object.__init__(self, cell, char=177, color=COLOR['GRAY'])
+        Object.__init__(self, cell, char=0x10B0, color=COLOR['GRAY'])
 
         self.tier = tier
         self.closed = True
@@ -34,17 +34,15 @@ class Door(Object):
 
     def open(self, actor):
         if self.authorize(actor):
-#            actor.main.sound['DOOR'].play()
             self.closed = False
             self.block = [False, False, False]
-            self.char = 176
+            self.char = 0x10B1
 
     def close(self, actor):
         if self.authorize(actor):
-#            actor.main.sound['DOOR'].play()
             self.closed = True
             self.block = [True, True, True]
-            self.char = 177
+            self.char = 0x10B0
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':

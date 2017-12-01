@@ -1,13 +1,14 @@
-from globals import *
+from src.globals import *
 import numpy as np
 
-from src.render import Render
+from src.render.render import Render
 from src.input import Input
 from src.level.map import Map, Rectangle
 
 
 class Gui:
-    MESSAGES = [('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
+    MESSAGES = [
+        ('The hum from the vents reminds you of a TV tuned to a dead channel.', COLOR['GREEN'])]
 
     def __init__(self, main):
         self.main = main
@@ -24,13 +25,18 @@ class Gui:
             Gui.MESSAGES.insert(0, (string, color))
 
     def updateCursor(self, terminalPos=np.array([8, 8])):
-        if not Render.inMap(terminalPos):
-            return
+#        if not Render.inMap(terminalPos):
+#            return
 
-        mapPos = np.array(terminalPos) + self.mapOffset - \
-            Render.MAPINSET
+        mapPos = (terminalPos - Render.MAPINSET)
+        mapPos[X] = mapPos[X] // 2
+
+        mapPos += self.mapOffset
+
         if self.main.map.contains(mapPos):
             self.cursorPos = mapPos
+
+        print(self.cursorPos)
 
         ray = mapPos - self.main.player.cell.pos
         length = np.linalg.norm(ray)
@@ -41,7 +47,7 @@ class Gui:
         self.mapOffset += dir
         self.cursorPos += dir
         (panelX, panelY) = self.main.render.mapPanel.size
-        self.mapRectangle = Rectangle(self.mapOffset, panelX, panelY)
+        self.mapRectangle = Rectangle(self.mapOffset, panelX // 2 - 1, panelY)
 
     def getCells(self, map):
         return self.mapRectangle.getCells(map)
@@ -81,12 +87,13 @@ class Gui:
                 break
 
             if i == 0:
-                panel.draw_str(1, pos, 'SPACE: ' + item.describe(), item.fg, COLOR['DARKGRAY'])
+                panel.draw_str(1, pos, 'SPACE: ' + item.describe(),
+                               item.fg, COLOR['DARKGRAY'])
             elif i <= 4:
-                panel.draw_str(1, pos, '    {:}: '.format(i) + item.describe(), item.fg)
+                panel.draw_str(1, pos, '    {:}: '.format(
+                    i) + item.describe(), item.fg)
             else:
                 panel.draw_str(1, pos, '       ' + item.describe(), item.fg)
-
 
     def renderMessage(self, panel):
         panel.clear(bg=COLOR['BLACK'])
@@ -113,7 +120,8 @@ class Gui:
 
         if page == 1:
             for key in Input.KEYMAP:
-                panel.draw_str(pos[X], pos[Y], "{: >5}: ".format(key.split('_')[-1]) + Input.KEYMAP[key][2])
+                panel.draw_str(pos[X], pos[Y], "{: >5}: ".format(
+                    key.split('_')[-1]) + Input.KEYMAP[key][2])
 
                 pos[Y] += 2
                 if pos[Y] >= panel.height - 1:
