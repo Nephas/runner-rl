@@ -196,7 +196,7 @@ class Level(Map):
                 if cell.wall:
                     for neighbor in cell.getNeighborhood('LARGE'):
                         if neighbor.wall is None:
-                            wallMap[neighbor.pos[X],neighbor.pos[Y]] = 1
+                            wallMap[neighbor.pos[X], neighbor.pos[Y]] = 1
 
             for cell in self.allTiles():
                 if wallMap[cell.pos[X], cell.pos[Y]] != 0:

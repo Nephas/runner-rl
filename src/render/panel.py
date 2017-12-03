@@ -2,6 +2,7 @@ from bearlibterminal import terminal as term
 
 from src.globals import *
 
+
 class Rectangle:  # a rectangle on the map. used to characterize a room or a window
     def __init__(self, pos, w, h):
         self.pos = np.array(pos)
@@ -48,7 +49,8 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
                 for obj in map.tile[x][y].object:
                     yield obj
 
-class Panel:
+
+class Panel(object):
     def __init__(self, main, pos, w, h, layer=0):
         self.main = main
         self.pos = np.array(pos)
@@ -57,6 +59,10 @@ class Panel:
         self.y = [pos[Y], pos[Y] + h]
         self.center = (self.pos + self.size / 2).round().astype('int')
         self.layer = layer
+        self.cursor = False
+
+    def updateCursor(self, pos):
+        self.cursor = self.contains(pos)
 
     def contains(self, pos):
         return pos[X] in range(*self.x) and pos[Y] in range(*self.y)
@@ -72,18 +78,28 @@ class Panel:
         return positions
 
     def clear(self, color=COLOR['BLACK']):
-        term.layer = self.layer
+        term.layer(0)
         term.bkcolor(term.color_from_argb(255, *color))
         term.clear_area(self.pos[X], self.pos[Y], *self.size)
 
     def printString(self, pos, string, color=COLOR['WHITE']):
-        term.layer = self.layer
         term.color(term.color_from_argb(255, *color))
         pos += self.pos
         term.printf(pos[X], pos[Y], string)
 
+    def printChar(self, pos, char, color=COLOR['WHITE']):
+        term.color(term.color_from_argb(255, *color))
+        pos += self.pos
+        term.put(pos[X], pos[Y], char)
+
     def render(self):
-        pass
+        self.clear()
+
+        if self.cursor:
+            term.color(term.color_from_argb(255, 16, 16, 16))
+            term.color
+            for pos in self.border():
+                term.put(pos[X], pos[Y], '+')
 
 
 class MapPanel(Panel):
@@ -102,56 +118,44 @@ class MapPanel(Panel):
         self.cursorDir = np.array([1, 1])
         self.camera = Rectangle(self.mapOffset, 0, 0)
 
-
     def render(self, map):
-        self.clear()
-#        if self.mapLayer == 0:
+        super(MapPanel, self).render()
+
         for cell in self.camera.getCells(map):
-            self.draw(cell, self.SCALE*(cell.pos + self.pos - self.mapOffset))
-#        elif self.mapLayer == 1:
-#        for cell in gui.getCells(map):
-#            cell.drawNet(self, cell.pos - gui.mapOffset)
+            self.draw(cell, self.SCALE *
+                      (cell.pos - self.mapOffset) + self.pos)
 
-        try:
-            cell = map.getTile(self.main.player.cell.pos + self.cursorDir)
-            cursorPos = self.SCALE*(cell.pos - self.mapOffset + self.pos)
-            self.highlight(cell, cursorPos)
-
-            cell = map.getTile(self.cursorPos)
-            cursorPos = self.SCALE*(cell.pos - self.mapOffset) + self.pos
-            self.highlight(cell, cursorPos)
-        except:
-            pass
+        for mapPos in [self.main.player.cell.pos + self.cursorDir, self.cursorPos]:
+            try:
+                cell = map.getTile(mapPos)
+                panelPos = self.SCALE * (cell.pos - self.mapOffset) + self.pos
+                self.highlight(cell, panelPos)
+            except:
+                pass
 
     def draw(self, cell, panelPos):
-        term.layer = self.backLayer
-        term.bkcolor(term.color_from_argb(255, *cell.bg))
-        term.color(term.color_from_argb(255, *cell.fg))
+        term.composition(True)
 
-        term.layer = self.objectLayer
-        if cell.vision[LOS]:
-            term.put(panelPos[X], panelPos[Y], cell.char[VIS])
-        elif cell.vision[EXP]:
-            term.put(panelPos[X], panelPos[Y], cell.char[VIS])
+        i = 0
+        for color, tile in zip(cell.color, cell.stack):
+            if tile is not None:
+                term.layer(i)
+                term.color(term.color_from_argb(255, *color))
+                term.put(panelPos[X], panelPos[Y], tile)
+            i += 1
 
     def highlight(self, cell, panelPos):
-        term.layer = self.backLayer
-        term.color(term.color_from_argb(255, *cell.fg))
-        term.put(panelPos[X], panelPos[Y], 0x1001)
+        term.layer(3)
+        term.color(term.color_from_argb(255, *COLOR['WHITE']))
+        term.put(panelPos[X], panelPos[Y], 0x1020)
 
     def updateCursor(self, terminalPos=np.array([8, 8])):
-#        if not Render.inMap(terminalPos):
-#            return
+        super(MapPanel, self).updateCursor(terminalPos)
 
-        mapPos = (terminalPos - self.pos)
-        mapPos[X] = mapPos[X] // 2
-
-        mapPos += self.mapOffset
+        mapPos = (terminalPos - self.pos) // self.SCALE + self.mapOffset
 
         if self.main.map.contains(mapPos):
             self.cursorPos = mapPos
-
-        print(self.cursorPos)
 
         ray = mapPos - self.main.player.cell.pos
         length = np.linalg.norm(ray)
@@ -177,9 +181,10 @@ class InfoPanel(Panel):
     def __init__(self, main, pos, w, h, layer=0):
         Panel.__init__(self, main, pos, w, h, layer=0)
 
-    def render(self, gui, main):
-        self.clear()
-#        self.printString(np.array([1, 1]), "Hello World")
+    def render(self, main):
+        super(InfoPanel, self).render()
+
+        row = 1
 
         actions = ''
         for i in range(1 + (main.tic % main.TIC_SEC)):
@@ -187,21 +192,31 @@ class InfoPanel(Panel):
         actions += ' '
         for i in range(main.player.cooldown):
             actions += '-'
-        self.printString(np.array([1, 1]), actions)
+        self.printString(np.array([1, row]), actions)
+
+        row = 2
 
         # lighting bar
-        # for i in range(6):
-        #     self.draw_char(1 + i, 3, 7, self.main.player.cell.bg)
-        # for i in range(int(float(self.main.player.cell.light) / MAX_LIGHT * 6)):
-        # #     panel.draw_char(1 + i, 3, 15)
+        for i in range(6):
+            self.printChar(np.array([1 + 2 * i, row]), 0x1009)
+        for i in range(int(float(self.main.player.cell.light) / MAX_LIGHT * 6)):
+            self.printChar(np.array([1 + 2 * i, row]), 0x1007)
 
-        if self.main.map.contains(gui.cursorPos):
-            cursorTile = self.main.map.getTile(gui.cursorPos)
+        mapPanel = self.main.render.mapPanel
+
+        row = 3
+
+        if self.main.map.contains(mapPanel.cursorPos):
+            cursorTile = self.main.map.getTile(mapPanel.cursorPos)
             if cursorTile.vision[LOS] is True:
                 if cursorTile.room is not None:
-                    self.printString(np.array([1, 5]), cursorTile.room.describe())
+                    self.printString(
+                        np.array([1, row]), cursorTile.room.describe())
+
+                row = 4
+
                 for i, obj in enumerate(cursorTile.object + cursorTile.effect):
-                    self.printString(np.array([1, 7 + 2 * i]), obj.describe())
+                    self.printString(np.array([1, row + i]), obj.describe())
 
 
 class MessagePanel(Panel):
@@ -219,7 +234,8 @@ class MessagePanel(Panel):
             self.MESSAGES.insert(0, (string, color))
 
     def render(self, main):
-        self.clear()
+        super(MessagePanel, self).render()
+
         pos = 0
 
         for string, color in self.MESSAGES[self.messageOffset:]:
@@ -242,7 +258,7 @@ class InventoryPanel(Panel):
         Panel.__init__(self, main, pos, w, h, layer=0)
 
     def render(self, gui, player):
-        self.clear()
+        super(InventoryPanel, self).render()
 
         for i, item in enumerate(player.inventory[gui.inventoryOffset:]):
             pos = i + 1

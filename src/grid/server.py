@@ -9,7 +9,7 @@ from src.render.render import Render
 
 class Terminal(Object):
     def __init__(self, cell=None, tier=0):
-        Object.__init__(self, cell, char=20, color=COLOR['MEDIUMGREEN'])
+        Object.__init__(self, cell, char=0x1014, color=COLOR['MEDIUMGREEN'])
 
         self.on = True
         self.connection = []
@@ -56,7 +56,7 @@ class MasterSwitch(Terminal):
     def __init__(self, cell=None):
         Terminal.__init__(self, cell)
 
-        self.char = 33
+        self.char = 0x1021
         self.block = [False, False, False]
 
     def interact(self, actor=None, dir=None, type=None):
@@ -85,7 +85,7 @@ class Server(Terminal):
     def __init__(self, cell=None):
         Terminal.__init__(self, cell)
 
-        self.char = 19
+        self.char = 0x1013
         self.fg = COLOR['GREEN']
         self.block = [True, True, True]
 

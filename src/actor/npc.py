@@ -7,7 +7,7 @@ from src.actor.actor import Actor
 
 
 class NPC(Actor):
-    def __init__(self, cell=None, main=None, char='@'):
+    def __init__(self, cell=None, main=None, char=0x1040):
         Actor.__init__(self, cell, main, char=char)
 
         self.ai = Idle(self)
@@ -21,7 +21,7 @@ class NPC(Actor):
 
 class Guard(NPC):
     def __init__(self, cell=None, main=None, owner=None):
-        NPC.__init__(self, cell, main, char='@')
+        NPC.__init__(self, cell, main)
 
         self.ai = Idle(self)
         self.inventory = [Key(carrier=self, tier=3), Key(
@@ -29,7 +29,7 @@ class Guard(NPC):
 
 class Worker(NPC):
     def __init__(self, cell=None, main=None, owner=None):
-        NPC.__init__(self, cell, main, char='@')
+        NPC.__init__(self, cell, main)
 
         self.ai = Idle(self)
         self.inventory = [Key(carrier=self, tier=5)]

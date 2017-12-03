@@ -126,6 +126,7 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
 
 class Cell:
     FLOOR = 0x10B2
+    GRATE = 0x1000
 
     def __init__(self, map, pos, wall=None):
         self.map = map
@@ -144,10 +145,9 @@ class Cell:
         self.object = []
         self.effect = []
 
-        # graphics attributes [VIS, GRID]
-        self.char = [' ', ' ']
-        self.bg = COLOR['BLACK']
-        self.fg = COLOR['WHITE']
+        # graphics attributes [FLOOR, EFFECT, OBJECT]
+        self.stack = [Cell.FLOOR, None, None]
+        self.color = [COLOR['BLACK'], COLOR['WHITE'], COLOR['WHITE']]
 
         self.neighborhood = {'SMALL': [],
                              'LARGE': []}
@@ -190,49 +190,51 @@ class Cell:
 
     def updateRender(self):
         if not self.vision[EXP]:
+            self.color = [COLOR['BLACK'], COLOR['BLACK'], COLOR['BLACK']]
             return
 
         if not self.vision[LOS]:
-            self.fg = (25, 25, 25)
-            self.bg = (10, 10, 10)
-            return
-
-        if self.wall:
-            self.bg = (50, 50, 50)
-            self.fg = (128, 128, 128)
+            self.color = [COLOR['NIGHT'], COLOR['NIGHT'], COLOR['NIGHT']]
             return
 
         if self.room is None:
-            self.bg = (25, 25, 25)
+            self.stack[0] = self.GRATE
+            roomCol = np.array(COLOR['WHITE'])
         else:
-            self.bg = self.map.palette[self.room.tier]
-            self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
+            roomCol = self.map.palette[self.room.tier]
 
-        self.char[0] = self.FLOOR
+        self.color[0] = roomCol * self.light // MAX_LIGHT // 2
 
-        if self.object + self.effect != []:
-            obj = max(self.object + self.effect, key=lambda obj: obj.priority)
-            self.char[0] = obj.char
-            self.fg = obj.fg
-            try:
-                self.bg = obj.bg
-                self.bg = [self.light * c / MAX_LIGHT for c in self.bg]
-            except:
-                pass
+        if self.wall:
+            self.color[1] = roomCol * self.light // MAX_LIGHT
+#            self.color[2] = self.color[2]#COLOR['WHITE']
+            return
 
-        if self.block[LOS]:
-            self.bg = (25, 25, 25)
+        self.stack[1] = None
+        self.stack[2] = None
+
+        if len(self.object) != 0:
+            obj = max(self.object, key=lambda obj: obj.priority)
+            self.stack[2] = obj.char
+            self.color[2] = obj.fg
+            if self.hasDoor():
+                self.color[2] = roomCol * self.light // MAX_LIGHT
+
+        if len(self.effect) != 0:
+            eff = max(self.effect, key=lambda eff: eff.priority)
+            self.stack[1] = eff.char
+            self.color[1] = eff.fg
 
     def makeWall(self):
         self.object = []
         self.wall = True
         self.block = [True, True, True]
-        self.char[VIS] = Wall.getChar(self.pos, self.map)
+        self.stack[1] = Wall.getChar(self.pos, self.map)
 
     def removeWall(self):
         self.wall = False
         self.block = [False, False, False]
-        self.char[VIS] = ' '
+        self.stack[1] = None
 
     def getNeighborhood(self, shape='SMALL'):
         if shape in self.neighborhood:
@@ -247,11 +249,6 @@ class Cell:
                 yield self.map.getTile(pos)
 
     def updatePhysics(self):
-        if self.grid is True:
-            self.char[GRID] = rd.randint(191, 197)
-        elif self.grid is not None and self.grid.agents != []:
-            self.char[GRID] = self.grid.agents[0].char
-
         if self.wall:
             self.block = [True, True, True]
         else:
@@ -265,37 +262,6 @@ class Cell:
             if obj.block[LIGHT]:
                 self.block[LIGHT] = True
             obj.physics(self.map)
-
-    def drawMap(self, panel, pos):
-        char = self.char[VIS]
-
-        if self.vision[EXP]:
-            term.put(pos[X], pos[Y], self.char[VIS])
-#            panel.drawChar(pos, self.char[0], self.fg, self.bg)
-
-    def drawNet(self, window, pos):
-        if self.wall:
-            bg = COLOR['DARKGRAY']
-        elif self.room is None:
-            bg = COLOR['BLACK']
-        else:
-            bg = list(self.map.palette[self.room.tier])
-
-        if self.grid is True:
-            window.draw_char(pos[X], pos[Y], self.char[GRID], list(self.map.corp.complement[0]), bg)
-        elif self.grid is not None:
-            window.draw_char(pos[X], pos[Y], self.char[GRID], COLOR['BLACK'], list(self.map.corp.complement[0]))
-        elif self.vision[LOS]:
-            window.draw_char(pos[X], pos[Y], self.char[VIS], COLOR['WHITE'], bg)
-        else:
-            window.draw_char(pos[X], pos[Y], ' ', COLOR['WHITE'], bg)
-
-
-    def drawHighlight(self, window, pos, color=COLOR['SILVER']):
-        if self.vision[EXP]:
-            window.draw_char(pos[X], pos[Y], self.char[0], self.fg, color)
-        else:
-            window.draw_char(pos[X], pos[Y], ' ', self.fg, color)
 
 
 class Wall:

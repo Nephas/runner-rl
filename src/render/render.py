@@ -16,7 +16,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
     FONT = 'font_12x24.png'
     LOGO = 'graphics/logo.txt'
 
-    SCREEN = np.array([100, 25])  # [WIDTH, HEIGHT]
+    SCREEN = np.array([110, 35])  # [WIDTH, HEIGHT]
     SEPARATOR = (5. / 8. * SCREEN).astype('int')
     MAPINSET = np.array([2, 1])
 
@@ -31,7 +31,10 @@ class Render:  # a rectangle on the map. used to characterize a room.
                  Render.FONT + ", size=12x24, codepage=437")
         term.set("0x1000: " + Render.GRAPHICSPATH + Render.TILES +
                  ", size=24x24, spacing=2x1, align=center")
-        term.printf(2, 2, "Hello World")
+        term.refresh()
+
+        term.composition(True)
+
 
         self.mapPanel = MapPanel(self.main,
             self.MAPINSET, *(self.SEPARATOR - np.array([4, 2])))
@@ -62,32 +65,11 @@ class Render:  # a rectangle on the map. used to characterize a room.
         term.bkcolor(term.color_from_argb(255, 25, 25, 25))
         term.clear()
 
-        self.infoPanel.render(gui, self.main)
+        self.infoPanel.render(self.main)
         self.inventoryPanel.render(gui, self.main.player)
         self.messagePanel.render(self.main)
         self.mapPanel.render(map)
         term.refresh()
-
-    def renderMap(self, panel, map, gui):
-        panel.clear(bg=COLOR['BLACK'])
-
-        if self.mapLayer == 0:
-            for cell in gui.getCells(map):
-                cell.drawMap(panel, cell.pos - gui.mapOffset)
-        elif self.mapLayer == 1:
-            for cell in gui.getCells(map):
-                cell.drawNet(panel, cell.pos - gui.mapOffset)
-
-        try:
-            cell = map.getTile(self.main.player.cell.pos + gui.cursorDir)
-            cursorPos = cell.pos - gui.mapOffset
-            cell.drawHighlight(panel, cursorPos)
-
-            cell = map.getTile(gui.cursorPos)
-            cursorPos = cell.pos - gui.mapOffset
-            cell.drawHighlight(panel, cursorPos)
-        except:
-            pass
 
     @staticmethod
     def inMap(terminalPos):

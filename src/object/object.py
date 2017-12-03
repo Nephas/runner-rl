@@ -18,7 +18,7 @@ class Object(object):
                 'Obstacle': 16,
                 'Player': 32}
 
-    def __init__(self, cell=None, char=None, color=COLOR['WHITE']):
+    def __init__(self, cell=None, char=0x100A, color=COLOR['WHITE']):
         self.cell = cell
         if cell is not None:
             self.cell.object.append(self)
@@ -85,7 +85,7 @@ class Debris(Object):
 
 class Desk(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char=178, color=COLOR['MAROON'])
+        Object.__init__(self, cell, color=COLOR['MAROON'])
 
         self.block = [True, False, True]
 
@@ -95,7 +95,7 @@ class Desk(Object):
 
 class Hydroponics(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char=';', color=COLOR['GREEN'])
+        Object.__init__(self, cell, color=COLOR['GREEN'])
 
         self.block = [False, True, True]
 
@@ -105,7 +105,7 @@ class Hydroponics(Object):
 
 class Obstacle(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char=10, color=(200, 200, 200))
+        Object.__init__(self, cell, color=COLOR['GRAY'])
 
         self.block = [True, True, True]
 
@@ -128,7 +128,7 @@ class Obstacle(Object):
 
 class Barrel(Object):
     def __init__(self, cell=None, content=None):
-        Object.__init__(self, cell, char=9, color=(200, 200, 200))
+        Object.__init__(self, cell, color=COLOR['GRAY'])
 
         self.block = [True, False, True]
 

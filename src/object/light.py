@@ -9,7 +9,7 @@ from src.render.gui import Gui
 
 class Lamp(Object):
     def __init__(self, cell=None, brightness=10):
-        Object.__init__(self, cell, char=7)
+        Object.__init__(self, cell, char=0x1007)
 
         self.on = True
         self.brightness = brightness

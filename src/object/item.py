@@ -8,7 +8,7 @@ import pygame as pg
 
 
 class Item(Object):
-    def __init__(self, cell=None, carrier=None, char='i', color=COLOR['WHITE']):
+    def __init__(self, cell=None, carrier=None, char=0x1024, color=COLOR['WHITE']):
         Object.__init__(self, cell, char=char, color=color)
 
         self.carrier = carrier
@@ -39,7 +39,7 @@ class Item(Object):
 
 class PlotDevice(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, char='!', color=COLOR['RED'])
+        Item.__init__(self, cell, carrier, color=COLOR['RED'])
 
     def take(self, actor):
         Gui.pushMessage('You got it! Now to the extraction point!')
@@ -57,7 +57,7 @@ class PlotDevice(Item):
 
 class FogCloak(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, char='*')
+        Item.__init__(self, cell, carrier)
 
     def use(self, action=None):
         Gui.pushMessage('You release a Gas grenade')
@@ -69,7 +69,7 @@ class FogCloak(Item):
 
 class Canister(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, char='*')
+        Item.__init__(self, cell, carrier)
 
     def use(self, action=None):
         Gui.pushMessage('You empty the canister')
@@ -82,7 +82,7 @@ class Canister(Item):
 
 class Lighter(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, char=';')
+        Item.__init__(self, cell, carrier)
 
     def use(self, action=None):
         Gui.pushMessage('You light a Fire')
@@ -95,7 +95,7 @@ class Lighter(Item):
 
 class Explosive(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, char='=')
+        Item.__init__(self, cell, carrier)
 
         self.counter = -1
 
@@ -126,7 +126,7 @@ class Explosive(Item):
 
 class Gun(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, char=169)
+        Item.__init__(self, cell, carrier)
 
         self.magazine = 12
 
@@ -219,7 +219,7 @@ class Shotgun(Gun):
 
 class Key(Item):
     def __init__(self, cell=None, carrier=None, tier=0):
-        Item.__init__(self, cell, carrier, char='$')
+        Item.__init__(self, cell, carrier)
 
         self.tier = tier
 

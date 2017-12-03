@@ -54,7 +54,6 @@ class Input:
 
             elif event is term.TK_MOUSE_MOVE:
                 self.handleMouse(event)
-                print(self.getMouse())
             elif event is term.TK_MOUSE_LEFT:
                 self.handleClick(event)
             print(event)
@@ -126,14 +125,21 @@ class Input:
                                      'TARGET': self.main.player.ai.mind['TARGET']}]
 
     def handleMouse(self, event=None):
-        self.main.render.mapPanel.updateCursor(self.getMouse())
+        mouse = self.getMouse()
+
+        self.main.render.mapPanel.updateCursor(mouse)
+        self.main.render.infoPanel.updateCursor(mouse)
+        self.main.render.inventoryPanel.updateCursor(mouse)
+        self.main.render.messagePanel.updateCursor(mouse)
+
+
 
     def handleClick(self, event):
         self.main.player.actions = []
 
 #        if self.main.render.mapLayer == 0:
         if len(self.main.player.actions) < 2:
-            self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.render.mapPanel.cursorPos, False)
+            self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.render.mapPanel.cursorPos, True)
 #            elif event.button is 'RIGHT' and len(self.main.player.actions) < 2:
 #                self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.render.mapPanel.cursorPos, True)
         # elif self.main.render.mapLayer == 1:
