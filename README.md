@@ -1,11 +1,13 @@
 # runner-rl
-Game Prototype: a cyberpunk roguelike of stealth, hacking and evil megacorps
 
-**Game Teaser**
+
+**Teaser**
 
 <p align="left">
   <img src="https://github.com/Nephas/runner-rl/blob/master/gif/demo.gif" width="900"/>
 </p>
+
+*Game Prototype: a cyberpunk roguelike of stealth, hacking and evil megacorps*
 
 There is a [Design Document](https://github.com/Nephas/runner-rl/blob/master/docs/design.pdf) to 
 outline the creative vision.
