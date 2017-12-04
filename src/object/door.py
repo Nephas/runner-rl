@@ -2,7 +2,6 @@ from src.globals import *
 
 from src.object.object import Object
 from src.object.item import Key
-from src.render.gui import Gui
 
 import random as rd
 
@@ -68,9 +67,9 @@ class SecDoor(Door):
     def authorize(self, actor):
         for item in actor.inventory:
             if isinstance(item, Key) and item.tier == self.tier:
-                Gui.pushMessage("Access granted")
+                # Gui.pushMessage("Access granted")
                 return True
-        Gui.pushMessage("Access denied", COLOR['RED'])
+        # Gui.pushMessage("Access denied", COLOR['RED'])
         return False
 
     def describe(self):

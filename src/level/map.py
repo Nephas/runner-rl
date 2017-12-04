@@ -5,17 +5,12 @@ import numpy as np
 import random as rd
 import itertools as it
 
-from src.render.render import Render
 from bearlibterminal import terminal as term
 
 
 class Map:
     WIDTH = 128
     HEIGHT = 128
-
-    FOVMAP = Render.rayMap(20)
-    FOV_NEIGHBORHOOD = np.array(
-        [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, -1], [-1, 1]])
 
     PHYSICSRANGE = np.array([20, 20])
 
@@ -207,7 +202,7 @@ class Cell:
 
         if self.wall:
             self.color[1] = roomCol * self.light // MAX_LIGHT
-#            self.color[2] = self.color[2]#COLOR['WHITE']
+            self.color[2] = self.color[1]#COLOR['WHITE']
             return
 
         self.stack[1] = None

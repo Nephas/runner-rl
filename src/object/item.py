@@ -1,10 +1,10 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.effect.effect import Fog, Fluid, Fire, Fuel, Shot, Flash
-from src.render.gui import Gui
+from src.effect.effect import Fog, Fluid, Fire, Fuel, Shot, Flash, Slash
 
 import pygame as pg
+import random as rd
 
 
 class Item(Object):
@@ -14,9 +14,12 @@ class Item(Object):
         self.carrier = carrier
 
     def interact(self, actor=None, dir=None, type=None):
-        Gui.pushMessage('You pickup ' + self.describe(), self.fg)
+        # Gui.pushMessage('You pickup ' + self.describe(), self.fg)
         self.take(actor)
         return 1
+
+    def destroy(self):
+        pass
 
     def take(self, actor):
         self.carrier = actor
@@ -26,12 +29,17 @@ class Item(Object):
 
     def drop(self):
         if self.carrier is not None:
-            self.carrier.cell.addObject(self)
+            cells = filter(lambda c: c.isEmpty(), self.carrier.cell.getNeighborhood('LARGE'))
+            if len(cells) != 0:
+                rd.choice(cells).addObject(self)
+            else:
+                self.carrier.cell.addObject(self)
+
             self.carrier.inventory.remove(self)
             self.carrier = None
 
     def use(self, action=None):
-        Gui.pushMessage('This Item has no use')
+        # Gui.pushMessage('This Item has no use')
         return 0
 
     def describe(self):
@@ -42,14 +50,14 @@ class PlotDevice(Item):
         Item.__init__(self, cell, carrier, color=COLOR['RED'])
 
     def take(self, actor):
-        Gui.pushMessage('You got it! Now to the extraction point!')
+        # Gui.pushMessage('You got it! Now to the extraction point!')
         self.carrier = actor
         actor.inventory.append(self)
         self.cell.object.remove(self)
         self.cell = self.carrier.cell
 
     def use(self, action=None):
-        Gui.pushMessage('This Item has no use')
+        # Gui.pushMessage('This Item has no use')
         return 0
 
     def describe(self):
@@ -60,7 +68,7 @@ class FogCloak(Item):
         Item.__init__(self, cell, carrier)
 
     def use(self, action=None):
-        Gui.pushMessage('You release a Gas grenade')
+        # Gui.pushMessage('You release a Gas grenade')
         self.carrier.cell.addEffect(Fog(amount=16))
         return 3
 
@@ -72,7 +80,7 @@ class Canister(Item):
         Item.__init__(self, cell, carrier)
 
     def use(self, action=None):
-        Gui.pushMessage('You empty the canister')
+        # Gui.pushMessage('You empty the canister')
         cell = self.carrier.main.map.getTile(self.carrier.cell.pos + action['DIR'])
         cell.addEffect(Fuel(amount=4))
         return 3
@@ -85,7 +93,7 @@ class Lighter(Item):
         Item.__init__(self, cell, carrier)
 
     def use(self, action=None):
-        Gui.pushMessage('You light a Fire')
+        # Gui.pushMessage('You light a Fire')
         cell = self.carrier.main.map.getTile(self.carrier.cell.pos + action['DIR'])
         cell.addEffect(Fire(amount=2))
         return 3
@@ -102,7 +110,7 @@ class Explosive(Item):
     def use(self, action=None):
         self.drop()
         self.counter = 20
-        Gui.pushMessage('You set the counter to {}'.format(self.counter))
+        # Gui.pushMessage('You set the counter to {}'.format(self.counter))
         return 3
 
     def detonate(self, map):
@@ -114,6 +122,8 @@ class Explosive(Item):
             for obj in cell.object:
                 obj.destroy()
             cell.addEffect(Fire(amount=1))
+        self.counter = -1
+        self.destroy()
 
     def describe(self):
         return 'Bomb'
@@ -158,6 +168,23 @@ class Gun(Item):
         yLine = np.linspace(start[Y], end[Y], nPoints).round()
         line = [[x, y] for x, y in zip(xLine, yLine)]
         return np.array(line).astype('int')
+
+
+class Knife(Item):
+    def __init__(self, cell=None, carrier=None):
+        Item.__init__(self, cell, carrier)
+
+    def describe(self):
+        return "Knife"
+
+    def slash(self, dir):
+        cell = self.carrier.main.map.getTile(self.carrier.cell.pos + dir)
+        cell.addEffect(Slash(cell))
+
+    def use(self, action):
+        self.slash(action['DIR'])
+        return 5
+
 
 class Grenade(Explosive):
     def __init__(self, cell=None, carrier=None):
@@ -227,5 +254,5 @@ class Key(Item):
         return "Key ({:})".format(self.tier)
 
     def use(self, action=None):
-        Gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
+        # Gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
         return 0

@@ -54,6 +54,7 @@ class Office(Room):
         Worker(map.getTile(self.randomSpot(2)), map.main)
         self.scatter(map, Key(tier=rd.randint(3, 5)), rd.randint(0, 1))
         self.scatter(map, Lamp(), margin=2)
+        self.scatter(map, Barrel())
 
 
 class Lab(Room):

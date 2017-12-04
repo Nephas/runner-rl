@@ -96,7 +96,7 @@ class Corp:
 
     @staticmethod
     def randColorPalette(length, start):
-        startcol = [start, 0.5, 0.9]
+        startcol = [start, 0.33, 0.9]
 
         colors = []
         for i in np.linspace(0, 1 / 12., length):

@@ -2,8 +2,8 @@ from src.globals import *
 
 import random as rd
 
-from src.render.render import Render, Light
-from src.render.gui import Gui
+from src.render.geometry import Light
+
 
 class Effect(object):
     PRIORITY = {'Effect': 24,
@@ -13,14 +13,14 @@ class Effect(object):
                 'Fire': 24,
                 'Shot': 24}
 
-    def __init__(self, cell=None, char='+', color=COLOR['RED'], bgColor=None, time=1):
+    def __init__(self, cell=None, char=0x1004, color=COLOR['RED'], time=1):
         self.cell = cell
         if cell is not None:
             self.cell.effect.append(self)
         self.block = [False, False, False]  # [MOVE, LOS]
 
         self.char = char
-        self.fg = list(color)
+        self.fg = np.array(color)
 
         self.time = time
 
@@ -52,14 +52,16 @@ class Effect(object):
         self.amount = min(16, self.amount + other.amount)
 
 class Fire(Effect):
-    def __init__(self, cell=None, amount=1, color=COLOR['YELLOW']):
-        Effect.__init__(self, cell, char='^', color=color, time=0)
+    BASE_COLOR = np.array(COLOR['FIRE'])
+
+    def __init__(self, cell=None, amount=1, color=COLOR['FIRE']):
+        Effect.__init__(self, cell, color=color, time=0)
 
         self.time = rd.randint(0,10)
         self.amount = amount
         self.flammable = -1
 
-        self.bg = COLOR['FIRE']
+        self.fg = (min(self.amount + 4, MAX_LIGHT) / float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
 
     def describe(self):
         return 'Fire ({:})'.format(self.amount)
@@ -81,9 +83,9 @@ class Fire(Effect):
                 self.cease()
                 self.cell.addEffect(Smoke())
 
-
         self.time += 1
         self.cell.light = min(self.cell.light + self.amount, MAX_LIGHT)
+        self.fg = (min(self.amount + 4, MAX_LIGHT) / float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
 
     def burn(self, obj):
         if obj.flammable > 0:
@@ -93,29 +95,8 @@ class Fire(Effect):
             obj.destroy()
 
 
-class Fluid(Effect):
-    def __init__(self, cell=None, char=247, amount=1, color=COLOR['BLUE']):
-        Effect.__init__(self, cell, char, color=color)
-
-        self.amount = amount
-
-    def describe(self):
-        return 'Fluid ({:})'.format(self.amount)
-
-    def physics(self, map):
-        """Slowly decay and spawn new fog."""
-        if self.amount > 1:
-            neigbors = filter(lambda c: not c.block[MOVE], self.cell.getNeighborhood())
-            rd.shuffle(neigbors)
-            for cell in neigbors:
-                if self.amount > 1:
-                    cell.addEffect(Fluid(amount=1))
-                    self.amount -= 1
-        elif rd.randint(0,1000) < 1:
-            self.cease()
-
 class Shot(Effect):
-    def __init__(self, cell=None, char=250, amount=1, color=COLOR['GRAY']):
+    def __init__(self, cell=None, char=0x10FA, amount=1, color=COLOR['GRAY']):
         Effect.__init__(self, cell, char, color=color)
 
         self.amount = amount
@@ -130,81 +111,110 @@ class Shot(Effect):
         for obj in self.cell.object:
             obj.destroy()
 
-class Fuel(Fluid):
-    def __init__(self, cell=None, amount=1):
-        Fluid.__init__(self, cell=cell, char=126, amount=amount, color=COLOR['PURPLE'])
 
-        self.block = [False, False, False]
-        self.bg = COLOR['PURPLE']
-        self.flammable = 8
+class Slash(Effect):
+    def __init__(self, cell=None, char=0x102F, amount=1, color=COLOR['BLOOD']):
+        Effect.__init__(self, cell, char, color=color)
+
+        self.amount = amount
 
     def describe(self):
-        return 'Fuel'
+        return 'Shot'
 
     def physics(self, map):
-        """Slowly decay and spawn new fog."""
+        if self.amount <= 0:
+            self.cease()
+        self.amount -= 1
+        for obj in self.cell.object:
+            obj.destroy()
+
+
+class Fluid(Effect):
+    BASE_COLOR = np.array(COLOR['BLUE'])
+
+    def __init__(self, cell=None, char=0x1004, amount=1, decay=0.001, color=COLOR['BLUE']):
+        Effect.__init__(self, cell, char, color=color)
+
+        self.amount = amount
+        self.decay = decay
+        self.fg = (min(self.amount + 4, MAX_LIGHT) / float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
+        self.flammable = -1
+
+    def describe(self):
+        return 'Fluid ({:})'.format(self.amount)
+
+    def physics(self, map):
         if self.amount > 1:
             neigbors = filter(lambda c: not c.block[MOVE], self.cell.getNeighborhood())
             rd.shuffle(neigbors)
             for cell in neigbors:
                 if self.amount > 1:
-                    cell.addEffect(Fuel(amount=1))
+                    cell.addEffect(self.__class__(amount=1))
                     self.amount -= 1
-        elif rd.randint(0,500) < 1:
+                    self.fg = (min(self.amount + 4, MAX_LIGHT) / float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
+        elif rd.random() <= self.decay:
             self.cease()
 
-class Smoke(Fluid):
+
+
+class Fuel(Fluid):
+    BASE_COLOR = np.array(COLOR['PURPLE'])
+
     def __init__(self, cell=None, amount=1):
-        Fluid.__init__(self, cell=cell, char=126, amount=amount, color=COLOR['WHITE'])
+        Fluid.__init__(self, cell=cell, char=0x1004, amount=amount, color=COLOR['PURPLE'])
+
+        self.block = [False, False, False]
+        self.flammable = 8
+
+    def describe(self):
+        return 'Fuel'
+
+
+class Blood(Fluid):
+    BASE_COLOR = np.array(COLOR['BLOOD'])
+
+    def __init__(self, cell=None, amount=1):
+        Fluid.__init__(self, cell=cell, char=0x1004, amount=amount, color=COLOR['BLOOD'])
+
+        self.block = [False, False, False]
+        self.flammable = -1
+
+    def describe(self):
+        return 'Blood'
+
+
+class Smoke(Fluid):
+    BASE_COLOR = np.array(COLOR['GRAY'])
+
+    def __init__(self, cell=None, amount=1):
+        Fluid.__init__(self, cell=cell, char=0x1005, amount=amount, decay=0.2, color=COLOR['WHITE'])
 
         self.block = [False, False, True]
-        self.bg = COLOR['WHITE']
         self.flammable = -1
 
     def describe(self):
         return 'Smoke'
 
-    def physics(self, map):
-        """Slowly decay and spawn new fog."""
-        if self.amount > 1:
-            neigbors = filter(lambda c: not c.block[MOVE], self.cell.getNeighborhood())
-            for cell in neigbors:
-                if self.amount > 1 and rd.randint(0,4) < 1:
-                    cell.addEffect(Smoke(amount=1))
-                    self.amount -= 1
-        elif rd.randint(0,50) < 1:
-            self.cease()
 
 class Fog(Fluid):
+    BASE_COLOR = np.array(COLOR['WHITE'])
+
     def __init__(self, cell=None, amount=1):
-        Fluid.__init__(self, cell=cell, char=126, amount=amount, color=COLOR['WHITE'])
+        Fluid.__init__(self, cell=cell, char=0x1005, amount=amount, decay=0.1, color=COLOR['WHITE'])
 
         self.block = [False, True, True]
-        self.bg = COLOR['WHITE']
         self.flammable = -1
 
     def describe(self):
         return 'Fog'
 
-    def physics(self, map):
-        """Slowly decay and spawn new fog."""
-        if self.amount > 1:
-            neigbors = filter(lambda c: not c.block[MOVE], self.cell.getNeighborhood())
-            for cell in neigbors:
-                if self.amount > 1 and rd.randint(0,4) < 1:
-                    cell.addEffect(Fog(amount=1))
-                    self.amount -= 1
-        elif rd.randint(0,100) < 1:
-            self.cease()
-
 
 class Flash(Effect):
     def __init__(self, cell=None, brightness = 7):
-        Effect.__init__(self, cell, char=' ', color=COLOR['WHITE'])
+        Effect.__init__(self, cell, char=0x1007, color=COLOR['WHITE'])
 
         self.brightness = brightness
         self.amount = 1
-        self.bg = COLOR['WHITE']
 
     def physics(self, map):
         if self.amount <= 0:

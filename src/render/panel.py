@@ -1,6 +1,7 @@
 from bearlibterminal import terminal as term
 
 from src.globals import *
+from src.actor.ai import AI
 
 
 class Rectangle:  # a rectangle on the map. used to characterize a room or a window
@@ -39,8 +40,8 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
                 yield [x, y]
 
     def getCells(self, map):
-        for x in range(self.x[MIN], self.x[MAX]):
-            for y in range(self.y[MIN], self.y[MAX]):
+        for x in range(max(0, self.x[MIN]), min(self.x[MAX], map.WIDTH)):
+            for y in range(max(0, self.y[MIN]), min(self.y[MAX], map.HEIGHT)):
                 yield map.tile[x][y]
 
     def getObjects(self, map):
@@ -64,6 +65,12 @@ class Panel(object):
     def updateCursor(self, pos):
         self.cursor = self.contains(pos)
 
+    def handleScroll(self, offset=0):
+        pass
+
+    def handleClick(self, event=0):
+        pass
+
     def contains(self, pos):
         return pos[X] in range(*self.x) and pos[Y] in range(*self.y)
 
@@ -75,6 +82,14 @@ class Panel(object):
         for y in range(self.y[MIN], self.y[MAX]):
             positions.append([self.x[MIN], y])
             positions.append([self.x[MAX] - 1, y])
+        return positions
+
+    def bracket(self):
+        positions = []
+        for x in range(self.x[MIN] - 2, self.x[MIN] + self.size[X] * 2 // 3, 2):
+            positions.append([x, self.y[MIN] - 1])
+        for y in range(self.y[MIN] - 1, self.y[MIN] + self.size[Y] * 2 // 3):
+            positions.append([self.x[MIN] - 2, y])
         return positions
 
     def clear(self, color=COLOR['BLACK']):
@@ -94,12 +109,13 @@ class Panel(object):
 
     def render(self):
         self.clear()
+        term.layer(10)
 
         if self.cursor:
-            term.color(term.color_from_argb(255, 16, 16, 16))
+            term.color(term.color_from_argb(255, 64, 64, 64))
             term.color
-            for pos in self.border():
-                term.put(pos[X], pos[Y], '+')
+            for pos in self.bracket():
+                term.put(pos[X], pos[Y], 0x10FA)
 
 
 class MapPanel(Panel):
@@ -118,16 +134,30 @@ class MapPanel(Panel):
         self.cursorDir = np.array([1, 1])
         self.camera = Rectangle(self.mapOffset, 0, 0)
 
-    def render(self, map):
+    def handleClick(self, button='LEFT'):
+        self.main.player.actions = []
+
+        if button is 'LEFT' and len(self.main.player.actions) < 2:
+            self.main.player.actions = AI.findPath(
+                self.map, self.main.player.cell.pos, self.cursorPos, False)
+        elif button is 'RIGHT' and len(self.main.player.actions) < 2:
+            self.main.player.actions = AI.findPath(
+                self.map, self.main.player.cell.pos, self.cursorPos, True)
+
+    def handleScroll(self, offY):
+        offset = np.array([0, offY])
+        self.moveOffset(offset)
+
+    def render(self):
         super(MapPanel, self).render()
 
-        for cell in self.camera.getCells(map):
+        for cell in self.camera.getCells(self.map):
             self.draw(cell, self.SCALE *
                       (cell.pos - self.mapOffset) + self.pos)
 
         for mapPos in [self.main.player.cell.pos + self.cursorDir, self.cursorPos]:
             try:
-                cell = map.getTile(mapPos)
+                cell = self.map.getTile(mapPos)
                 panelPos = self.SCALE * (cell.pos - self.mapOffset) + self.pos
                 self.highlight(cell, panelPos)
             except:
@@ -173,24 +203,21 @@ class MapPanel(Panel):
         for cell in self.camera.getCells(map):
             cell.updateRender()
 
-    def getCells(self, map):
-        return
-
 
 class InfoPanel(Panel):
     def __init__(self, main, pos, w, h, layer=0):
         Panel.__init__(self, main, pos, w, h, layer=0)
 
-    def render(self, main):
+    def render(self):
         super(InfoPanel, self).render()
 
         row = 1
 
         actions = ''
-        for i in range(1 + (main.tic % main.TIC_SEC)):
+        for i in range(1 + (self.main.tic % self.main.TIC_SEC)):
             actions += '>'
         actions += ' '
-        for i in range(main.player.cooldown):
+        for i in range(self.main.player.cooldown):
             actions += '-'
         self.printString(np.array([1, row]), actions)
 
@@ -233,34 +260,41 @@ class MessagePanel(Panel):
         if not self.MESSAGES[0][0] == string:
             self.MESSAGES.insert(0, (string, color))
 
-    def render(self, main):
+    def render(self):
         super(MessagePanel, self).render()
 
         pos = 0
 
         for string, color in self.MESSAGES[self.messageOffset:]:
             # line wrapping in list comprehension
-            block = [string[i:i + self.size[X] - 2]
-                     for i in range(0, len(string), self.size[Y] - 2)]
+            block = [string[i:i + self.size[X] - 2] for i in range(0, len(string), self.size[X] - 2)]
             for line in block:
                 pos += 1
                 if pos >= self.size[Y] - 1:
                     break
                 self.printString(np.array([1, pos]), line)
 
-            pos += 1
-            if pos >= self.size[Y] - 1:
-                break
+#            pos += 1
+#            if pos >= self.size[Y] - 1:
+#                break
+
+    def handleScroll(self, offset):
+        self.messageOffset += offset
+        self.messageOffset = max(0, self.messageOffset)
+
 
 
 class InventoryPanel(Panel):
     def __init__(self, main, pos, w, h, layer=0):
         Panel.__init__(self, main, pos, w, h, layer=0)
 
-    def render(self, gui, player):
+        self.player = main.player
+        self.inventoryOffset = 0
+
+    def render(self):
         super(InventoryPanel, self).render()
 
-        for i, item in enumerate(player.inventory[gui.inventoryOffset:]):
+        for i, item in enumerate(self.player.inventory[self.inventoryOffset:]):
             pos = i + 1
             if pos >= self.size[Y] - 1:
                 break
@@ -274,3 +308,7 @@ class InventoryPanel(Panel):
             else:
                 self.printString(np.array([1, pos]),
                                  '       ' + item.describe())
+
+    def handleScroll(self, offset):
+        self.inventoryOffset += offset
+        self.inventoryOffset = max(0, self.inventoryOffset)

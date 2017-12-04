@@ -1,14 +1,13 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.object.item import Item, Key, FogCloak, Canister, Lighter, Explosive, Gun, Shotgun, Grenade
-from src.effect.effect import Effect
+from src.object.item import Item, Key, Knife, FogCloak, Canister, Lighter, Explosive, Gun, Shotgun, Grenade
+from src.effect.effect import Effect, Blood
 
 from src.actor.ai import AI, Idle, Follow
 from src.actor.person import Person
 from src.actor.conversation import Conversation
 from src.actor.body import Body
-from src.render.gui import Gui
 
 import random as rd
 
@@ -54,12 +53,12 @@ class Actor(Object):
             return 0
 
     def destroy(self):
-        if self.__class__.__name__ in ['Corpse','Debris']:
+        if self.__class__.__name__ in ['Corpse', 'Debris']:
             return
         self.die()
 
     def die(self):
-        if self.__class__.__name__ in ['Corpse','Debris']:
+        if self.__class__.__name__ in ['Corpse', 'Debris']:
             return
         else:
             self.cell.object.remove(self)
@@ -67,7 +66,8 @@ class Actor(Object):
                 item.drop()
             self.main.actor.remove(self)
             Corpse(self.cell, self)
-            Gui.pushMessage(self.describe() + " dies")
+            self.cell.addEffect(Blood(amount=rd.randint(1,3)))
+            # Gui.pushMessage(self.describe() + " dies")
 
     def interactWith(self, map, dir, type=None):
         tile = map.getTile(self.cell.pos + dir)
@@ -104,7 +104,7 @@ class Player(Actor):
         Actor.__init__(self, cell, main, char=0x1040)
 
         self.fg = [225, 150, 50]
-        self.inventory = [FogCloak(carrier=self), Canister(carrier=self), Grenade(carrier=self),
+        self.inventory = [Knife(carrier=self), Canister(carrier=self), Grenade(carrier=self),
                           Lighter(carrier=self), Key(carrier=self,tier=4), Shotgun(carrier=self),
                           Explosive(carrier=self)]
 
@@ -125,7 +125,7 @@ class Player(Actor):
 
 class Corpse(Object):
     def __init__(self, cell=None, actor=None):
-        Object.__init__(self, cell, char='%', color=(150, 150, 150))
+        Object.__init__(self, cell, char=0x1025, color=(150, 150, 150))
 
         self.actor = actor
         self.flammable = -1

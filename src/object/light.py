@@ -3,8 +3,7 @@ from src.globals import *
 import random as rd
 
 from src.object.object import Object
-from src.render.render import Render, Light
-from src.render.gui import Gui
+from src.render.geometry import Geometry, Light
 
 
 class Lamp(Object):
@@ -23,7 +22,7 @@ class Lamp(Object):
             self.destroy()
             return 5
         else:
-            Gui.pushMessage('You switch the ' + self.describe())
+            # Gui.pushMessage('You switch the ' + self.describe())
             self.on = not self.on
             return 3
 
@@ -76,4 +75,4 @@ class SpotLight(Lamp):
         Lamp.__init__(self, cell, brightness=brightness)
 
         self.direction = direction
-        self.lightmap = Render.coneMap(brightness, direction, width=np.pi*0.25)
+        self.lightmap = Geometry.coneMap(brightness, direction, width=np.pi*0.25)

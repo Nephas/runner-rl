@@ -4,7 +4,6 @@ import numpy as np
 import collections as coll
 
 from src.actor.ai import AI
-from src.render.render import Render
 
 from bearlibterminal import terminal as term
 
@@ -51,33 +50,14 @@ class Input:
             event = term.read()
             if event in self.KEYMAP:
                 self.handleKey(event)
-
             elif event is term.TK_MOUSE_MOVE:
                 self.handleMouse(event)
-            elif event is term.TK_MOUSE_LEFT:
+            elif event in [term.TK_MOUSE_LEFT, term.TK_MOUSE_RIGHT]:
                 self.handleClick(event)
-            print(event)
-
-
-        # try:
-        #     while True:
-        #         event = tdl.event.get().next()
-        #
-        #         if event.type is 'KEYDOWN':
-        #             self.handleKey(event)
-        #         elif event.type is 'MOUSEUP':
-        #             self.handleClick(event)
-        #         elif event.type is 'MOUSEMOTION':
-        #             self.handleMouse(event)
-        #         elif event.type is 'MOUSEDOWN':
-        #             self.handleScroll(event)
-        # except:
-        #     pass
+            elif event in [term.TK_MOUSE_SCROLL]:
+                self.handleScroll(event)
 
     def handleKey(self, event):
-        # idString = event.key
-        # if event.key == 'TEXT':
-        #     idString += '_' + event.text
         getattr(self, self.KEYMAP[event][0]).__call__(self.KEYMAP[event][1])
 
     def toggleQuit(self, qualifier=None):
@@ -105,7 +85,8 @@ class Input:
                                      'TARGET': self.main.render.mapPanel.cursorPos}]
 
     def movePlayer(self, direction):
-        self.main.player.actions = [{'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[direction]}]
+        self.main.player.actions = [
+            {'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[direction]}]
         self.main.render.mapPanel.cursorDir = Input.MOVEMAP[direction]
 
     def moveMap(self, direction):
@@ -114,7 +95,7 @@ class Input:
     def useItem(self, index):
         if index < len(self.main.player.inventory):
             self.main.player.actions = [{'TYPE': 'ITEM',
-                                         'INDEX': index + self.main.render.mapPanel.inventoryOffset,
+                                         'INDEX': index + self.main.render.inventoryPanel.inventoryOffset,
                                          'DIR': self.main.render.mapPanel.cursorDir,
                                          'TARGET': self.main.render.mapPanel.cursorPos}]
 
@@ -126,41 +107,21 @@ class Input:
 
     def handleMouse(self, event=None):
         mouse = self.getMouse()
-
-        self.main.render.mapPanel.updateCursor(mouse)
-        self.main.render.infoPanel.updateCursor(mouse)
-        self.main.render.inventoryPanel.updateCursor(mouse)
-        self.main.render.messagePanel.updateCursor(mouse)
-
-
+        for panel in self.main.panel:
+            self.main.panel[panel].updateCursor(mouse)
 
     def handleClick(self, event):
-        self.main.player.actions = []
+        button = {term.TK_MOUSE_LEFT: 'LEFT',
+                  term.TK_MOUSE_RIGHT: 'RIGHT'}
 
-#        if self.main.render.mapLayer == 0:
-        if len(self.main.player.actions) < 2:
-            self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.render.mapPanel.cursorPos, True)
-#            elif event.button is 'RIGHT' and len(self.main.player.actions) < 2:
-#                self.main.player.actions = AI.findPath(self.main.map, self.main.player.cell.pos, self.main.render.mapPanel.cursorPos, True)
-        # elif self.main.render.mapLayer == 1:
-        #     self.main.player.actions = [{'TYPE': 'GRID',
-        #                                  'DIR': self.main.render.mapPanel.cursorDir,
-        #                                  'TARGET': self.main.render.mapPanel.cursorPos}]
+        for panel in self.main.panel:
+            if self.main.panel[panel].cursor:
+                self.main.panel[panel].handleClick(button[event])
 
     def handleScroll(self, event):
-        if event.button is 'SCROLLUP':
-            if event.cell[X] <= Render.SEPARATOR[X]:
-                self.main.gui.messageOffset += 1
-            else:
-                self.main.gui.inventoryOffset += 1
-        elif event.button is 'SCROLLDOWN':
-            if event.cell[X] <= Render.SEPARATOR[X]:
-                self.main.gui.messageOffset -= 1
-            else:
-                self.main.gui.inventoryOffset -= 1
-
-        self.main.gui.messageOffset = max(0, self.main.gui.messageOffset)
-        self.main.gui.inventoryOffset = max(0, self.main.gui.inventoryOffset)
+        for panel in self.main.panel:
+            if self.main.panel[panel].cursor:
+                self.main.panel[panel].handleScroll(term.state(term.TK_MOUSE_WHEEL))
 
     def getMouse(self):
         return np.array([term.state(term.TK_MOUSE_X), term.state(term.TK_MOUSE_Y)])

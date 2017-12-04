@@ -3,12 +3,12 @@ from src.globals import *
 import random as rd
 import numpy as np
 
-from src.render.render import Render
+from src.render.geometry import Geometry
 from src.level.map import Map, Rectangle
 
 
 class AI:
-    FOVMAP = Render.rayMap(24)
+    FOVMAP = Geometry.rayMap(24)
     FOV_NEIGHBORHOOD = np.array(
         [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, -1], [-1, 1]])
 
@@ -135,7 +135,7 @@ class AI:
 
     @staticmethod
     def hasLos(map, start, end):
-        for pos in Render.rayCast(start, end):
+        for pos in Geometry.rayCast(start, end):
             if map.getTile(pos).block[LOS]:
                 return False
         return True

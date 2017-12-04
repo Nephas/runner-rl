@@ -3,7 +3,6 @@
 from src.globals import *
 from src.level.level import Level
 from src.input import Input
-from src.render.gui import Gui
 from src.render.render import Render
 from src.actor.actor import Player
 
@@ -21,14 +20,13 @@ class Game:
     FRAME_LENGTH = 1. / LIMIT_FPS
 
     def __init__(self):
+        self.panel = {}
+        self.actor = []
+
         self.map = Level(self)
+        self.player = Player(None, self)
         self.render = Render(self)
         self.input = Input(self)
-        self.gui = Gui(self)
-        self.sound = {}
-
-        self.actor = []
-        self.player = Player(None, self)
 
         self.lastTic = t.time()
         self.tic = 0
@@ -36,8 +34,9 @@ class Game:
     def initialize(self):
         self.actor = [self.player]
 
-#        tdl.setFPS(self.LIMIT_FPS)
         pg.init()
+        self.render.renderStart()
+
         # self.sound = {'SHOT': pg.mixer.Sound('sounds/shot.wav'),
         #               'EXPLOSION': pg.mixer.Sound('sounds/explosion.wav'),
         #               'DOOR': pg.mixer.Sound('sounds/door.wav'),
@@ -46,8 +45,9 @@ class Game:
 
         self.map.load()
 
-        self.render.mapPanel.moveOffset(self.player.cell.pos - (self.render.SEPARATOR / 2))
+        self.render.mapPanel.moveOffset(self.player.cell.pos - (self.render.SEPARATOR // 4))
         self.render.mapPanel.updateCursor()
+
         self.map.updatePhysics()
         self.map.updateRender()
 
@@ -71,7 +71,7 @@ class Game:
                     self.tic += 1
                     self.lastTic = t.time()
             if t.time() >= self.FRAME_LENGTH + self.lastTic:
-                self.render.renderAll(self.map, self.gui)
+                self.render.renderAll(self.map)
                 self.input.handleEvents()
 
 

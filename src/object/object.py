@@ -3,7 +3,6 @@ from src.globals import *
 import random as rd
 import copy as cp
 
-from src.render.gui import Gui
 from src.effect.effect import Fuel
 
 class Object(object):
@@ -18,15 +17,26 @@ class Object(object):
                 'Obstacle': 16,
                 'Player': 32}
 
+    PRIORITY = {'Object': 0x100A,
+                'Debris': 1,
+                'Item': 8,
+                'Actor': 16,
+                'NPC': 16,
+                'Worker': 16,
+                'Guard': 24,
+                'Grenade': 24,
+                'Obstacle': 16,
+                'Player': 32}
+
+
     def __init__(self, cell=None, char=0x100A, color=COLOR['WHITE']):
         self.cell = cell
         if cell is not None:
             self.cell.object.append(self)
 
-        self.block = [False, False, False]  # [MOVE, LOS]
+        self.block = [False, False, False]  # [MOVE, LOS, LIGHT]
         self.char = char
-        self.basechar = char
-        self.fg = list(color)
+        self.fg = np.array(color)
 
         self.flammable = 8
 
@@ -60,17 +70,17 @@ class Object(object):
         pass
 
     def destroy(self):
-        if self.__class__.__name__ is 'Debris':
+        if self.__class__.__name__ in ['Debris','Corpse']:
             return
         else:
-            Gui.pushMessage('The ' + self.describe() + ' is destroyed')
+#            Gui.pushMessage('The ' + self.describe() + ' is destroyed')
             self.cell.object.remove(self)
             Debris(self.cell, self)
 
 
 class Debris(Object):
     def __init__(self, cell=None, obj=None):
-        Object.__init__(self, cell, char='%', color=(200, 200, 200))
+        Object.__init__(self, cell, char=0x1025, color=(200, 200, 200))
 
         self.block = [False, False, False]
         self.obj = obj
@@ -116,7 +126,7 @@ class Obstacle(Object):
             self.destroy()
             return 5
         elif self.moveDir(dir):
-            Gui.pushMessage('You push the ' + self.describe())
+#            Gui.pushMessage('You push the ' + self.describe())
             oldCell.updatePhysics()
             actor.moveDir(dir)
             return 3
@@ -142,7 +152,7 @@ class Barrel(Object):
             self.destroy()
             return 5
         elif self.moveDir(dir):
-            Gui.pushMessage('You push the ' + self.describe())
+            # Gui.pushMessage('You push the ' + self.describe())
             oldCell.updatePhysics()
             actor.moveDir(dir)
             return 3
@@ -153,7 +163,7 @@ class Barrel(Object):
         return "Barrel of " + self.content.describe()
 
     def destroy(self):
-        Gui.pushMessage('The ' + self.describe() + ' is destroyed')
+        # Gui.pushMessage('The ' + self.describe() + ' is destroyed')
         self.cell.object.remove(self)
         self.cell.addEffect(self.content)
         Debris(self.cell, self)

@@ -69,11 +69,11 @@ class MasterSwitch(Terminal):
 
     def toggle(self, map):
         if self.on:
-            self.char = 173
+            self.char = 0x1021
             for obj in self.cell.room.getObjects(map):
                 setattr(obj, 'on', False)
         elif not self.on:
-            self.char = 33
+            self.char = 0x10AD
             for obj in self.cell.room.getObjects(map):
                 setattr(obj, 'on', True)
 
@@ -98,7 +98,7 @@ class Server(Terminal):
 
 class Rack(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, 19)
+        Object.__init__(self, cell, 0x1013)
 
         self.on = True
         self.fg = COLOR['GREEN']

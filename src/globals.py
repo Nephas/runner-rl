@@ -26,6 +26,10 @@ HEIGHT = 1
 MAX_LIGHT = 16
 BASE_LIGHT = 2
 
+
+def arr(*args):
+    return np.array(args)
+
 COLOR = {'BLACK': (0, 0, 0),
          'WHITE': (255, 255, 255),
          'RED'	: (255, 0, 0),
@@ -46,4 +50,5 @@ COLOR = {'BLACK': (0, 0, 0),
          'PURPLE': (128, 0, 128),
          'TEAL': (0, 128, 128),
          'NAVY': (0, 0, 128),
-         'NIGHT': (8, 8, 8)}
+         'NIGHT': (8, 8, 8),
+         'BLOOD': (128, 32, 8)}
