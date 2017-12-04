@@ -1,6 +1,12 @@
 # runner-rl
 Game Prototype: a cyberpunk roguelike of stealth, hacking and evil megacorps
 
+**Game Teaser**
+
+<p align="left">
+  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/demo.gif" width="900"/>
+</p>
+
 There is a [Design Document](https://github.com/Nephas/runner-rl/blob/master/docs/design.pdf) to 
 outline the creative vision.
 
@@ -16,7 +22,7 @@ Levels are scattered with interconnected Servers and Terminals which will later 
 with the level objects.
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/levelgen.gif" width="500"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/levelgen.gif" width="500"/>
 </p>
 
 Other features implemented so far:
@@ -26,22 +32,16 @@ Other features implemented so far:
 * simple world interactions (door opening, pushing)
 * light sources
 * simple physics
-* mouse movement
+* mouse movement and panels
+* basic AI behaviour
 * dialogue tree system
 
 Light and shadows are completely dynamic and interact with changes in the environment like 
 opening doors and moving scenery. The physics engine can handle simple elements like Fluids, 
-Gases, Fire and environmental destruction.
+Gases, Fire and environmental destruction. Also, blood.
+
+Last, but definitely not least: Credits for the really promising tileset got to Reddit user [Gzintu](https://www.reddit.com/user/gzintu).
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/demo.gif" width="750"/>
-</p>
-
-The gif shows shooting some Fuel Barrels, shooting a lightbulb, then setting the fuel on fire.
-later, I'm placing a bomb and blow a hole in the wall towards the server room on the right.
-
-Last, but definitely not least: Reddit user [Gzintu](https://www.reddit.com/user/gzintu) has started to work on this really promising tileset:
-
-<p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/graphics/exp_24x24.png" width="500"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/graphics/exp_24x24.png" width="384"/>
 </p>
