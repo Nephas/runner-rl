@@ -14,6 +14,7 @@ class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
     TILES = 'exp_24x24.png'
     FONT = 'font_12x24.png'
+    LOADSCREEN = 'load_1364x768.png'
     LOGO = 'graphics/logo.txt'
 
     SCREEN = np.array([110, 30])  # [WIDTH, HEIGHT]
@@ -31,6 +32,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
                  Render.FONT + ", size=12x24, codepage=437")
         term.set("0x1000: " + Render.GRAPHICSPATH + Render.TILES +
                  ", size=24x24, spacing=2x1, align=center")
+        term.set("0x2000: " + Render.GRAPHICSPATH + Render.LOADSCREEN +
+                 ", size=1364x768, align=top-left")
         term.refresh()
 
         term.composition(True)
@@ -51,14 +54,15 @@ class Render:  # a rectangle on the map. used to characterize a room.
                            'INVENTORY': self.inventoryPanel,
                            'MESSAGE': self.messagePanel}
 
-        self.mapLayer = 0
+        self.renderStart()
 
     def renderStart(self):
         term.bkcolor(term.color_from_argb(255, 25, 25, 25))
         term.clear()
 
-        for panel in self.main.panel:
-            self.main.panel[panel].clear()
+        term.color(term.color_from_argb(255, *COLOR['WHITE']))
+        term.layer(255)
+        term.put(0, 0, 0x2000)
         term.refresh()
 
     def renderAll(self, map):

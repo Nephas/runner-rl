@@ -4,6 +4,7 @@ sounds/
 dist/
 music/
 gif/
+art/
 graphics/
 *.aux
 *.log
