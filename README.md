@@ -1,4 +1,5 @@
-# RUNNER - a Cyberpunk Roguelike
+# RUNNER
+a Cyberpunk Roguelike
 
 
 **Teaser**
