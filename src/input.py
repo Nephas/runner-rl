@@ -18,8 +18,9 @@ class Input:
     KEYMAP = coll.OrderedDict([
         (term.TK_ESCAPE, ('toggleQuit', None, "Quit game")),
         (term.TK_SPACE,  ('useItem', 0, "Use item slot")),
-        ('TEXT_p', ('togglePause', None, "Pause Game")),
-        ('TEXT_t', ('toggleDebug', None, "Enter debug console")),
+        (term.TK_TAB, ('toggleSlow', None, "Pause Game")),
+        (term.TK_P, ('togglePause', None, "Pause Game")),
+        (term.TK_T, ('toggleDebug', None, "Enter debug console")),
         ('TEXT_m', ('cycleMap', None, "Cycle Map modes")),
         ('TEXT_h', ('cycleHelp', None, "Show help window")),
         (term.TK_UP,     ('moveMap', 'UP', "Move map")),
@@ -31,16 +32,17 @@ class Input:
         (term.TK_A, ('movePlayer', 'LEFT', "Player Movement")),
         (term.TK_D, ('movePlayer', 'RIGHT', "Player Movement")),
         ('TEXT_r', ('restart', None, "Reload Level")),
-        ('TEXT_1', ('dialogChoice', 1, "Answer Dialogue")),
-        ('TEXT_2', ('dialogChoice', 2, "Answer Dialogue")),
-        ('TEXT_3', ('dialogChoice', 3, "Answer Dialogue")),
-        ('TEXT_0', ('dialogChoice', 0, "Answer Dialogue"))])
+        (term.TK_1, ('useItem', 1, "Answer Dialogue")),
+        (term.TK_2, ('useItem', 2, "Answer Dialogue")),
+        (term.TK_3, ('useItem', 3, "Answer Dialogue")),
+        (term.TK_4, ('useItem', 4, "Answer Dialogue"))])
 
     def __init__(self, main):
         self.main = main
         self.quit = False
         self.debug = False
         self.pause = False
+        self.slow = False
         self.help = 0
 
         term.set("input: filter=[keyboard,mouse];")

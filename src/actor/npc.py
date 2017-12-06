@@ -36,7 +36,7 @@ class Worker(NPC):
 
 class Drone(NPC):
     def __init__(self, cell=None, main=None, owner=None):
-        NPC.__init__(self, cell, main, char='*')
+        NPC.__init__(self, cell, main, char=0x10CF)
 
         self.ai = Follow(self, None)
         self.ai.setLeader(owner)

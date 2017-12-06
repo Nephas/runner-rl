@@ -2,6 +2,7 @@ from src.globals import *
 
 from src.object.object import Object
 from src.effect.effect import Fog, Fluid, Fire, Fuel, Shot, Flash, Slash
+from src.actor.body import SlowMo
 
 import pygame as pg
 import random as rd
@@ -29,7 +30,8 @@ class Item(Object):
 
     def drop(self):
         if self.carrier is not None:
-            cells = filter(lambda c: c.isEmpty(), self.carrier.cell.getNeighborhood('LARGE'))
+            cells = filter(lambda c: c.isEmpty(),
+                           self.carrier.cell.getNeighborhood('LARGE'))
             if len(cells) != 0:
                 rd.choice(cells).addObject(self)
             else:
@@ -44,6 +46,7 @@ class Item(Object):
 
     def describe(self):
         return 'generic item'
+
 
 class PlotDevice(Item):
     def __init__(self, cell=None, carrier=None):
@@ -63,6 +66,7 @@ class PlotDevice(Item):
     def describe(self):
         return 'MacGuffin'
 
+
 class FogCloak(Item):
     def __init__(self, cell=None, carrier=None):
         Item.__init__(self, cell, carrier)
@@ -75,18 +79,21 @@ class FogCloak(Item):
     def describe(self):
         return 'Fog Cloak'
 
+
 class Canister(Item):
     def __init__(self, cell=None, carrier=None):
         Item.__init__(self, cell, carrier)
 
     def use(self, action=None):
         # Gui.pushMessage('You empty the canister')
-        cell = self.carrier.main.map.getTile(self.carrier.cell.pos + action['DIR'])
+        cell = self.carrier.main.map.getTile(
+            self.carrier.cell.pos + action['DIR'])
         cell.addEffect(Fuel(amount=4))
         return 3
 
     def describe(self):
         return 'Canister'
+
 
 class Lighter(Item):
     def __init__(self, cell=None, carrier=None):
@@ -94,12 +101,14 @@ class Lighter(Item):
 
     def use(self, action=None):
         # Gui.pushMessage('You light a Fire')
-        cell = self.carrier.main.map.getTile(self.carrier.cell.pos + action['DIR'])
+        cell = self.carrier.main.map.getTile(
+            self.carrier.cell.pos + action['DIR'])
         cell.addEffect(Fire(amount=2))
         return 3
 
     def describe(self):
         return 'Lighter'
+
 
 class Explosive(Item):
     def __init__(self, cell=None, carrier=None):
@@ -114,7 +123,7 @@ class Explosive(Item):
         return 3
 
     def detonate(self, map):
-#        map.main.sound['EXPLOSION'].play()
+        #        map.main.sound['EXPLOSION'].play()
         self.cell.addEffect(Flash(self.cell, 14))
 
         for cell in self.cell.getNeighborhood(shape=4):
@@ -134,6 +143,7 @@ class Explosive(Item):
         elif self.counter == 0:
             self.detonate(map)
 
+
 class Gun(Item):
     def __init__(self, cell=None, carrier=None):
         Item.__init__(self, cell, carrier)
@@ -144,7 +154,7 @@ class Gun(Item):
         return "Gun ({:})".format(self.magazine)
 
     def shoot(self, start, target):
-#        self.carrier.main.sound['SHOT'].play()
+        #        self.carrier.main.sound['SHOT'].play()
         self.carrier.cell.addEffect(Flash(self.carrier.cell))
 
         for cell in map(lambda p: self.carrier.main.map.getTile(p), self.rayCast(start, target)[1:]):
@@ -227,12 +237,13 @@ class Grenade(Explosive):
         line = [[x, y] for x, y in zip(xLine, yLine)]
         return np.array(line).astype('int')
 
+
 class Shotgun(Gun):
     def __init__(self, cell=None, carrier=None):
         Gun.__init__(self, cell, carrier)
 
     def shoot(self, start, target):
-#        self.carrier.main.sound['SHOT'].play()
+        #        self.carrier.main.sound['SHOT'].play()
         self.carrier.cell.addEffect(Flash(self.carrier.cell))
 
         offsets = np.array([[0, -1], [1, 0], [0, 1], [-1, 0]])
@@ -256,3 +267,22 @@ class Key(Item):
     def use(self, action=None):
         # Gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
         return 0
+
+
+class Injector(Item):
+    def __init__(self, cell=None, carrier=None, tier=0):
+        Item.__init__(self, cell, carrier)
+
+        self.amount = 3
+
+    def describe(self):
+        return "Drug ({:})".format(self.amount)
+
+    def use(self, action=None):
+        if self.amount > 0:
+            self.carrier.body.addStatus(SlowMo(self.carrier))
+            # Gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
+            self.amount -= 1
+            return 1
+        else:
+            return 0

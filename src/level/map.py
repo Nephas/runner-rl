@@ -260,7 +260,7 @@ class Cell:
 
 
 class Wall:
-    ALIGNMAP = {'CENTER': 0x10CE,
+    ALIGNMAP = {'CENTER': 0x10CD,
                 'UP_LEFT': 0x10BC,
                 'UP_RIGHT': 0x10C8,
                 'DOWN_LEFT': 0x10BB,

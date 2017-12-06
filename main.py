@@ -51,6 +51,10 @@ class Game:
         self.map.updatePhysics()
         self.map.updateRender()
 
+    def changeSpeed(self, tics=10):
+        self.TIC_SEC = tics
+        self.TIC_SIZE = 1. / tics
+
     def run(self):
         self.input.debug = False
         self.input.quit = False

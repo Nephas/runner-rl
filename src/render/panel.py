@@ -213,21 +213,25 @@ class InfoPanel(Panel):
 
         row = 1
 
+        self.printString(np.array([1, row]), 'Tics:  ')
+
         actions = ''
         for i in range(1 + (self.main.tic % self.main.TIC_SEC)):
             actions += '>'
         actions += ' '
         for i in range(self.main.player.cooldown):
             actions += '-'
-        self.printString(np.array([1, row]), actions)
+        self.printString(np.array([7, row]), actions)
 
         row = 2
 
         # lighting bar
-        for i in range(6):
-            self.printChar(np.array([1 + 2 * i, row]), 0x1009)
+        self.printString(np.array([1, row]), 'Light: ')
+
+#        for i in range(6):
+#            self.printChar(np.array([7 + 2 * i, row]), 0x10FF)
         for i in range(int(float(self.main.player.cell.light) / MAX_LIGHT * 6)):
-            self.printChar(np.array([1 + 2 * i, row]), 0x1007)
+            self.printChar(np.array([7 + 2 * i, row]), 0x1007)
 
         mapPanel = self.main.render.mapPanel
 
@@ -243,7 +247,8 @@ class InfoPanel(Panel):
                 row = 4
 
                 for i, obj in enumerate(cursorTile.object + cursorTile.effect):
-                    self.printString(np.array([1, row + i]), obj.describe())
+                    self.printChar(np.array([1, row + i]), obj.char)
+                    self.printString(np.array([4, row + i]), obj.describe())
 
 
 class MessagePanel(Panel):

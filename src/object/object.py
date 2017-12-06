@@ -95,7 +95,7 @@ class Debris(Object):
 
 class Desk(Object):
     def __init__(self, cell=None):
-        Object.__init__(self, cell, color=COLOR['MAROON'])
+        Object.__init__(self, cell, color=COLOR['WHITE'], char=np.random.choice([0x100A, 0x100B], p=[0.25,0.75]))
 
         self.block = [True, False, True]
 
@@ -138,7 +138,7 @@ class Obstacle(Object):
 
 class Barrel(Object):
     def __init__(self, cell=None, content=None):
-        Object.__init__(self, cell, color=COLOR['GRAY'])
+        Object.__init__(self, cell, char=0x1009, color=COLOR['WHITE'])
 
         self.block = [True, False, True]
 

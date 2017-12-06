@@ -47,7 +47,8 @@ class Office(Room):
 
         try:
             for cell in ([deskTile] + neighbors)[0:3]:
-                cell.addObject(cp.deepcopy(Desk()))
+                desk = Desk()
+                cell.addObject(desk)
         except IndexError:
             pass
 

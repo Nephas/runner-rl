@@ -1,7 +1,7 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.object.item import Item, Key, Knife, FogCloak, Canister, Lighter, Explosive, Gun, Shotgun, Grenade
+from src.object.item import Item, Key, Knife, FogCloak, Canister, Lighter, Explosive, Gun, Injector, Shotgun, Grenade
 from src.effect.effect import Effect, Blood
 
 from src.actor.ai import AI, Idle, Follow
@@ -98,6 +98,9 @@ class Actor(Object):
         elif len(self.actions) == 0:
             self.actions = self.ai.decide(tileMap)
 
+    def physics(self, map):
+        self.body.physics(map)
+
 
 class Player(Actor):
     def __init__(self, cell=None, main=None):
@@ -106,7 +109,7 @@ class Player(Actor):
         self.fg = [225, 150, 50]
         self.inventory = [Knife(carrier=self), Canister(carrier=self), Grenade(carrier=self),
                           Lighter(carrier=self), Key(carrier=self,tier=4), Shotgun(carrier=self),
-                          Explosive(carrier=self)]
+                          Explosive(carrier=self), Injector(carrier=self)]
 
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir

@@ -51,17 +51,19 @@ class Effect(object):
     def stack(self, other):
         self.amount = min(16, self.amount + other.amount)
 
+
 class Fire(Effect):
     BASE_COLOR = np.array(COLOR['FIRE'])
 
     def __init__(self, cell=None, amount=1, color=COLOR['FIRE']):
-        Effect.__init__(self, cell, color=color, time=0)
+        Effect.__init__(self, cell, char=0x1003, color=color, time=0)
 
-        self.time = rd.randint(0,10)
+        self.time = rd.randint(0, 10)
         self.amount = amount
         self.flammable = -1
 
-        self.fg = (min(self.amount + 4, MAX_LIGHT) / float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
+        self.fg = (min(self.amount + 4, MAX_LIGHT) /
+                   float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
 
     def describe(self):
         return 'Fire ({:})'.format(self.amount)
@@ -73,19 +75,21 @@ class Fire(Effect):
                 self.burn(obj)
 
             if self.amount > 1:
-                neigbors = filter(lambda c: not c.wall, self.cell.getNeighborhood())
+                neigbors = filter(lambda c: not c.wall,
+                                  self.cell.getNeighborhood())
                 rd.shuffle(neigbors)
                 for cell in neigbors:
-                    if self.amount > 1 and rd.randint(0,4) < 1:
+                    if self.amount > 1 and rd.randint(0, 4) < 1:
                         cell.addEffect(Fire(amount=1))
                         self.amount -= 1
-            elif rd.randint(1,2) == 1:
+            elif rd.randint(1, 2) == 1:
                 self.cease()
                 self.cell.addEffect(Smoke())
 
         self.time += 1
         self.cell.light = min(self.cell.light + self.amount, MAX_LIGHT)
-        self.fg = (min(self.amount + 4, MAX_LIGHT) / float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
+        self.fg = (min(self.amount + 4, MAX_LIGHT) /
+                   float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
 
     def burn(self, obj):
         if obj.flammable > 0:
@@ -137,7 +141,8 @@ class Fluid(Effect):
 
         self.amount = amount
         self.decay = decay
-        self.fg = (min(self.amount + 4, MAX_LIGHT) / float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
+        self.fg = (min(self.amount + 4, MAX_LIGHT) /
+                   float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
         self.flammable = -1
 
     def describe(self):
@@ -145,23 +150,25 @@ class Fluid(Effect):
 
     def physics(self, map):
         if self.amount > 1:
-            neigbors = filter(lambda c: not c.block[MOVE], self.cell.getNeighborhood())
+            neigbors = filter(
+                lambda c: not c.block[MOVE], self.cell.getNeighborhood())
             rd.shuffle(neigbors)
             for cell in neigbors:
                 if self.amount > 1:
                     cell.addEffect(self.__class__(amount=1))
                     self.amount -= 1
-                    self.fg = (min(self.amount + 4, MAX_LIGHT) / float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
+                    self.fg = (min(self.amount + 4, MAX_LIGHT) /
+                               float(MAX_LIGHT) * self.BASE_COLOR).astype('int')
         elif rd.random() <= self.decay:
             self.cease()
-
 
 
 class Fuel(Fluid):
     BASE_COLOR = np.array(COLOR['PURPLE'])
 
     def __init__(self, cell=None, amount=1):
-        Fluid.__init__(self, cell=cell, char=0x1004, amount=amount, color=COLOR['PURPLE'])
+        Fluid.__init__(self, cell=cell, char=0x1004,
+                       amount=amount, color=COLOR['PURPLE'])
 
         self.block = [False, False, False]
         self.flammable = 8
@@ -174,7 +181,8 @@ class Blood(Fluid):
     BASE_COLOR = np.array(COLOR['BLOOD'])
 
     def __init__(self, cell=None, amount=1):
-        Fluid.__init__(self, cell=cell, char=0x1004, amount=amount, color=COLOR['BLOOD'])
+        Fluid.__init__(self, cell=cell, char=0x1004,
+                       amount=amount, color=COLOR['BLOOD'])
 
         self.block = [False, False, False]
         self.flammable = -1
@@ -187,7 +195,8 @@ class Smoke(Fluid):
     BASE_COLOR = np.array(COLOR['GRAY'])
 
     def __init__(self, cell=None, amount=1):
-        Fluid.__init__(self, cell=cell, char=0x1005, amount=amount, decay=0.2, color=COLOR['WHITE'])
+        Fluid.__init__(self, cell=cell, char=0x1005,
+                       amount=amount, decay=0.2, color=COLOR['WHITE'])
 
         self.block = [False, False, True]
         self.flammable = -1
@@ -200,7 +209,8 @@ class Fog(Fluid):
     BASE_COLOR = np.array(COLOR['WHITE'])
 
     def __init__(self, cell=None, amount=1):
-        Fluid.__init__(self, cell=cell, char=0x1005, amount=amount, decay=0.1, color=COLOR['WHITE'])
+        Fluid.__init__(self, cell=cell, char=0x1005,
+                       amount=amount, decay=0.1, color=COLOR['WHITE'])
 
         self.block = [False, True, True]
         self.flammable = -1
@@ -210,7 +220,7 @@ class Fog(Fluid):
 
 
 class Flash(Effect):
-    def __init__(self, cell=None, brightness = 7):
+    def __init__(self, cell=None, brightness=7):
         Effect.__init__(self, cell, char=0x1007, color=COLOR['WHITE'])
 
         self.brightness = brightness
