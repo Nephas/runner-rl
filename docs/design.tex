@@ -1,14 +1,29 @@
-\documentclass[11pt,a4paper]{article}
+\documentclass[11pt,a4paper, twocolumn]{article}
 \usepackage{url}
 \usepackage{graphicx}
+\usepackage{textcomp}
 
  \renewcommand{\familydefault}{\sfdefault}
 
 \begin{document}
-\title{Runner - A Cyberpunk Roguelike}
+\title{\LARGE{Runner - A Cyberpunk Roguelike}}
 \author{M. Fink}
 
-\maketitle
+
+%\begin{figure*}
+%end{figure*}
+
+\begin{titlepage}
+    \Huge{RUNNER}
+    \Large{~~A Cyberpunk Roguelike}
+    \vspace{2cm}
+    \center
+    \includegraphics[width=\textwidth]{blackout.png}
+    \vfill
+    {a \Large{BLACKOUT Games} production}\\
+    \today
+\end{titlepage}
+%\maketitle
 
 % \begin{abstract}
 % A primer for my upcoming cy
@@ -105,9 +120,7 @@ focus on:\\ \
                 About playfully misusing the systems and tools that you are given.
 \end{itemize}
 
-\section{Gameplay Loop}
-
-\begin{figure}
+\begin{figure*}
     \center
     \includegraphics[width=0.47\textwidth]{level1.png}
     \hfill
@@ -121,7 +134,9 @@ focus on:\\ \
 
     \caption{Some results of the level generator, with procedural color palettes and cross-, ring- or corner-shaped
             level footprints.}
-\end{figure}
+\end{figure*}
+
+\section{Gameplay Loop}
 
 For the beginning, the main gameplay loop will be the typical heist trope. You start at the periphery of the level.
 You get to the vault, with whatever means necessary. That first means careful exploration of the outer parts of the
@@ -138,14 +153,6 @@ not careful. Maybe at one point during your run the priorities change, and your 
 \textit{For the far future:} Maybe the level generator also lends itself to create a hub level, the \textit{Arcology}, to add
 some metagame in between individual runs. But this will be only considered when one facility run is playable from
 insertion to extraction.
-
-% \section{Game World}
-%
-% \textit{preliminary}
-%
-%
-
-\newpage
 
 \section{Playable Characters}
 
@@ -176,39 +183,164 @@ figure, just to give some flair. But they could well be adapted to focusing diff
         their worst security hole. The squishy, insecure, bumbling little things inside. It's just a matter of some
         well placed words. Hmmm, which pair of sunglasses will it be today?
 \end{itemize}
+
+%\onecolumn
+\begin{figure*}
+    \includegraphics[width=\textwidth]{screen.png}
+    \caption{Screenshot of the recent build.}
+    \label{fig:screen}
+\end{figure*}
+%\twocolumn
+
+\section{Graphics}\label{sec:art}
+
+\subsection{Art direction}
+
+For tilesets, usability comes first. Sometimes there will be $16\times 16 = 256$
+tiles in the field of view of the player, therefore they should be easily
+readable and require a low detail style -- slightly darkened outlines, and not much color
+variation. Compare to \emph{Pixel Dungeon}, or the old GameBoy \emph{Zelda}.
+Perspective is between
+top-down and frontal. Around $30^{\circ}$ from vertical, but it doesn't have to be
+perfectly consistent for all tiles. For level objects, two thirds of a tile show
+the top, the lower third shows the front. For tall objects, this fraction can vary.
+Items should not be in perspective, but more iconic.
+
+The color palette is desaturated by roughly 50\%, for reference see the original
+\emph{Ghost in the Shell} anime. Overall, levels have a washed out, shady look, with
+contrasting bright light sources and blinking computer lights.
+The (still to implement) Network map layer and the GUI panels will have a slightly
+retro look with some noise and scanlines.
+
+Some Objects are colorized ingame, most notably Wall and Floor tiles, or Items with
+different subtypes like Keycards or Grenades. These need to be monochrome. Other Items
+Are colorized, but in washed-out, desaturated colors to add to the somewhat grim,
+desperate Cyberpunk atmosphere. Level objects should have a brightness gradient from
+bright top to shady bottom, this ensures that they blend in well with the differently
+colored floor tiles. Compare i. e. the desks in Fig. \ref{fig:screen}.
+
+\subsection{Rendering}
+
+The main game world consists of 24x24 pixel tiles, while all GUI panels are drawn with
+half-width 12x24 panels. Each map cell is rendered in three layers (listed bottom to top):
+
+\begin{enumerate}
+    \item \textbf{Floor}: The background tile is colored depending
+        on the room, light and visibility.
+    \item \textbf{Effect}: Environmental Effects like Fluids and Fire
+        or Slashing and Shot animations.
+    \item \textbf{Object}: Actors, Level objects or Items. When there's
+        several things in a cell, only the highest priority object is
+        actually drawn.
+\end{enumerate}
+
+When they are not in line of sight, all Tiles are drawn in monochrome dark gray.
+One important design constraint for the rendering engine is that, although it is designed
+with Pixel graphics tiles in mind it should be possible to swap those out for an
+ASCII character set and still look atmospheric and readable.
+
 \newpage
 
-\section{Tasks}
+\section{Roadmap}
 
-Here I will list some tasks that lend themselves to be offloaded to other contributers.
+Here I will list some tasks that lend themselves to be offloaded to other contributors.
 
+\subsection{Graphics}
+\subsubsection*{Tileset} See Sec.~\ref{sec:art}. The points are roughly ordered by priority,
+Bold items are already finished.
+        \begin{itemize}
+            \item Objects (Furniture sized, in perspective):
+                \begin{enumerate}
+                    \item \textbf{Desk}: mainly to give cover and cast shadows.
+                    \item \textbf{Barrel}: filled with fluids.
+                    \item \textbf{Server}: man-sized blinking server rack.
+                    \item Terminal: interactive computer screen, maybe with the recognizable \url{ >_ } on it.
+                    \item Container: man-sized, pushable. for large storage halls.
+                    \item Locker: man-sized, for player to hide in.
+                    \item Hydroponics: for indoor farming. with tall plants in it to obstruct sight.
+                \end{enumerate}
+            \item Items (Small, drawn on inventory Panel and when dropped.):
+                \begin{enumerate}
+                    \item Keycard (monochrome): generic, will be colorized for security levels
+                    \item Datadisk: like CD or flash drive
+                    \item Pistol: blocky, futuristic, Desert Eagle style
+                    \item Shotgun: also modern
+                    \item Grenade (monochrome): Generic, modern cylindric shape. There will be variants like Fog, Flashbang, EMP
+                    \item Canister (monochrome): fillable with fluids... like Fuel
+                    \item Clothing: To blend in, types: Labcoat, Security Uniform, Worker Jumpsuit
+                    \item Injector (monochrome): for drugs and medicine
+                \end{enumerate}
+            \item Effects (Tile filling, mostly in Background.):
+                \begin{enumerate}
+                    \item \textbf{Fire} (monochrome): Brightness depends on fire strength.
+                    \item \textbf{Fluid} (monochrome): Colored by type, like Fuel, Water, Blood.
+                    \item Cloud (monochrome): For Gases, Fog, Smoke. Can have transparency
+                    \item Slash: For attack animation.
+                \end{enumerate}
+            \item Actors:
+                \begin{enumerate}
+                    \item Guard: in Uniform
+                    \item Scientist: in Labcoat
+                    \item Worker: in Jumpsuit
+                    \item Punk: in Rags
+                \end{enumerate}
+            \item Wall and Floor tilesets
+                \begin{enumerate}
+                    \item \textbf{Industrial}: With bolts
+                    \item Ruin: like industrial, but crumbled
+                    \item Office Building: More detail and decoration
+                    \item Research Lab: Bright, sparse Detail
+                \end{enumerate}
+        \end{itemize}
+
+\subsubsection*{Load/Menu screens:} Maybe in REXpaint, Maybe in Pixel graphics. They should evoke the dark, eerily
+            silent atmosphere of Blade Runner and GITS. Motive ideas:
+    \begin{itemize}
+        \item Calm Cityscape
+        \item Hero on Motorcycle
+        \item Ruined, overgrown Arcology
+        \item Aircraft carrier settlement
+    \end{itemize}
+
+\subsection{Systems and Programming}
+
+\subsubsection{Level Generation}
 \begin{itemize}
-    \item \textbf{Worldbuilding:} On a more abstract level, some narrative on the history this world has taken.
-                Wars, Nations, Corporates, Crises... These texts would not make it into the game and wouldn't have to
-                be too elaborate, but they would serve as point reference for ingame texts, to give them some coherence.
-                Maybe also some new slang words.
-    \item \textbf{Corporate Descriptions:} Recent developments and ideology of the Corp you're breaking into, this would
-                be shown on a loading screen and maybe referenced on the computer systems in the level. Ideally modular,
-                so it can be handed out in small snippets or even randomized.
-    \item \textbf{Personal Backgrounds:} Small (often tragic) backstories for individual NPCs. Ideally also in small
-                chunks, so they could be experienced in conversations with NPCs, and maybe include minor quest points.
-    \item \textbf{Tileset:} For the beginning:
-        \begin{itemize}
-            \item Walls, Doors, vents
-            \item Items: Guns, Keycards, Grenades, Datadisks
-            \item Objects: Furniture, Servers and Terminals, machines
-            \item People: Guard in Body armor, Scientist in Labcoat,
-                          Worker in Jumpsuit, Homeless in Rags, Robots
-        \end{itemize}
-    \item \textbf{Load/Menu screens:} Maybe in REXpaint, Maybe in Pixel graphics. Motive ideas:
-        \begin{itemize}
-            \item Calm Cityscape
-            \item Hero on Motorcycle
-            \item Ruined, overgrown Arcology
-            \item Aircraft carrier settlement
-        \end{itemize}
-
+    \item Enemy and Loot distribution System
+    \item Key puzzle solvability check
 \end{itemize}
+
+\subsubsection*{Gameplay}
+\begin{itemize}
+    \item Injury system
+    \item Network agent interaction
+    \item Equippable armor and disguises
+    \item Dialogue Windows
+\end{itemize}
+
+\subsubsection*{Controls}
+\begin{itemize}
+    \item remappable inventory keys
+    \item switchable map Layers
+\end{itemize}
+
+\subsubsection*{Sound Engine}
+\begin{itemize}
+    \item probably Pygame
+\end{itemize}
+
+\subsection{Worldbuilding}
+    \begin{itemize}
+        \item \textbf{Worldbuilding:} On a more abstract level, some narrative on the history this world has taken.
+                    Wars, Nations, Corporates, Crises... These texts would not make it into the game and wouldn't have to
+                    be too elaborate, but they would serve as point reference for ingame texts, to give them some coherence.
+                    Maybe also some new slang words.
+        \item \textbf{Corporate Descriptions:} Recent developments and ideology of the Corp you're breaking into, this would
+                    be shown on a loading screen and maybe referenced on the computer systems in the level. Ideally modular,
+                    so it can be handed out in small snippets or even randomized.
+        \item \textbf{Personal Backgrounds:} Small (often tragic) backstories for individual NPCs. Ideally also in small
+                    chunks, so they could be experienced in conversations with NPCs, and maybe include minor quest points.
+    \end{itemize}
 
 
 \end{document}
