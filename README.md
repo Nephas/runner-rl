@@ -2,16 +2,7 @@
   <img src="https://github.com/Nephas/runner-rl/blob/master/graphics/title.png" width="500"/>
 </p>
 
-a Cyberpunk Roguelike
-
-
-**Teaser**
-
-<p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/demo.gif" width="900"/>
-</p>
-
-*Game Prototype: a cyberpunk roguelike of stealth, hacking and evil megacorps*
+*a Cyberpunk Roguelike of stealth, hacking and evil megacorps*
 
 There is a [Design Document](https://github.com/Nephas/runner-rl/blob/master/docs/design.pdf) to 
 outline the creative vision.
@@ -41,6 +32,12 @@ Other features implemented so far:
 * mouse movement and panels
 * basic AI behaviour
 * dialogue tree system
+
+**Teaser**
+
+<p align="left">
+  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/demo.gif" width="900"/>
+</p>
 
 Light and shadows are completely dynamic and interact with changes in the environment like 
 opening doors and moving scenery. The physics engine can handle simple elements like Fluids, 
