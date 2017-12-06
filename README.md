@@ -1,4 +1,7 @@
-# RUNNER
+<p align="left">
+  <img src="https://github.com/Nephas/runner-rl/blob/master/graphics/title.png" width="500"/>
+</p>
+
 a Cyberpunk Roguelike
 
 
