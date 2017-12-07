@@ -8,14 +8,12 @@ from src.level.map import Map, Rectangle
 
 
 class AI:
-    FOVMAP = Geometry.rayMap(24)
-    FOV_NEIGHBORHOOD = np.array(
-        [[0, 1], [1, 0], [0, -1], [-1, 0], [1, 1], [1, -1], [-1, -1], [-1, 1]])
+    FOVMAP = Geometry.rayMap(16)
 
-    def __init__(self, actor, mind=None):
+    def __init__(self, actor, mind=None, color=COLOR['WHITE']):
         self.actor = actor
         self.char = actor.char
-        self.color = COLOR['WHITE']
+        self.color = color
         self.distmap = np.ones((Map.HEIGHT, Map.WIDTH)) * -1
         self.node = None
 
@@ -33,9 +31,11 @@ class AI:
         self.updateRoom(map)
         actors = []
 
-        for cell in self.mind['ROOM'].getCells(map):
-            if cell.light > BASE_LIGHT:
-                actors += filter(lambda obj: hasattr(obj, 'ai'), cell.object)
+        if self.mind['ROOM'] is not None:
+            for cell in self.mind['ROOM'].getCells(map):
+                if cell.light > BASE_LIGHT:
+                    actors += filter(lambda obj: hasattr(obj, 'ai'), cell.object)
+
 
         for obj in actors:
             if self.hasLos(map, self.actor.cell.pos, obj.cell.pos):
@@ -60,7 +60,6 @@ class AI:
 
     def switchState(self, aiState):
         self.actor.ai = aiState(self.actor, self.mind)
-        self.actor.fg = self.actor.ai.color
 
     def describe(self):
         return " (" + self.__class__.__name__ + ") "
@@ -77,6 +76,7 @@ class AI:
                 self.actor.char = '?'
 
     def decide(self, map):
+        self.lookAround(map)
         return []
 
     def chooseOption(self, index):
@@ -197,10 +197,9 @@ class AI:
 
 class Idle(AI):
     def __init__(self, actor, mind=None, target=None):
-        AI.__init__(self, actor, mind)
+        AI.__init__(self, actor, mind, COLOR['GREEN'])
 
         self.counter = 0
-        self.color = COLOR['GREEN']
 
     def decide(self, map):
         for cell in self.actor.cell.getNeighborhood('LARGE'):
@@ -232,10 +231,9 @@ class Idle(AI):
 
 class Stunned(AI):
     def __init__(self, actor, mind=None):
-        AI.__init__(self, actor, mind)
+        AI.__init__(self, actor, mind, COLOR['YELLOW'])
 
         self.counter = 10
-        self.color = COLOR['YELLOW']
 
     def decide(self, map):
         self.actor.actions = []
@@ -247,12 +245,14 @@ class Stunned(AI):
 
 
 class Follow(AI):
-    def __init__(self, actor, mind):
-        AI.__init__(self, actor, mind)
+    def __init__(self, actor, mind, distance=4):
+        AI.__init__(self, actor, mind, COLOR['BLUE'])
+
+        self.distance = distance
 
     def decide(self, map):
         if len(self.actor.actions) == 0:
-            if np.linalg.norm(self.actor.cell.pos - self.target.cell.pos) < 5:
+            if np.linalg.norm(self.actor.cell.pos - self.target.cell.pos) < self.distance:
                 return []
             else:
                 return AI.findPath(map, self.actor.cell.pos, self.target.cell.pos)[0:3]
@@ -263,10 +263,9 @@ class Follow(AI):
 
 class Attack(AI):
     def __init__(self, actor, mind):
-        AI.__init__(self, actor, mind)
+        AI.__init__(self, actor, mind, COLOR['RED'])
 
         self.target = mind['TARGET']
-        self.color = COLOR['RED']
 
     def decide(self, map):
         if len(self.actor.actions) == 0:
@@ -300,11 +299,10 @@ class Attack(AI):
 
 class Chase(AI):
     def __init__(self, actor, mind):
-        AI.__init__(self, actor, mind)
+        AI.__init__(self, actor, mind, COLOR['ORANGE'])
 
         self.target = mind['TARGET']
         self.lastPos = self.target.cell.pos
-        self.color = COLOR['ORANGE']
 
     def decide(self, map):
         if len(self.actor.actions) == 0:

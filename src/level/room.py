@@ -15,12 +15,13 @@ from src.level.map import Rectangle
 
 
 class Room(Rectangle):
-    def __init__(self, pos, w, h, tier=-1, parent=None):
+    def __init__(self, pos, w, h, tier=-1, parent=None, color=COLOR['WHITE']):
         Rectangle.__init__(self, pos, w, h)
         self.tier = tier
         self.function = None
         self.parent = parent
         self.children = []
+        self.color = color
 
     def carve(self, map):
         self.updateCells(map)
@@ -56,7 +57,7 @@ class Room(Rectangle):
         for j in range(500):
             cell = map.getTile(self.randomSpot(margin))
             if cell.isEmpty():
-                cell.addObject(cp.deepcopy(obj))
+                cell.addObject(cp.copy(obj))
                 i += 1
             if i >= n:
                 break
@@ -77,16 +78,17 @@ class Room(Rectangle):
         cells = map(lambda p: tileMap.getTile(p), self.edge())
         cells = filter(lambda c: c.isEmpty() and c.atWall(), cells)
         cell = rd.choice(cells)
-        cell.addObject(cp.deepcopy(obj))
+        cell.addObject(cp.copy(obj))
         return cell
 
     def cluster(self, map, pos, obj, n=0):
         if n > 0:
             cell = map.getTile(pos)
             if cell.isEmpty():
-                cell.addObject(cp.deepcopy(obj))
+                cell.addObject(cp.copy(obj))
                 n -= 1
-            self.cluster(map, rd.choice(list(map.getTile(pos).getNeighborhood())).pos, obj, n)
+            self.cluster(map, rd.choice(
+                list(map.getTile(pos).getNeighborhood())).pos, obj, n)
 
     def distribute(self, map, obj, dx=5, dy=5, margin=1):
         count = 0

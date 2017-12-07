@@ -3,6 +3,8 @@ from bearlibterminal import terminal as term
 from src.globals import *
 from src.actor.ai import AI
 
+import itertools as it
+
 
 class Rectangle:  # a rectangle on the map. used to characterize a room or a window
     def __init__(self, pos, w, h):
@@ -120,14 +122,13 @@ class Panel(object):
 
 class MapPanel(Panel):
     SCALE = np.array([2, 1])
+    LAYER = it.cycle(['MAP', 'GRID'])
 
     def __init__(self, main, pos, w, h, layer=0):
         Panel.__init__(self, main, pos, w, h, layer=0)
         self.map = main.map
 
-        self.backLayer = 0
-        self.effectLayer = 1
-        self.objectLayer = 2
+        self.layer = self.LAYER.next()
 
         self.mapOffset = np.array([0, 0])
         self.cursorPos = np.array([64, 64])
@@ -148,11 +149,28 @@ class MapPanel(Panel):
         offset = np.array([0, offY])
         self.moveOffset(offset)
 
+    def cycleLayer(self):
+        self.layer = self.LAYER.next()
+
     def render(self):
+        if self.layer is 'MAP':
+            self.renderMap()
+        elif self.layer is 'GRID':
+            self.renderGrid()
+
+    def renderGrid(self):
         super(MapPanel, self).render()
 
         for cell in self.camera.getCells(self.map):
-            self.draw(cell, self.SCALE *
+            self.drawGrid(cell, self.SCALE *
+                      (cell.pos - self.mapOffset) + self.pos)
+
+
+    def renderMap(self):
+        super(MapPanel, self).render()
+
+        for cell in self.camera.getCells(self.map):
+            self.drawMap(cell, self.SCALE *
                       (cell.pos - self.mapOffset) + self.pos)
 
         for mapPos in [self.main.player.cell.pos + self.cursorDir, self.cursorPos]:
@@ -163,9 +181,12 @@ class MapPanel(Panel):
             except:
                 pass
 
-    def draw(self, cell, panelPos):
-        term.composition(True)
+        # for actor in self.main.player.ai.mind['AWARE']:
+        #     cell = actor.cell
+        #     panelPos = self.SCALE * (cell.pos - self.mapOffset) + self.pos
+        #     self.highlight(cell, panelPos, actor.ai.color)
 
+    def drawMap(self, cell, panelPos):
         i = 0
         for color, tile in zip(cell.color, cell.stack):
             if tile is not None:
@@ -174,9 +195,29 @@ class MapPanel(Panel):
                 term.put(panelPos[X], panelPos[Y], tile)
             i += 1
 
-    def highlight(self, cell, panelPos):
+    def drawGrid(self, cell, panelPos):
+        term.layer(99)
+
+        if not cell.wall and cell.room is not None:
+            term.color(term.color_from_argb(64, *cell.room.color))
+            term.put(panelPos[X], panelPos[Y], 0x10DB)
+
+        if cell.grid:
+            term.layer(100)
+            term.color(term.color_from_argb(255, *COLOR['GREEN']))
+            term.put(panelPos[X], panelPos[Y], 0x10FE)
+
+        grid = cell.getGrid()
+        if len(grid) != 0:
+            term.layer(101)
+            term.color(term.color_from_argb(255, *COLOR['GREEN']))
+            term.put(panelPos[X], panelPos[Y], grid[0].char)
+
+
+
+    def highlight(self, cell, panelPos, color=COLOR['WHITE']):
         term.layer(3)
-        term.color(term.color_from_argb(255, *COLOR['WHITE']))
+        term.color(term.color_from_argb(255, *color))
         term.put(panelPos[X], panelPos[Y], 0x1020)
 
     def updateCursor(self, terminalPos=np.array([8, 8])):

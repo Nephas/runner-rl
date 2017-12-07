@@ -13,7 +13,7 @@ from src.grid.server import Terminal, Server, MasterSwitch, Rack
 from src.object.light import Lamp, FlickerLamp, SpotLight
 from src.object.item import Item, Key, PlotDevice
 
-from src.actor.npc import Guard, Worker
+from src.actor.npc import Guard, Worker, Drone
 
 
 class Corridor(Room):
@@ -21,7 +21,9 @@ class Corridor(Room):
         Room.__init__(self, pos, w, h, tier, parent)
 
     def generateContent(self, map):
-        Guard(map.getTile(self.randomSpot(1)), map.main)
+        guard = Guard(map.getTile(self.randomSpot(1)), map.main)
+        Drone(map.getTile(self.randomSpot(2)), map.main, guard)
+
         map.getTile(self.center).addObject(Lamp())
 
     def carve(self, tileMap):
@@ -131,6 +133,9 @@ class ServerFarm(Hall):
                     cell = map.tile[x][y]
                     if cell.isEmpty():
                         Rack(cell)
+
+        for i in range(rd.randint(2,5)):
+            Drone(map.getTile(self.randomSpot(2)), map.main)
 
 
 class GreenHouse(Hall):

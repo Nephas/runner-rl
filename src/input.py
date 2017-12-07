@@ -21,7 +21,7 @@ class Input:
         (term.TK_TAB, ('toggleSlow', None, "Pause Game")),
         (term.TK_P, ('togglePause', None, "Pause Game")),
         (term.TK_T, ('toggleDebug', None, "Enter debug console")),
-        ('TEXT_m', ('cycleMap', None, "Cycle Map modes")),
+        (term.TK_M, ('cycleMap', None, "Cycle Map modes")),
         ('TEXT_h', ('cycleHelp', None, "Show help window")),
         (term.TK_UP,     ('moveMap', 'UP', "Move map")),
         (term.TK_DOWN,   ('moveMap', 'DOWN', "Move map")),
@@ -79,7 +79,7 @@ class Input:
         self.help = (self.help + 1) % 8
 
     def cycleMap(self, qualifier=None):
-        self.main.render.mapLayer = (self.main.render.mapLayer + 1) % 3
+        self.main.render.mapPanel.cycleLayer()
 
     def playerAttack(self, qualifier=None):
         self.main.player.actions = [{'TYPE': 'ATTACK',

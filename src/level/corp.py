@@ -72,8 +72,6 @@ class Corp:
 
     def __init__(self, main=None):
 
-        self.facility = rd.choice(Corp.NAMES) + ' ' + rd.choice(Corp.SECTORS)
-
         self.places = []
         self.people = []
 
@@ -82,6 +80,8 @@ class Corp:
     def randomize(self):
         self.name = rd.choice(Corp.NAMES)
         self.sector = rd.choice(Corp.SECTORS)
+
+        self.facility = self.name + ' ' + self.sector
 
         self.layout = rd.choice(Corp.LAYOUT)
         self.struct = Corp.STRUCT[self.sector]

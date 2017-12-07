@@ -8,8 +8,12 @@ from src.render.render import Render
 
 
 class Terminal(Object):
+    ANIMATION = [0x102C, 0x102D, 0x102E, 0x102F]
+
     def __init__(self, cell=None, tier=0):
-        Object.__init__(self, cell, char=0x1014, color=COLOR['MEDIUMGREEN'])
+        Object.__init__(self, cell, char=0x1014)
+
+        self.block = [True, True, True]
 
         self.on = True
         self.connection = []
@@ -51,12 +55,17 @@ class Terminal(Object):
         if isinstance(obj, Terminal):
             obj.connection.remove(self)
 
+    def physics(self, map):
+        self.char = self.animation.next()
 
 class MasterSwitch(Terminal):
+    CHAR_ON = 0x1018
+    CHAR_OFF = 0x1019
+
     def __init__(self, cell=None):
         Terminal.__init__(self, cell)
 
-        self.char = 0x1021
+        self.char = self.CHAR_OFF
         self.block = [False, False, False]
 
     def interact(self, actor=None, dir=None, type=None):
@@ -69,43 +78,47 @@ class MasterSwitch(Terminal):
 
     def toggle(self, map):
         if self.on:
-            self.char = 0x1021
+            self.char = self.CHAR_ON
             for obj in self.cell.room.getObjects(map):
                 setattr(obj, 'on', False)
         elif not self.on:
-            self.char = 0x10AD
+            self.char = self.CHAR_OFF
             for obj in self.cell.room.getObjects(map):
                 setattr(obj, 'on', True)
 
     def describe(self):
         return "Switch"
 
+    def physics(self, map):
+        pass
 
 class Server(Terminal):
+    ANIMATION = [0x100C, 0x100D, 0x100E, 0x100F]
+
     def __init__(self, cell=None):
         Terminal.__init__(self, cell)
 
-        self.char = 0x1013
-        self.fg = COLOR['GREEN']
+        self.on = True
         self.block = [True, True, True]
 
     def physics(self, map):
-        self.fg = rd.choice([COLOR['GREEN'], COLOR['DARKGRAY']])
+        self.char = self.animation.next()
 
     def describe(self):
         return "Server"
 
 
 class Rack(Object):
+    ANIMATION = [0x100C, 0x100D, 0x100E, 0x100F]
+
     def __init__(self, cell=None):
-        Object.__init__(self, cell, 0x1013)
+        Object.__init__(self, cell, 0x100C)
 
         self.on = True
-        self.fg = COLOR['GREEN']
         self.block = [True, True, True]
 
     def physics(self, map):
-        self.fg = rd.choice([COLOR['GREEN'], COLOR['DARKGRAY']])
+        self.char = self.animation.next()
 
     def connect(self, obj):
         self.cell.grid = self

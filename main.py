@@ -43,7 +43,7 @@ class Game:
         #               'PUNCH': pg.mixer.Sound('sounds/punch.wav'),
         #               'STEP': pg.mixer.Sound('sounds/step.wav')}
 
-        self.map.load()
+        self.map.load(random=True)
 
         self.render.mapPanel.moveOffset(self.player.cell.pos - (self.render.SEPARATOR // 4))
         self.render.mapPanel.updateCursor()

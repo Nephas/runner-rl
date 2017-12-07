@@ -6,6 +6,8 @@ from src.object.item import Key
 import random as rd
 
 class Vent(Object):
+    ANIMATION = [0x103C, 0x103D, 0x103E, 0x103F]
+
     def __init__(self, cell=None):
         Object.__init__(self, cell, char=rd.choice([0x1022, 0x1023]), color=COLOR['WHITE'])
 
@@ -22,6 +24,8 @@ class Vent(Object):
     def describe(self):
         return "Vent"
 
+    def physics(self, map):
+        self.char = self.animation.next()
 
 class Door(Object):
     def __init__(self, cell=None, tier=0):

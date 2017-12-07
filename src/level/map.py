@@ -12,7 +12,7 @@ class Map:
     WIDTH = 128
     HEIGHT = 128
 
-    PHYSICSRANGE = np.array([20, 20])
+    PHYSICSRANGE = np.array([16, 16])
 
     def __init__(self, main=None):
         self.main = main
@@ -177,6 +177,9 @@ class Cell:
                 return True
         return False
 
+    def getGrid(self):
+        return filter(lambda obj: obj.__class__.__name__ in ['Server', 'SecDoor', 'Terminal', 'MasterSwitch', 'Rack'], self.object)
+
     def atWall(self):
         for n in self.getNeighborhood():
             if n.wall:
@@ -212,7 +215,7 @@ class Cell:
             obj = max(self.object, key=lambda obj: obj.priority)
             self.stack[2] = obj.char
             self.color[2] = obj.fg
-            if self.hasDoor():
+            if self.hasDoor() and len(self.object) == 1:
                 self.color[2] = roomCol * self.light // MAX_LIGHT
 
         if len(self.effect) != 0:

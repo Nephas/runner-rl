@@ -2,6 +2,7 @@ from src.globals import *
 
 import random as rd
 import copy as cp
+import itertools as it
 
 from src.effect.effect import Fuel
 
@@ -17,18 +18,6 @@ class Object(object):
                 'Obstacle': 16,
                 'Player': 32}
 
-    PRIORITY = {'Object': 0x100A,
-                'Debris': 1,
-                'Item': 8,
-                'Actor': 16,
-                'NPC': 16,
-                'Worker': 16,
-                'Guard': 24,
-                'Grenade': 24,
-                'Obstacle': 16,
-                'Player': 32}
-
-
     def __init__(self, cell=None, char=0x100A, color=COLOR['WHITE']):
         self.cell = cell
         if cell is not None:
@@ -40,10 +29,15 @@ class Object(object):
 
         self.flammable = 8
 
-        try:
+        if self.__class__.__name__ in Object.PRIORITY:
             self.priority = Object.PRIORITY[self.__class__.__name__]
-        except KeyError:
+        else:
             self.priority = 4
+
+        if hasattr(self.__class__, 'ANIMATION'):
+            self.animation = it.cycle(self.__class__.ANIMATION)
+            for i in range(rd.randint(0, len(self.__class__.ANIMATION))):
+                self.animation.next()
 
     def moveTo(self, pos):
         if self.cell.map.tile[pos[X]][pos[Y]].block[MOVE]:
@@ -76,7 +70,6 @@ class Object(object):
 #            Gui.pushMessage('The ' + self.describe() + ' is destroyed')
             self.cell.object.remove(self)
             Debris(self.cell, self)
-
 
 class Debris(Object):
     def __init__(self, cell=None, obj=None):

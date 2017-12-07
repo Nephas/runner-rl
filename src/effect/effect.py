@@ -163,6 +163,19 @@ class Fluid(Effect):
             self.cease()
 
 
+class GrayGoo(Effect):
+    BASE_COLOR = np.array(COLOR['PURPLE'])
+
+    def __init__(self, cell=None, amount=1):
+        Fluid.__init__(self, cell=cell, char=0x1004,
+                       amount=amount, color=COLOR['PURPLE'])
+
+        self.block = [False, False, False]
+        self.flammable = 8
+
+    def describe(self):
+        return 'Fuel'
+
 class Fuel(Fluid):
     BASE_COLOR = np.array(COLOR['PURPLE'])
 

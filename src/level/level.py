@@ -335,6 +335,7 @@ class Level(Map):
                 roomClass = globals()[shape]
                 nextRoom = roomClass(
                     rect.pos, rect.size[X], rect.size[Y], room.tier + 1, room)
+                nextRoom.color = self.palette[room.tier + 1]
                 room.children.append(nextRoom)
                 self.tier[room.tier + 1].append(nextRoom)
                 nextRoom.carve(self)
