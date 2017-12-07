@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/graphics/title.png" width="500"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/graphics/title.gif" width="450"/>
 </p>
 
 *a Cyberpunk Roguelike of stealth, hacking and evil megacorps*
