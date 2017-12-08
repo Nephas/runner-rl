@@ -22,6 +22,7 @@ class Game:
     def __init__(self):
         self.panel = {}
         self.actor = []
+        self.agent = []
 
         self.map = Level(self)
         self.player = Player(None, self)
@@ -49,7 +50,6 @@ class Game:
         self.render.mapPanel.updateCursor()
 
         self.map.updatePhysics()
-        self.map.updateRender()
 
     def changeSpeed(self, tics=10):
         self.TIC_SEC = tics
@@ -69,8 +69,10 @@ class Game:
                 if t.time() >= self.TIC_SIZE + self.lastTic:
                     for actor in self.actor:
                         actor.act(self.map)
+                    for agent in self.agent:
+                        agent.act(self.map)
                     self.map.updatePhysics()
-                    self.map.updateRender()
+                    self.render.mapPanel.updateRender()
 
                     self.tic += 1
                     self.lastTic = t.time()

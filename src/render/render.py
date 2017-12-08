@@ -106,11 +106,11 @@ class Render:  # a rectangle on the map. used to characterize a room.
                         # set the colour accordingly
                         pixels[p[X], p[Y]] = COLOR['BLACK']
 
-                if map.tile[x][y].grid is True:
+                if map.tile[x][y].grid.wire:
                     # set the colour accordingly
                     pixels[3 * x + 1, 3 * y +
                            1] = tuple(map.corp.complement[0])
-                elif map.tile[x][y].grid is not None:
+                elif map.tile[x][y].grid.object != []:
                     for p in tile:
                         # set the colour accordingly
                         pixels[p[X], p[Y]] = tuple(

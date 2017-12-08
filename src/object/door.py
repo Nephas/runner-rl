@@ -1,6 +1,7 @@
 from src.globals import *
 
 from src.object.object import Object
+from src.grid.server import Electronics
 from src.object.item import Key
 
 import random as rd
@@ -27,9 +28,10 @@ class Vent(Object):
     def physics(self, map):
         self.char = self.animation.next()
 
-class Door(Object):
+
+class Door(Electronics):
     def __init__(self, cell=None, tier=0):
-        Object.__init__(self, cell, char=0x10B1, color=COLOR['WHITE'])
+        Electronics.__init__(self, cell, char=0x10B1)
 
         self.tier = tier
         self.closed = True

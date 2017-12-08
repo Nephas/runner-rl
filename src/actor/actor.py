@@ -111,6 +111,8 @@ class Player(Actor):
                           Lighter(carrier=self), Key(carrier=self,tier=4), Shotgun(carrier=self),
                           Explosive(carrier=self), Injector(carrier=self)]
 
+        self.agent = None
+
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir
         if self.moveTo(targetPos):
@@ -121,6 +123,9 @@ class Player(Actor):
 
     def castFov(self, map):
         self.ai.castFov(map, self.cell.pos)
+        if self.agent is not None:
+            self.agent.castFov(map)
+
 
     def describe(self):
         return "You"

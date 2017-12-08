@@ -138,12 +138,21 @@ class MapPanel(Panel):
     def handleClick(self, button='LEFT'):
         self.main.player.actions = []
 
-        if button is 'LEFT' and len(self.main.player.actions) < 2:
-            self.main.player.actions = AI.findPath(
-                self.map, self.main.player.cell.pos, self.cursorPos, False)
-        elif button is 'RIGHT' and len(self.main.player.actions) < 2:
-            self.main.player.actions = AI.findPath(
-                self.map, self.main.player.cell.pos, self.cursorPos, True)
+        if self.layer is 'MAP':
+            if button is 'LEFT' and len(self.main.player.actions) < 2:
+                self.main.player.actions = AI.findPath(
+                    self.map, self.main.player.cell.pos, self.cursorPos, False)
+            elif button is 'RIGHT' and len(self.main.player.actions) < 2:
+                self.main.player.actions = AI.findPath(
+                    self.map, self.main.player.cell.pos, self.cursorPos, True)
+
+        elif self.layer is 'GRID':
+            if button is 'LEFT' and len(self.main.player.actions) < 2:
+                self.main.player.agent.actions = [{'TYPE': 'MOVE',
+                                                   'TARGET': self.main.render.mapPanel.cursorPos}]
+            elif button is 'RIGHT' and len(self.main.player.actions) < 2:
+                self.main.player.agent.actions = [{'TYPE': 'USE',
+                                                   'TARGET': self.main.render.mapPanel.cursorPos}]
 
     def handleScroll(self, offY):
         offset = np.array([0, offY])
@@ -151,42 +160,64 @@ class MapPanel(Panel):
 
     def cycleLayer(self):
         self.layer = self.LAYER.next()
+        self.updateRender()
+
+    def updateRender(self):
+        if self.layer is 'MAP':
+            for cell in self.camera.getCells(self.map):
+                cell.updateRender()
+        elif self.layer is 'GRID':
+            for cell in self.camera.getCells(self.map):
+                cell.grid.updateRender()
 
     def render(self):
+        super(MapPanel, self).render()
+
         if self.layer is 'MAP':
             self.renderMap()
         elif self.layer is 'GRID':
             self.renderGrid()
 
-    def renderGrid(self):
-        super(MapPanel, self).render()
-
-        for cell in self.camera.getCells(self.map):
-            self.drawGrid(cell, self.SCALE *
-                      (cell.pos - self.mapOffset) + self.pos)
-
-
     def renderMap(self):
-        super(MapPanel, self).render()
-
         for cell in self.camera.getCells(self.map):
-            self.drawMap(cell, self.SCALE *
+            self.draw(cell, self.SCALE *
                       (cell.pos - self.mapOffset) + self.pos)
 
         for mapPos in [self.main.player.cell.pos + self.cursorDir, self.cursorPos]:
             try:
                 cell = self.map.getTile(mapPos)
                 panelPos = self.SCALE * (cell.pos - self.mapOffset) + self.pos
-                self.highlight(cell, panelPos)
+                self.highlight(panelPos)
             except:
                 pass
 
-        # for actor in self.main.player.ai.mind['AWARE']:
-        #     cell = actor.cell
-        #     panelPos = self.SCALE * (cell.pos - self.mapOffset) + self.pos
-        #     self.highlight(cell, panelPos, actor.ai.color)
+    def renderGrid(self):
+        player = self.main.player
+        connected = []
+        route = []
+        if player.agent is not None:
+            connected = [obj.cell.pos for obj in player.agent.grid.object[0].connection]
+            route = player.agent.route
 
-    def drawMap(self, cell, panelPos):
+        self.draw(player.cell, self.SCALE * (player.cell.pos - self.mapOffset) + self.pos)
+
+        for cell in self.camera.getCells(self.map):
+            self.draw(cell.grid, self.SCALE *
+                      (cell.pos - self.mapOffset) + self.pos)
+
+        for mapPos in [self.cursorPos] + connected:
+            try:
+                cell = self.map.getTile(mapPos)
+                panelPos = self.SCALE * (cell.pos - self.mapOffset) + self.pos
+                self.highlight(panelPos, self.map.complement[2])
+            except:
+                pass
+
+        for grid in route:
+            panelPos = self.SCALE * (grid.cell.pos - self.mapOffset) + self.pos
+            self.highlight(panelPos)
+
+    def draw(self, cell, panelPos):
         i = 0
         for color, tile in zip(cell.color, cell.stack):
             if tile is not None:
@@ -195,27 +226,7 @@ class MapPanel(Panel):
                 term.put(panelPos[X], panelPos[Y], tile)
             i += 1
 
-    def drawGrid(self, cell, panelPos):
-        term.layer(99)
-
-        if not cell.wall and cell.room is not None:
-            term.color(term.color_from_argb(64, *cell.room.color))
-            term.put(panelPos[X], panelPos[Y], 0x10DB)
-
-        if cell.grid:
-            term.layer(100)
-            term.color(term.color_from_argb(255, *COLOR['GREEN']))
-            term.put(panelPos[X], panelPos[Y], 0x10FE)
-
-        grid = cell.getGrid()
-        if len(grid) != 0:
-            term.layer(101)
-            term.color(term.color_from_argb(255, *COLOR['GREEN']))
-            term.put(panelPos[X], panelPos[Y], grid[0].char)
-
-
-
-    def highlight(self, cell, panelPos, color=COLOR['WHITE']):
+    def highlight(self, panelPos, color=COLOR['WHITE']):
         term.layer(3)
         term.color(term.color_from_argb(255, *color))
         term.put(panelPos[X], panelPos[Y], 0x1020)
@@ -238,11 +249,11 @@ class MapPanel(Panel):
         self.cursorPos += dir
         (panelX, panelY) = self.size
         self.camera = Rectangle(self.mapOffset, panelX // 2, panelY)
-        self.updateRender(self.map)
+        self.updateRender()
 
-    def updateRender(self, map):
-        for cell in self.camera.getCells(map):
-            cell.updateRender()
+    # def updateRender(self, map):
+    #     for cell in self.camera.getCells(map):
+    #         cell.updateRender()
 
 
 class InfoPanel(Panel):
@@ -287,9 +298,16 @@ class InfoPanel(Panel):
 
                 row = 4
 
-                for i, obj in enumerate(cursorTile.object + cursorTile.effect):
-                    self.printChar(np.array([1, row + i]), obj.char)
-                    self.printString(np.array([4, row + i]), obj.describe())
+                if mapPanel.layer is 'MAP':
+                    for i, obj in enumerate(cursorTile.object + cursorTile.effect):
+                        self.printChar(np.array([1, row + i]), obj.char)
+                        self.printString(
+                            np.array([4, row + i]), obj.describe())
+                elif mapPanel.layer is 'GRID':
+                    for i, obj in enumerate(cursorTile.grid.object + cursorTile.grid.agent):
+                        self.printChar(np.array([1, row + i]), obj.char)
+                        self.printString(
+                            np.array([4, row + i]), obj.describe())
 
 
 class MessagePanel(Panel):
@@ -313,7 +331,8 @@ class MessagePanel(Panel):
 
         for string, color in self.MESSAGES[self.messageOffset:]:
             # line wrapping in list comprehension
-            block = [string[i:i + self.size[X] - 2] for i in range(0, len(string), self.size[X] - 2)]
+            block = [string[i:i + self.size[X] - 2]
+                     for i in range(0, len(string), self.size[X] - 2)]
             for line in block:
                 pos += 1
                 if pos >= self.size[Y] - 1:
@@ -327,7 +346,6 @@ class MessagePanel(Panel):
     def handleScroll(self, offset):
         self.messageOffset += offset
         self.messageOffset = max(0, self.messageOffset)
-
 
 
 class InventoryPanel(Panel):

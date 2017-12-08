@@ -37,6 +37,9 @@ class Level(Map):
 
         self.tier = [[]]
         self.forbidden = []
+        self.corp = None
+        self.palette = []
+        self.complement = []
 
     def contains(self, target):
         """Returns whether the target is fully contained inside the map, excluding the forbidden regions.
@@ -74,6 +77,7 @@ class Level(Map):
         self.corp = Corp()
         self.forbidden = Level.SHAPE[self.corp.layout]
         self.palette = self.corp.palette
+        self.complement = self.corp.complement
         print(self.corp)
         print('\n')
         self.generate(debug)
@@ -86,7 +90,9 @@ class Level(Map):
             return
 
         stats = {'ROOMS': -1, 'VENTS': -1, 'CORRIDORS': -1, 'AREA': -1}
-        while stats['VENTS'] < 10 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
+#        while stats['VENTS'] < 10 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
+        while stats['VENTS'] < 5 or stats['ROOMS'] < 10 or stats['CORRIDORS'] < 3 or stats['AREA'] < 2000:
+
             self.clear()
             self.generateStart()
             self.generateRooms()
@@ -166,8 +172,8 @@ class Level(Map):
         for pair in it.combinations(self.getAll(Server) + self.getAll(Terminal) + self.getAll(MasterSwitch), 2):
             if rd.randint(0, 2) <= 2:
                 if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
-                    pair[0].connect(pair[1])
-                    self.layCable(pair[0].cell.pos, pair[1].cell.pos)
+                    pair[0].connect(self, pair[1])
+#                    self.layCable(pair[0].cell.pos, pair[1].cell.pos)
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
@@ -208,16 +214,6 @@ class Level(Map):
             elif cell.wall is True:
                 cell.makeWall()
 
-
-    def layCable(self, pos1, pos2, horizontal=True):
-        for pos in self.getConnection(pos1, pos2, horizontal):
-            if not self.contains(pos):
-                return False
-            cell = self.getTile(pos)
-            if cell.grid is None:
-                cell.grid = True
-        return True
-
     def carveDoorway(self, room1, room2, tunnelTier=-1, horizontal=True):
         positions = self.getConnection(room1.center, room2.center, horizontal)
 
@@ -230,6 +226,7 @@ class Level(Map):
 
         # place door and Terminal
         door = SecDoor(tier=tunnelTier)
+        term = Terminal()
         for pos in positions:
             cell = self.getTile(pos)
             cell.removeWall()
@@ -240,12 +237,13 @@ class Level(Map):
                 for cell in self.getTile(pos).getNeighborhood():
                     if list(cell.pos) in room2.border():
                         if not flag:
-                            term = Terminal(cell)
-                            term.connect(door)
+                            cell.addObject(term)
                             flag = True
                         else:
                             cell.addObject(DoorLamp())
                             break
+
+        term.connect(self, door)
         return True
 
     def carveVent(self, room1, room2, horizontal=True):

@@ -1,4 +1,5 @@
 from src.globals import *
+from src.grid.grid import Grid
 
 import math as m
 import numpy as np
@@ -37,21 +38,30 @@ class Map:
                 yield np.array([x, y])
 
     def updatePhysics(self):
-        rect = Rectangle(self.main.player.cell.pos -
+        playerRect = Rectangle(self.main.player.cell.pos -
                          Map.PHYSICSRANGE, *(2 * Map.PHYSICSRANGE))
 
-        for cell in rect.getCells(self):
+        for cell in playerRect.getCells(self):
             cell.light = BASE_LIGHT
             cell.vision[LOS] = False
 
-        for cell in rect.getCells(self):
+        for cell in playerRect.getCells(self):
             cell.updatePhysics()
+
+        if self.main.player.agent is not None:
+            agentRect = Rectangle(self.main.player.agent.grid.cell.pos -
+                             Map.PHYSICSRANGE, *(2 * Map.PHYSICSRANGE))
+
+            for cell in agentRect.getCells(self):
+                cell.updatePhysics()
+                cell.grid.updatePhysics()
 
         self.main.player.castFov(self)
 
     def updateRender(self):
         for cell in self.main.render.mapPanel.camera.getCells(self):
             cell.updateRender()
+            cell.grid.updateRender()
 
     def getObjects(self):
         for x in range(Map.WIDTH):
@@ -129,7 +139,7 @@ class Cell:
         self.pos = np.array(pos)
         self.wall = wall
         self.light = BASE_LIGHT
-        self.grid = None
+        self.grid = Grid(self)
 
         # [MOVE, LOS, LIGHT]
         self.block = [False, False, False]
@@ -177,8 +187,8 @@ class Cell:
                 return True
         return False
 
-    def getGrid(self):
-        return filter(lambda obj: obj.__class__.__name__ in ['Server', 'SecDoor', 'Terminal', 'MasterSwitch', 'Rack'], self.object)
+    def getClass(self, classList):
+        return filter(lambda obj: obj.__class__.__name__ in classList, self.object)
 
     def atWall(self):
         for n in self.getNeighborhood():
@@ -199,13 +209,14 @@ class Cell:
             self.stack[0] = self.GRATE
             roomCol = np.array(COLOR['WHITE'])
         else:
-            roomCol = self.map.palette[self.room.tier]
+            roomCol = np.array(self.room.color)
+#            roomCol = self.map.palette[self.room.tier]
 
         self.color[0] = roomCol * self.light // MAX_LIGHT // 2
 
         if self.wall:
             self.color[1] = roomCol * self.light // MAX_LIGHT
-            self.color[2] = self.color[1]#COLOR['WHITE']
+            self.color[2] = self.color[1]
             return
 
         self.stack[1] = None
@@ -227,7 +238,7 @@ class Cell:
         self.object = []
         self.wall = True
         self.block = [True, True, True]
-        self.stack[1] = Wall.getChar(self.pos, self.map)
+        self.stack[1] = Wall.getChar(self)
 
     def removeWall(self):
         self.wall = False
@@ -279,11 +290,8 @@ class Wall:
         pass
 
     @staticmethod
-    def getChar(pos, tileMap):
-        align = ''
-        cell = tileMap.getTile(pos)
+    def getChar(cell):
         neighborhood = list(cell.getNeighborhood('LARGE'))
-
         surfaceString = 'CENTER'
 
         floorCells = filter(lambda c: not (c.wall or c.hasDoor()), cell.getNeighborhood('SMALL'))

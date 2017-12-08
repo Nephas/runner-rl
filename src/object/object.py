@@ -64,7 +64,7 @@ class Object(object):
         pass
 
     def destroy(self):
-        if self.__class__.__name__ in ['Debris','Corpse']:
+        if self.__class__.__name__ in ['Debris', 'Corpse']:
             return
         else:
 #            Gui.pushMessage('The ' + self.describe() + ' is destroyed')
