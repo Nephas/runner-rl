@@ -82,7 +82,7 @@ class Map:
         return pos[X] in range(0, Map.WIDTH) and pos[Y] in range(0, Map.HEIGHT)
 
 
-class Rectangle:  # a rectangle on the map. used to characterize a room or a window
+class Rectangle(object):  # a rectangle on the map. used to characterize a room or a window
     def __init__(self, pos, w, h):
         self.pos = np.array(pos)
         self.size = np.array([w, h])
@@ -132,6 +132,7 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
 class Cell:
     FLOOR = 0x10B2
     GRATE = 0x1000
+    PEBBLE = 0x1002
 
     def __init__(self, map, pos, wall=None):
         self.map = map
@@ -151,7 +152,7 @@ class Cell:
         self.effect = []
 
         # graphics attributes [FLOOR, EFFECT, OBJECT]
-        self.stack = [Cell.FLOOR, None, None]
+        self.stack = [Cell.PEBBLE, None, None]
         self.color = [COLOR['BLACK'], COLOR['WHITE'], COLOR['WHITE']]
 
         self.neighborhood = {'SMALL': [],
@@ -206,11 +207,10 @@ class Cell:
             return
 
         if self.room is None:
-            self.stack[0] = self.GRATE
+#            self.stack[0] = self.GRATE
             roomCol = np.array(COLOR['WHITE'])
         else:
             roomCol = np.array(self.room.color)
-#            roomCol = self.map.palette[self.room.tier]
 
         self.color[0] = roomCol * self.light // MAX_LIGHT // 2
 

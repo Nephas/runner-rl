@@ -12,10 +12,8 @@ from src.actor.body import Body
 import random as rd
 
 
-
-
 class Actor(Object):
-    def __init__(self, cell=None, main=None, char=0x1040, ai=None):
+    def __init__(self, cell=None, main=None, char=0x1031, ai=None):
         Object.__init__(self, cell, char=char)
 
         self.main = main
@@ -66,7 +64,7 @@ class Actor(Object):
                 item.drop()
             self.main.actor.remove(self)
             Corpse(self.cell, self)
-            self.cell.addEffect(Blood(amount=rd.randint(1,3)))
+            self.cell.addEffect(Blood(amount=rd.randint(1, 3)))
             # Gui.pushMessage(self.describe() + " dies")
 
     def interactWith(self, map, dir, type=None):
@@ -89,7 +87,8 @@ class Actor(Object):
                 self.cooldown += self.inventory[act['INDEX']].use(act)
             elif act['TYPE'] in ['USE', 'ATTACK']:
                 dir = act['DIR']
-                self.cooldown += self.interactWith(tileMap, act['DIR'], act['TYPE'])
+                self.cooldown += self.interactWith(tileMap,
+                                                   act['DIR'], act['TYPE'])
             elif act['TYPE'] is 'TALK' and act['TARGET'] is not None:
                 self.cooldown += act['TARGET'].ai.chooseOption(act['INDEX'])
             elif act['TYPE'] is 'GRID':
@@ -103,12 +102,15 @@ class Actor(Object):
 
 
 class Player(Actor):
-    def __init__(self, cell=None, main=None):
-        Actor.__init__(self, cell, main, char=0x1040)
+    ANIMATION = [0x1031, 0x1031, 0x1041, 0x1041]
 
-        self.fg = [225, 150, 50]
+    def __init__(self, cell=None, main=None):
+        Actor.__init__(self, cell, main, char=0x1031)
+
+#        self.fg = COLOR[]# [225, 150, 50]
         self.inventory = [Knife(carrier=self), Canister(carrier=self), Grenade(carrier=self),
-                          Lighter(carrier=self), Key(carrier=self,tier=4), Shotgun(carrier=self),
+                          Lighter(carrier=self), Key(carrier=self,
+                                                     tier=4), Shotgun(carrier=self),
                           Explosive(carrier=self), Injector(carrier=self)]
 
         self.agent = None
@@ -126,6 +128,8 @@ class Player(Actor):
         if self.agent is not None:
             self.agent.castFov(map)
 
+    def physics(self, map):
+        self.char = self.animation.next()
 
     def describe(self):
         return "You"
@@ -133,7 +137,7 @@ class Player(Actor):
 
 class Corpse(Object):
     def __init__(self, cell=None, actor=None):
-        Object.__init__(self, cell, char=0x1025, color=(150, 150, 150))
+        Object.__init__(self, cell, char=0x1011, color=(150, 150, 150))
 
         self.actor = actor
         self.flammable = -1

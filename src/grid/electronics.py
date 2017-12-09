@@ -16,10 +16,10 @@ class Electronics(Object):
 
     def connect(self, tileMap, obj):
         Wire.layCable(tileMap, self.cell.pos, obj.cell.pos)
-        self.cell.grid.object.append(self)
+        self.cell.grid.addObject(self)
         if hasattr(obj, 'connection'):
             obj.connection.append(self)
-        obj.cell.grid.object.append(obj)
+        obj.cell.grid.addObject(obj)
 
     def command(self, actor=None, dir=None, type=None):
         return self.interact(actor, dir, type)
@@ -43,11 +43,11 @@ class Router(Electronics):
 
     def connect(self, tileMap, obj):
         Wire.layCable(tileMap, self.cell.pos, obj.cell.pos)
-        self.cell.grid.object.append(self)
+        self.cell.grid.addObject(self)
         self.connection.append(obj)
         if hasattr(obj, 'connection'):
             obj.connection.append(self)
-        obj.cell.grid.object.append(obj)
+        obj.cell.grid.addObject(obj)
 
     def disconnect(self, obj):
         self.connection.remove(obj)

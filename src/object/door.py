@@ -3,6 +3,7 @@ from src.globals import *
 from src.object.object import Object
 from src.grid.server import Electronics
 from src.object.item import Key
+from src.effect.effect import Fuel
 
 import random as rd
 
@@ -18,15 +19,40 @@ class Vent(Object):
         if type is 'ATTACK':
             self.destroy()
             return 5
-
-        self.cell.object.remove(self)
-        return 10
+        return 0
 
     def describe(self):
         return "Vent"
 
     def physics(self, map):
         self.char = self.animation.next()
+
+
+class Outlet(Electronics):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, char=0x1023, color=COLOR['WHITE'])
+
+        self.block = [False, False, False]
+        self.open = False
+
+        self.content = Fuel(amount=1)
+
+    def interact(self, actor=None, dir=None, type=None):
+        # if type is 'ATTACK':
+        #     self.destroy()
+        #     return 5
+        if type is 'USE':
+            self.open = not self.open
+            return 5
+        else:
+            return 0
+
+    def describe(self):
+        return "Vent"
+
+    def physics(self, map):
+        if self.open:
+            self.cell.addEffect(self.content)
 
 
 class Door(Electronics):

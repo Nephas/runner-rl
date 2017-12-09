@@ -7,7 +7,7 @@ from src.render.geometry import Geometry, Light
 
 
 class Lamp(Object):
-    def __init__(self, cell=None, brightness=10):
+    def __init__(self, cell=None, brightness=7):
         Object.__init__(self, cell, char=0x1007)
 
         self.on = True
@@ -31,7 +31,7 @@ class Lamp(Object):
 
 
 class DoorLamp(Lamp):
-    def __init__(self, cell=None, brightness=3):
+    def __init__(self, cell=None, brightness=5):
         Lamp.__init__(self, cell, brightness=brightness)
 
         self.fg = COLOR['RED']
@@ -39,7 +39,7 @@ class DoorLamp(Lamp):
 
     def physics(self, map):
         self.counter += 1
-        if self.counter % 4 == 0:
+        if self.counter % 10 == 0:
             self.on = not self.on
         if self.on:
             self.fg = COLOR['WHITE']
@@ -53,7 +53,7 @@ class DoorLamp(Lamp):
 
 
 class FlickerLamp(Lamp):
-    def __init__(self, cell=None, brightness=8):
+    def __init__(self, cell=None, brightness=7):
         Lamp.__init__(self, cell, brightness=brightness)
 
         self.counter = 0

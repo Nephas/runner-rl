@@ -9,7 +9,7 @@ from src.actor.actor import Actor, Corpse
 
 
 class NPC(Actor):
-    def __init__(self, cell=None, main=None, char=0x1040):
+    def __init__(self, cell=None, main=None, char=0x1031):
         Actor.__init__(self, cell, main, char=char)
 
         self.ai = Idle(self)
@@ -23,18 +23,20 @@ class NPC(Actor):
 
 class Guard(NPC):
     def __init__(self, cell=None, main=None, owner=None):
-        NPC.__init__(self, cell, main)
+        NPC.__init__(self, cell, main, 0x1033)
 
         self.ai = Idle(self)
         self.inventory = [Key(carrier=self, tier=3), Key(
             carrier=self, tier=4), Gun(carrier=self)]
 
+
 class Worker(NPC):
     def __init__(self, cell=None, main=None, owner=None):
-        NPC.__init__(self, cell, main)
+        NPC.__init__(self, cell, main, 0x1032)
 
         self.ai = Idle(self)
         self.inventory = [Key(carrier=self, tier=5)]
+
 
 class Drone(NPC):
     ANIMATION = [0x101C, 0x101D, 0x101E, 0x101F]
@@ -62,4 +64,4 @@ class Drone(NPC):
                 item.drop()
             self.main.actor.remove(self)
             Corpse(self.cell, self)
-            self.cell.addEffect(Fuel(amount=rd.randint(1,3)))
+            self.cell.addEffect(Fuel(amount=rd.randint(1, 3)))

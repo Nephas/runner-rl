@@ -10,10 +10,12 @@ import hashlib as hl
 
 from src.level.map import Map, Rectangle, Cell
 from src.level.corp import Corp
-from src.level.room import Room
-from src.level.roomtypes import BossRoom, Corridor, Office, Dome, Hall, ServerFarm, GreenHouse, Lab, Storage
+from src.level.room.room import Room
+from src.level.room.small import Vault, Corridor, Office, Lab, Lobby
+from src.level.room.hall import Hall, ServerFarm, GreenHouse, Storage
+from src.level.room.dome import Dome
 
-from src.grid.server import Terminal, Server, MasterSwitch
+from src.grid.electronics import Terminal, Server, MasterSwitch
 from src.object.light import Lamp, DoorLamp
 from src.object.door import Vent, SecDoor
 
@@ -45,7 +47,7 @@ class Level(Map):
         """Returns whether the target is fully contained inside the map, excluding the forbidden regions.
         Takes 2D pos lists and Rectangle objects
         """
-        if target.__class__.__name__ in ['Rectangle', 'BossRoom', 'Room']:
+        if target.__class__.__name__ in ['Rectangle', 'Vault', 'Room']:
             for rect in self.forbidden:
                 if target.intersects(rect):
                     return False
@@ -66,7 +68,7 @@ class Level(Map):
             for room in tier:
                 yield room
 
-    def load(self, seed='Test', random=False, debug = False):
+    def load(self, seed='Test', random=False, debug=False):
         self.clear()
 
         if not random:
@@ -82,7 +84,7 @@ class Level(Map):
         print('\n')
         self.generate(debug)
 
-    def generate(self, debug = False):
+    def generate(self, debug=False):
         if debug:
             self.clear()
             self.generateStart()
@@ -113,7 +115,7 @@ class Level(Map):
         while True:
             pos = [rd.randint(margin, Map.WIDTH - w - margin),
                    rd.randint(margin, Map.HEIGHT - h - margin)]
-            start = BossRoom(pos, w, h, 0, None)
+            start = Vault(pos, w, h, 0, None)
             if self.contains(start):
                 self.tier[0].append(start)
                 start.carve(self)
@@ -169,11 +171,10 @@ class Level(Map):
             room.generateContent(self)
 
         # connect terminals
-        for pair in it.combinations(self.getAll(Server) + self.getAll(Terminal) + self.getAll(MasterSwitch), 2):
+        for pair in it.combinations(self.getAll('Server') + self.getAll('Terminal') + self.getAll('MasterSwitch') + self.getAll('Outlet'), 2):
             if rd.randint(0, 2) <= 2:
                 if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
                     pair[0].connect(self, pair[1])
-#                    self.layCable(pair[0].cell.pos, pair[1].cell.pos)
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
@@ -270,6 +271,8 @@ class Level(Map):
         # carve connection
         for cell in map(lambda p: self.getTile(p), positions):
             cell.removeWall()
+            if cell.room is None:
+                cell.stack[0] = cell.GRATE
 
         # place vents
         for pos in positions:

@@ -154,8 +154,11 @@ class MapPanel(Panel):
                 self.main.player.agent.actions = [{'TYPE': 'USE',
                                                    'TARGET': self.main.render.mapPanel.cursorPos}]
 
-    def handleScroll(self, offY):
-        offset = np.array([0, offY])
+    def handleScroll(self, off):
+        if term.check(term.TK_SHIFT):
+            offset = np.array([off, 0])
+        else:
+            offset = np.array([0, off])
         self.moveOffset(offset)
 
     def cycleLayer(self):

@@ -1,0 +1,102 @@
+from src.globals import *
+
+import random as rd
+import copy as cp
+import itertools as it
+
+from src.effect.effect import Fuel
+from src.object.object import Object, Debris
+
+
+class Desk(Object):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, color=COLOR['WHITE'], char=np.random.choice(
+            [0x100A, 0x100B], p=[0.25, 0.75]))
+
+        self.block = [True, False, True]
+
+    def describe(self):
+        return "Desk"
+
+
+class Hydroponics(Object):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, color=COLOR['GREEN'])
+
+        self.block = [False, True, True]
+
+    def describe(self):
+        return "Hydroponics"
+
+
+class Container(Object):
+    def __init__(self, cell=None, char=0x1008, color=COLOR['WHITE'], content=None):
+        Object.__init__(self, cell, char, color)
+
+        self.content = content
+        self.block = [True, True, True]
+
+    def interact(self, actor=None, dir=None, type=None):
+        oldCell = self.cell
+
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+        elif self.moveDir(dir):
+            oldCell.updatePhysics()
+            actor.moveDir(dir)
+            return 3
+        else:
+            return 0
+
+    def describe(self):
+        return "Chest"
+
+
+class Locker(Object):
+    def __init__(self, cell=None, char=0x1008, color=COLOR['WHITE'], content=None):
+        Object.__init__(self, cell, char, color)
+
+        self.content = content
+        self.block = [True, True, True]
+
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+        elif type is 'USE':
+            self.enter(actor)
+            return 3
+        else:
+            return 0
+
+    def describe(self):
+        return "Locker"
+
+    def enter(self, actor):
+        actor.cell.object.remove(actor)
+        actor.cell = self.cell
+        self.cell.object.append(actor)
+
+    def destroy(self):
+        self.cell.object.remove(self)
+        self.cell.addEffect(self.content)
+        Debris(self.cell, self)
+
+
+class Barrel(Container):
+    def __init__(self, cell=None, content=None):
+        Container.__init__(self, cell, 0x1009, content=content)
+
+        self.block = [True, False, True]
+
+        if self.content is None:
+            self.content = Fuel(amount=16)
+
+    def describe(self):
+        return "Barrel of " + self.content.describe()
+
+    def destroy(self):
+        self.cell.object.remove(self)
+        self.cell.addEffect(self.content)
+        Debris(self.cell, self)

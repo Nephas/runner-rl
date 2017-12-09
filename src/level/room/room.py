@@ -6,7 +6,7 @@ import random as rd
 import copy as cp
 import itertools as it
 
-from src.object.object import Object, Obstacle, Barrel, Desk
+from src.object.furniture import Container, Barrel, Desk
 from src.grid.server import Terminal, Server
 from src.object.door import Vent, SecDoor, AutoDoor
 from src.object.item import Item, Key, PlotDevice
@@ -107,3 +107,4 @@ class Room(Rectangle):
     def updateCells(self, map):
         for cell in self.getCells(map):
             cell.room = self
+            cell.stack[0] = cell.FLOOR
