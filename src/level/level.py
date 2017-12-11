@@ -11,7 +11,7 @@ import hashlib as hl
 from src.level.map import Map, Rectangle, Cell
 from src.level.corp import Corp
 from src.level.room.room import Room
-from src.level.room.small import Vault, Corridor, Office, Lab, Lobby
+from src.level.room.small import Vault, Corridor, Office, Lab, Lobby, Gallery
 from src.level.room.hall import Hall, ServerFarm, GreenHouse, Storage
 from src.level.room.dome import Dome
 
@@ -171,10 +171,7 @@ class Level(Map):
             room.generateContent(self)
 
         # connect terminals
-        for pair in it.combinations(self.getAll('Server') + self.getAll('Terminal') + self.getAll('MasterSwitch') + self.getAll('Outlet'), 2):
-            if rd.randint(0, 2) <= 2:
-                if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 8:
-                    pair[0].connect(self, pair[1])
+        self.createGrid()
 
         # set start and extraction rooms
         start = rd.choice(self.tier[-1])
@@ -215,6 +212,16 @@ class Level(Map):
             elif cell.wall is True:
                 cell.makeWall()
 
+    def createGrid(self):
+        for pair in it.combinations(self.getAll('Server'), 2):
+            if rd.randint(0, 2) <= 2:
+                if np.linalg.norm(pair[0].cell.pos - pair[1].cell.pos) < Map.WIDTH / 4:
+                    pair[0].connect(self, pair[1])
+
+        for server in self.getAll('Server'):
+            server.connectRoom(self)
+
+
     def carveDoorway(self, room1, room2, tunnelTier=-1, horizontal=True):
         positions = self.getConnection(room1.center, room2.center, horizontal)
 
@@ -241,7 +248,7 @@ class Level(Map):
                             cell.addObject(term)
                             flag = True
                         else:
-                            cell.addObject(DoorLamp())
+                            cell.addObject(Lamp())
                             break
 
         term.connect(self, door)

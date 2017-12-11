@@ -294,23 +294,21 @@ class InfoPanel(Panel):
 
         if self.main.map.contains(mapPanel.cursorPos):
             cursorTile = self.main.map.getTile(mapPanel.cursorPos)
-            if cursorTile.vision[LOS] is True:
-                if cursorTile.room is not None:
-                    self.printString(
-                        np.array([1, row]), cursorTile.room.describe())
+            if cursorTile.room is not None:
+                self.printString(np.array([1, row]), cursorTile.room.describe())
 
                 row = 4
 
-                if mapPanel.layer is 'MAP':
-                    for i, obj in enumerate(cursorTile.object + cursorTile.effect):
-                        self.printChar(np.array([1, row + i]), obj.char)
-                        self.printString(
-                            np.array([4, row + i]), obj.describe())
-                elif mapPanel.layer is 'GRID':
-                    for i, obj in enumerate(cursorTile.grid.object + cursorTile.grid.agent):
-                        self.printChar(np.array([1, row + i]), obj.char)
-                        self.printString(
-                            np.array([4, row + i]), obj.describe())
+            if mapPanel.layer is 'MAP' and cursorTile.vision[LOS]:
+                for i, obj in enumerate(cursorTile.object + cursorTile.effect):
+                    self.printChar(np.array([1, row + i]), obj.char)
+                    self.printString(
+                        np.array([4, row + i]), obj.describe())
+            elif mapPanel.layer is 'GRID' and cursorTile.grid.vision[EXP]:
+                for i, obj in enumerate(cursorTile.grid.object + cursorTile.grid.agent):
+                    self.printChar(np.array([1, row + i]), obj.char)
+                    self.printString(
+                        np.array([4, row + i]), obj.describe())
 
 
 class MessagePanel(Panel):
