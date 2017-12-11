@@ -3,15 +3,17 @@ from src.globals import *
 from src.object.object import Object
 from src.grid.server import Electronics
 from src.object.item import Key
-from src.effect.effect import Fuel
+from src.effect.effect import Fuel, Fog
 
 import random as rd
+
 
 class Vent(Object):
     ANIMATION = [0x103C, 0x103D, 0x103E, 0x103F]
 
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char=rd.choice([0x1022, 0x1023]), color=COLOR['WHITE'])
+        Object.__init__(self, cell, char=rd.choice(
+            [0x1022, 0x1023]), color=COLOR['WHITE'])
 
         self.block = [False, True, False]
 
@@ -29,23 +31,31 @@ class Vent(Object):
 
 
 class Outlet(Electronics):
+    CHAR = {True: 0x101A,
+            False: 0x101B}
+
     def __init__(self, cell=None):
-        Object.__init__(self, cell, char=0x1023, color=COLOR['WHITE'])
+        Object.__init__(self, cell, char=0x101A, color=COLOR['WHITE'])
 
         self.block = [False, False, False]
         self.open = False
+        self.char = self.CHAR[self.open]
 
-        self.content = Fuel(amount=1)
+        self.content = Fog(amount=1)
 
     def interact(self, actor=None, dir=None, type=None):
         # if type is 'ATTACK':
         #     self.destroy()
         #     return 5
         if type is 'USE':
-            self.open = not self.open
+            self.toggle()
             return 5
         else:
             return 0
+
+    def toggle(self):
+        self.open = not self.open
+        self.char = self.CHAR[self.open]
 
     def describe(self):
         return "Vent"
@@ -63,17 +73,21 @@ class Door(Electronics):
         self.closed = True
         self.block = [True, True, True]
 
+    def authorize(self, actor):
+        for item in actor.inventory:
+            if isinstance(item, Key) and item.tier == self.tier:
+                return True
+        return False
+
     def open(self, actor):
-        if self.authorize(actor):
-            self.closed = False
-            self.block = [False, False, False]
-            self.char = 0x10B0
+        self.closed = False
+        self.block = [False, False, False]
+        self.char = 0x10B0
 
     def close(self, actor):
-        if self.authorize(actor):
-            self.closed = True
-            self.block = [True, True, True]
-            self.char = 0x10B1
+        self.closed = True
+        self.block = [True, True, True]
+        self.char = 0x10B1
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':
@@ -85,9 +99,6 @@ class Door(Electronics):
             self.close(actor)
         return 3
 
-    def authorize(self, actor):
-        return True
-
     def describe(self):
         return "Door ({:})".format(self.tier)
 
@@ -96,13 +107,17 @@ class SecDoor(Door):
     def __init__(self, cell=None, tier=0):
         Door.__init__(self, cell, tier)
 
-    def authorize(self, actor):
-        for item in actor.inventory:
-            if isinstance(item, Key) and item.tier == self.tier:
-                # Gui.pushMessage("Access granted")
-                return True
-        # Gui.pushMessage("Access denied", COLOR['RED'])
-        return False
+    def open(self, actor):
+        if self.authorize(actor):
+            self.closed = False
+            self.block = [False, False, False]
+            self.char = 0x10B0
+
+    def close(self, actor):
+        if self.authorize(actor):
+            self.closed = True
+            self.block = [True, True, True]
+            self.char = 0x10B1
 
     def describe(self):
         return "SecDoor ({:})".format(self.tier)

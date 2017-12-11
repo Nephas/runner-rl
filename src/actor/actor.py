@@ -102,7 +102,7 @@ class Actor(Object):
 
 
 class Player(Actor):
-    ANIMATION = [0x1031, 0x1031, 0x1041, 0x1041]
+    ANIMATION = [0x1042, 0x1042]
 
     def __init__(self, cell=None, main=None):
         Actor.__init__(self, cell, main, char=0x1031)

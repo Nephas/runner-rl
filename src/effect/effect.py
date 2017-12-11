@@ -223,7 +223,7 @@ class Fog(Fluid):
 
     def __init__(self, cell=None, amount=1):
         Fluid.__init__(self, cell=cell, char=0x1005,
-                       amount=amount, decay=0.1, color=COLOR['WHITE'])
+                       amount=amount, decay=0.01, color=COLOR['WHITE'])
 
         self.block = [False, True, True]
         self.flammable = -1

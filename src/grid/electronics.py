@@ -5,6 +5,7 @@ import random as rd
 from src.grid.agent import Agent
 from src.grid.grid import Wire
 from src.object.object import Object
+from src.object.item import Key
 from src.render.render import Render
 
 
@@ -13,6 +14,7 @@ class Electronics(Object):
         Object.__init__(self, cell, char=char)
 
         self.on = True
+#        self.cell.grid.addObject(self)
 
     def connect(self, tileMap, obj):
         Wire.layCable(tileMap, self.cell.pos, obj.cell.pos)
@@ -24,35 +26,38 @@ class Electronics(Object):
     def command(self, actor=None, dir=None, type=None):
         return self.interact(actor, dir, type)
 
+    def authorize(self, actor):
+        for item in actor.inventory:
+            if isinstance(item, Key) and item.tier == self.tier:
+                return True
+        return False
+
 
 class Router(Electronics):
     def __init__(self, cell=None, tier=0):
         Electronics.__init__(self, cell, char=0x1014)
 
-        self.tier = tier
+        self.tier = 4 + rd.randint(-1,1)
         self.connection = []
         self.agents = []
 
-    def authorize(self, actor):
-        for item in actor.inventory:
-            if isinstance(item, Key) and item.tier == self.tier:
-                Gui.pushMessage("Access granted")
-                return True
-        Gui.pushMessage("Access denied", COLOR['RED'])
-        return False
-
     def connect(self, tileMap, obj):
-        Wire.layCable(tileMap, self.cell.pos, obj.cell.pos)
         self.cell.grid.addObject(self)
-        self.connection.append(obj)
-        if hasattr(obj, 'connection'):
-            obj.connection.append(self)
         obj.cell.grid.addObject(obj)
+
+        if obj not in self.connection:
+            self.connection.append(obj)
+            Wire.layCable(tileMap, self.cell.pos, obj.cell.pos)
+        if hasattr(obj, 'connection') and not self in obj.connection:
+            obj.connection.append(self)
 
     def disconnect(self, obj):
         self.connection.remove(obj)
         if isinstance(obj, Terminal):
             obj.connection.remove(self)
+
+    def describe(self):
+        return self.__class__.__name__ + " ({:})".format(self.tier)
 
 
 class Terminal(Router):
@@ -72,19 +77,9 @@ class Terminal(Router):
             self.destroy()
             return 5
 
-        self.enter(actor)
+        elif self.authorize(actor):
+            self.enter(actor)
         return 3
-
-    def describe(self):
-        return "Terminal"
-
-    def authorize(self, actor):
-        for item in actor.inventory:
-            if isinstance(item, Key) and item.tier == self.tier:
-                Gui.pushMessage("Access granted")
-                return True
-        Gui.pushMessage("Access denied", COLOR['RED'])
-        return False
 
     def enter(self, actor):
         actor.agent = Agent(actor, self.cell)
@@ -129,8 +124,27 @@ class MasterSwitch(Electronics):
         pass
 
 
+class Camera(Router):
+    ANIMATION = [0x104C, 0x104C, 0x104D, 0x104E, 0x104E, 0x104F, 0x104F]
+
+    def __init__(self, cell=None):
+        Router.__init__(self, cell)
+
+        self.block = [False, False, False]
+
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            self.destroy()
+            return 5
+        return 5
+
+    def physics(self, map):
+        self.char = self.animation.next()
+
+
 class Server(Router):
     ANIMATION = [0x100C, 0x100D, 0x100E, 0x100F]
+    CONNECT = ['MasterSwitch', 'Outlet', 'Terminal', 'Rack', 'Camera']
 
     def __init__(self, cell=None):
         Router.__init__(self, cell)
@@ -140,8 +154,10 @@ class Server(Router):
     def physics(self, map):
         self.char = self.animation.next()
 
-    def describe(self):
-        return "Server"
+    def connectRoom(self, tileMap):
+        for cell in self.cell.room.getCells(tileMap):
+            for obj in filter(lambda obj: obj.__class__.__name__ in self.CONNECT, cell.object):
+                self.connect(tileMap, obj)
 
 
 class Rack(Electronics):

@@ -30,21 +30,9 @@ class Hall(Room):
                     map.tile[x][y].addObject(FlickerLamp())
 
     def carve(self, map):
-        self.updateCells(map)
-
-        # create a boundary wall
-        for cell in self.getCells(map):
-            if cell.wall is None:
-                cell.makeWall()
-
-        # carve basic rectangle
-        for x in range(self.x[MIN] + 1, self.x[MAX] - 1):
-            for y in range(self.y[MIN] + 1, self.y[MAX] - 1):
-                map.tile[x][y].removeWall()
-                map.tile[x][y].tier = self.tier
+        super(Hall, self).carve(map)
 
         offset = (2 * (self.center - self.pos) // 3).round().astype('int')
-
         for x in range(self.x[MIN] + 3, self.x[MAX] - 3):
             for y in range(self.y[MIN] + 3, self.y[MAX] - 3):
                 if (x - self.pos[X]) % offset[X] == 0 and (y - self.pos[Y]) % offset[Y] == 0:
