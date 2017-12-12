@@ -95,11 +95,11 @@ focus on:\\ \
             everyone is working for his goals. The more power, the more egocentric. And there's
             always a darker and more powerful force pulling the strings.
     \item \textbf{Ghost in the Shell}: A softer, more melancholic look on a mankind slowly forgetting it's
-            humanity. If you take your time meditate and listen, there's still some places of silent
+            humanity. If you take your time to meditate and listen, there's still some places of silent
             beauty between the towering slums.
     \item \textbf{Snow Crash}: Some aspects of the world always evolve beyond anything that parody could come
             up with. The church operating on corporate principles? The Mafia becoming a
-            well-established and respected brand? Pizza deliverators are treated as outlaws?
+            well-established and respected franchise? Pizza deliverators are treated as outlaws?
             It all sounds very stupid, but hasn't the last decade taught us, that economy and politics
             can bring nasty surprises that overshadow everything a cynical comedian could dream of?
 \end{itemize}
@@ -142,8 +142,8 @@ For the beginning, the main gameplay loop will be the typical heist trope. You s
 You get to the vault, with whatever means necessary. That first means careful exploration of the outer parts of the
 level, and and the preparing to penetrate into the inner high security zones.
 The tools you can find in the level are physical, like weapon prototypes, industrial tools or machines. But they can
-also be humans, that may be convinced or bribed to give you keys or information. Or you find your tools in the
-\textbf{GRID}, the virtual layer that meshes together all smart things in the facility. A parallel space to explore
+also be humans, which may be convinced or bribed to give you keys or information. Or you find your tools in the
+\textbf{GRID}, the virtual layer that meshes together all smart objects in the facility. A parallel space to explore
 and trigger repercussions into the meat world.
 However, the facility is aware of you. The more mess you make, the more lifes you take, the harder it will resist.
 Alarm levels will increase for every 'noisy' action you take, and security presence will become impregnable if you're
@@ -241,107 +241,79 @@ ASCII character set and still look atmospheric and readable.
 
 \newpage
 
-\section{Roadmap}
+\subsection{Worldbuilding and Writing}
 
-Here I will list some tasks that lend themselves to be offloaded to other contributors.
+\begin{figure*}
+    \center
+    \includegraphics[width=0.75\textwidth]{runner_world.pdf}
+    \caption{Rough schematic of the world.}
+    \label{fig:world}
+\end{figure*}
 
-\subsection{Graphics}
-\subsubsection*{Tileset} See Sec.~\ref{sec:art}. The points are roughly ordered by priority,
-Bold items are already finished.
-        \begin{itemize}
-            \item Objects (Furniture sized, in perspective):
-                \begin{enumerate}
-                    \item \textbf{Desk}: mainly to give cover and cast shadows.
-                    \item \textbf{Barrel}: filled with fluids.
-                    \item \textbf{Server}: man-sized blinking server rack.
-                    \item \textbf{Terminal}: interactive computer screen, maybe with the recognizable \url{ >_ } on it.
-                    \item Container: man-sized, pushable. for large storage halls.
-                    \item Locker: man-sized, for player to hide in.
-                    \item Hydroponics: for indoor farming. with tall plants in it to obstruct sight.
-                    \item Debris: two or three types for destroyed Walls, furniture and electronics.
-                \end{enumerate}
-            \item Items (Small, drawn on inventory Panel and when dropped.):
-                \begin{enumerate}
-                    \item Keycard (monochrome): generic, will be colorized for security levels
-                    \item Datadisk: like CD or flash drive
-                    \item Pistol: blocky, futuristic, Desert Eagle style
-                    \item Shotgun: also modern
-                    \item Grenade (monochrome): Generic, modern cylindric shape. There will be variants like Fog, Flashbang, EMP
-                    \item Canister (monochrome): fillable with fluids... like Fuel
-                    \item Clothing: To blend in, types: Labcoat, Security Uniform, Worker Jumpsuit
-                    \item Injector (monochrome): for drugs and medicine
-                \end{enumerate}
-            \item Effects (Tile filling, mostly in Background.):
-                \begin{enumerate}
-                    \item \textbf{Fire} (monochrome): Brightness depends on fire strength.
-                    \item \textbf{Fluid} (monochrome): Colored by type, like Fuel, Water, Blood.
-                    \item Cloud (monochrome): For Gases, Fog, Smoke. Can have transparency
-                    \item Slash: For attack animation.
-                \end{enumerate}
-            \item Actors:
-                \begin{enumerate}
-                    \item Guard: in Uniform
-                    \item Scientist: in Labcoat
-                    \item Worker: in Jumpsuit
-                    \item Punk: in Rags
-                \end{enumerate}
-            \item Wall and Floor tilesets
-                \begin{enumerate}
-                    \item \textbf{Industrial}: With bolts
-                    \item Ruin: like industrial, but crumbled
-                    \item Office Building: More detail and decoration
-                    \item Research Lab: Bright, sparse Detail
-                \end{enumerate}
-        \end{itemize}
+An important tool to transport atmosphere, especially in a lo-fi graphics game is writing.
+The in-game writing should generally favor expressive, handcrafted writing over
+procedural, information-driven text. However, as the facilities are completely built
+procedurally, the writing has to be flexible enough to be in some places adapted and
+sliced by algorithms.
 
-\subsubsection*{Load/Menu screens:} Maybe in REXpaint, Maybe in Pixel graphics. They should evoke the dark, eerily
-            silent atmosphere of Blade Runner and GITS. Motive ideas:
-    \begin{itemize}
-        \item Calm Cityscape
-        \item Hero on Motorcycle
-        \item Ruined, overgrown Arcology
-        \item Aircraft carrier settlement
+\begin{itemize}
+    \item \textbf{Loadscreens} These could contain concise but characterful descriptions of the
+        corporate you are breaking into and their role in the recent history of the world. They
+        can be used to motivate \textit{why} it is justified to break into their most valuable
+        places, i.e. because of the way they treat workers, environmental damage, or warmongering
+        political involvement.
+    \item \textbf{Mails and Wiki pages} These are very easy to place in the computers of the
+        GRID and can contain small flavourfull texts to set the general mood of the world.
+        They don't require much context, but also wont contribute much to the player's story and
+        typically are a bit technical.
+    \item \textbf{Character Dialogue} A very basic Dialogue system is already in place, it can be
+        used to explore background stories for NPCs. The stories would still be rather linear,
+        but give the player an interesting detail apart from the main task, giving some sense of
+        depth to the game world. This would also be the place for very moody, thoughtful pieces of
+        writing.\\
+        An interesting possibility would be a story told from two or three different points of view.
+        Distributed to several NPCs this might yield a further motivation for player exploration.\\
+        A method for adapting a predefinde story to the level would be to write it with placeholders
+        for characters and location in mind.
+\end{itemize}
+
+\subsubsection{Timeline}
+
+\begin{itemize}
+    \item \textbf{Founding of GRID Networking Technology:} Google, Amazon, Facebook merge into the de
+        facto monopoly of data services and force total commercialisation of the Internet. It is reborn
+        as the GRID, where privacy, limitless communication and free information access are a privilege
+        of the rich. Yet there is still a struggling resistance of dedicated, but permanently persecuted
+        hackers.
+    \item \textbf{The end of Nations:} The trust loss of the US government is unstoppable after decades
+        of bad presidency. Public unrests pinnacle in the historic votum of the government to disband itself. Few people
+        know, that this is the result of decades of clever lobby work and marionette placement by the
+        \textit{Big Seven} technology companies. The USA bursts into its constituent states and stands on the
+        brink of civil war.
+    \item \textbf{The big buyout:} The slowly brewing civil war is abruptly ended by a mindblowing barrage of
+        financial transactions: The Saudi buyout of the US Forces. This coup
+        turns the former Oil Sheikhs into the most powerful mercenary lords of all time. Their relentless
+        occupation of important ressources will trigger an economic boom in the middle east and finally
+        stabilize the eternal religious crises.
+    \item \textbf{Mutiny on USS America:} The only force resisting to the big buyout is the US admiral,
+        who -- with 10 Aircraft carriers and a considerable nuclear arsenal under his command -- refounds Sealand as
+        a frighteningly powerful military junta, soon to control transatlantic trade routes.
+    \item \textbf{A world without MAD:} After the rapid decay of the nation states, the big nuclear arsenals
+        are a thing of the past and find their way onto the free market. Without mutually assured destruction,
+        tactical nuclear become an occasional sight on the battlefields of corporate wars.
+    \item \textbf{Grexit, Spexit, Frexit...} Europe suffers a similar fate to the states and dissolves into
+        ever smaller privatized city states, yet in a more Peaceful manner. While Russia slowly descends into obscurity,
+        the Communist party of china seizes the opportunity to install marionette governments throughout
+        Europe and progresses towards a cultural merge through forced migration. Soon, the people's republic will be the
+        only superpower left to hold their ground against the \textit{Big Seven}.
+    \item \textbf{New Frontiers of pleasure} after decades of revising timelines and bussiness plans SpaceX manages
+        to establish a commercially viable transit connection to the moon. Elon musk spends the last year of his life
+        on the moon, griefing that he could not die on Mars. Luckily he doesn't live to see how the moon colony turns
+        into an exclusive, decadent playground for the Hyper-rich.
+    \item \textbf{At the brink of the singularity} China announces the construction of vast
+        data center landscapes in Siberia. The Communist party considers its final purpose the creation of the first
+        \textit{General Artificial Intelligence} to guide the collective economy of 3 billion people in its sphere of
+        influence to peace and prosperity.
     \end{itemize}
-
-\subsection{Systems and Programming}
-
-\subsubsection{Level Generation}
-\begin{itemize}
-    \item Enemy and Loot distribution System
-    \item Key puzzle solvability check
-\end{itemize}
-
-\subsubsection*{Gameplay}
-\begin{itemize}
-    \item Injury system
-    \item Network agent interaction
-    \item Equippable armor and disguises
-    \item Dialogue Windows
-\end{itemize}
-
-\subsubsection*{Controls}
-\begin{itemize}
-    \item remappable inventory keys
-    \item switchable map Layers
-\end{itemize}
-
-\subsubsection*{Sound Engine}
-\begin{itemize}
-    \item probably Pygame
-\end{itemize}
-
-\subsection{Worldbuilding}
-    \begin{itemize}
-        \item \textbf{Worldbuilding:} On a more abstract level, some narrative on the history this world has taken.
-                    Wars, Nations, Corporates, Crises... These texts would not make it into the game and wouldn't have to
-                    be too elaborate, but they would serve as point reference for ingame texts, to give them some coherence.
-                    Maybe also some new slang words.
-        \item \textbf{Corporate Descriptions:} Recent developments and ideology of the Corp you're breaking into, this would
-                    be shown on a loading screen and maybe referenced on the computer systems in the level. Ideally modular,
-                    so it can be handed out in small snippets or even randomized.
-        \item \textbf{Personal Backgrounds:} Small (often tragic) backstories for individual NPCs. Ideally also in small
-                    chunks, so they could be experienced in conversations with NPCs, and maybe include minor quest points.
-    \end{itemize}
-
 
 \end{document}

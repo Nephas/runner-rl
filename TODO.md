@@ -1,80 +1,62 @@
-Fog Object:
-    + Spawn adjacent Fog Objects
-    + Decay timer
-    + block LOS or dim light
+**Roadmap -- Graphics**
 
-Dialogue Trees:
-    + write to Message log
-    + attached to AI state
-    + can change AI state
+Tileset
 
-Corporate Generator:
-    + Names:
-        * Tyrell
-        * Weyland
-        * Yutani
-        * Thyssen
-        * Yamaha
-        * Intel
-        * Exxon
-    + Sectors:
-        1. Aerospace
-        2. Defense
-        3. Bio-Tech
-        4. Medicare
-        5. Nutrition
-        6. Electronics
-        7. Robotics
-        8. Data Services
-        9. Logistics
-    + Places:
-        * Server Farm: 1, 2, 3, 8
-        * Hangar: 1, 9
-        * Greenhouse: 3, 5
-        * Fish-tank: 5
-        * Reactor: 2
-        * Assembly Hall: 1, 2, 3, 6, 7
-        * Storage: 2, 6, 7, 9
-        * CEO Office: 1 - 9
-    + People:
-        * Business Man: 1, 2, 3, 8, 9
-        * Researcher: 1, 2, 3, 8
-        * Robot: 1, 2, 6, 7, 9
-        * Worker: 1, 2, 3, 5, 6, 7, 9
-        * Guard: 1 - 9
-        * Patient: 3, 4
-    + Tasks:
-        * Data
-        * Prototype
-        * Bounty
-        * Sabotage
+* Objects (Furniture sized, in perspective):
+  * Desk: mainly to give cover and cast shadows.
+  * Barrel: filled with fluids.
+  * Server: man-sized blinking server rack.
+  * Terminal: interactive computer screen, maybe with the recognizable \url{ >_ } on it.
+  * Container: man-sized, pushable. for large storage halls.
+  * Locker: man-sized, for player to hide in.
+  * Hydroponics: for indoor farming. with tall plants in it to obstruct sight.
+  * Debris: two or three types for destroyed Walls, furniture and electronics.
+* Items (Small, drawn on inventory Panel and when dropped.):
+  * Keycard (monochrome): generic, will be colorized for security levels
+  * Datadisk: like CD or flash drive
+  * Pistol: blocky, futuristic, Desert Eagle style
+  * Shotgun: also modern
+  * Grenade (monochrome): Generic, modern cylindric shape. There will be variants like Fog, Flashbang, EMP
+  * Canister (monochrome): fillable with fluids... like Fuel
+  * Clothing: To blend in, types: Labcoat, Security Uniform, Worker Jumpsuit
+  * Injector (monochrome): for drugs and medicine
+* Effects (Tile filling, mostly in Background.):
+  * Fire (monochrome): Brightness depends on fire strength.
+  * Fluid (monochrome): Colored by type, like Fuel, Water, Blood.
+  * Cloud (monochrome): For Gases, Fog, Smoke. Can have transparency
+  * Slash: For attack animation.
+* Actors:
+  * Guard: in Uniform
+  * Scientist: in Labcoat
+  * Worker: in Jumpsuit
+  * Punk: in Rags
+* Wall and Floor tilesets
+  * Industrial: With bolts
+  * Ruin: like industrial, but crumbled
+  * Office Building: More detail and decoration
+  * Research Lab: Bright, sparse Detail
 
-Player Class (Playstyle, Ideology):
-    * Judge     (Loud, Violent, Lawful)
-    * Cyberpunk (Silent, Peaceful, Anarchist)
-    * Hitman    (Silent, Violent, Pragmatic)
-    * Guerilla  (Silent, Violent, Anarchist)
-    * MAL(function) (Loud, Violent, ???)
-    * Mask      (Loud, Peaceful, Pragmatic)
+Load/Menu screens:
+* Calm Cityscape
+* Hero on Motorcycle
+* Ruined, overgrown Arcology
+* Aircraft carrier settlement
 
-Room
-    + Corridor
-    + Room
-        * Office
-        * Storage
-        * Surveillance
-        * Maintenance
-        * Lab
-    + Hall
-        * Assembly
-        * Storage
-        * Server Farm
-        * Fish farm
-    + Dome
-        * Reactor
-        * Incinerator
-        * Greenhouse
-    + Vault
-        * CEO Office
-        * Data Storage
-        * Prototype Storage
+
+**Roadmap -- Systems and Programming**
+
+* Level Generation
+  * Enemy and Loot distribution System
+  * Key puzzle solvability check
+* Gameplay
+  * Injury system
+  * Network agent interaction
+  * Equippable armor and disguises
+  * Dialogue Windows
+
+* Controls
+  * remappable inventory keys
+  * switchable map Layers
+
+* Sound Engine
+  * probably Pygame
