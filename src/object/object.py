@@ -57,7 +57,7 @@ class Object(object):
         return 0
 
     def describe(self):
-        return "something"
+        return self.__class__.__name__
 
     def physics(self, map):
         pass

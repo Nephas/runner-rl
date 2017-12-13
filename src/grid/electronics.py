@@ -83,7 +83,7 @@ class Terminal(Router):
 
     def enter(self, actor):
         actor.agent = Agent(actor, self.cell)
-        actor.main.render.mapPanel.layer = 'GRID'
+        actor.main.panel['MAP'].layer = 'GRID'
 
     def physics(self, map):
         self.char = self.animation.next()

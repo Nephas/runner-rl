@@ -15,7 +15,7 @@ class Vent(Object):
         Object.__init__(self, cell, char=rd.choice(
             [0x1022, 0x1023]), color=COLOR['WHITE'])
 
-        self.block = [False, True, False]
+        self.block = [False, True, True]
 
     def interact(self, actor=None, dir=None, type=None):
         if type is 'ATTACK':
@@ -28,6 +28,29 @@ class Vent(Object):
 
     def physics(self, map):
         self.char = self.animation.next()
+
+
+class Ladder(Object):
+    def __init__(self, cell=None):
+        Object.__init__(self, cell, char=0x1012, color=COLOR['WHITE'])
+
+        self.block = [False, False, True]
+
+    def interact(self, actor=None, dir=None, type=None):
+        if type is 'ATTACK':
+            return 0
+        else:
+            self.leave(actor)
+            return 0
+
+    def leave(self, actor):
+        main = actor.main
+        actor.cell.object.remove(actor)
+
+        main.actor.remove(actor)
+        main.panel.pop('MESSAGE')
+        main.panel.update(main.render.getExitPanel(main))
+        main.panel['EXIT'].message = 'You exit the facility.'
 
 
 class Outlet(Electronics):
@@ -44,9 +67,6 @@ class Outlet(Electronics):
         self.content = Fog(amount=1)
 
     def interact(self, actor=None, dir=None, type=None):
-        # if type is 'ATTACK':
-        #     self.destroy()
-        #     return 5
         if type is 'USE':
             self.toggle()
             return 5
@@ -56,9 +76,6 @@ class Outlet(Electronics):
     def toggle(self):
         self.open = not self.open
         self.char = self.CHAR[self.open]
-
-    def describe(self):
-        return "Vent"
 
     def physics(self, map):
         if self.open:

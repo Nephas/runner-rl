@@ -118,7 +118,7 @@ class Player(Actor):
     def moveDir(self, dir):
         targetPos = self.cell.pos + dir
         if self.moveTo(targetPos):
-            self.main.render.mapPanel.moveOffset(dir)
+            self.main.panel['MAP'].moveOffset(dir)
             return np.abs(dir[X]) + np.abs(dir[Y])
         else:
             return self.interactWith(self.main.map, dir)
@@ -133,6 +133,14 @@ class Player(Actor):
 
     def describe(self):
         return "You"
+
+    def die(self):
+        super(Player, self).die()
+
+        self.main.panel.pop('MESSAGE')
+        self.main.panel.update(self.main.render.getExitPanel(self.main))
+        self.main.panel['EXIT'].message = 'Your world darkens.'
+#        self.main.menu()
 
 
 class Corpse(Object):

@@ -279,6 +279,10 @@ class Wall:
                 'UP_RIGHT': 0x10C8,
                 'DOWN_LEFT': 0x10BB,
                 'DOWN_RIGHT': 0x10C9,
+                'OUT_UP_LEFT': 0x10BA,
+                'OUT_UP_RIGHT': 0x10B8,
+                'OUT_DOWN_LEFT': 0x10D8,
+                'OUT_DOWN_RIGHT': 0x10D9,
                 'UP': 0x10CB,
                 'DOWN': 0x10CA,
                 'LEFT': 0x10CC,
@@ -308,11 +312,15 @@ class Wall:
                 surfaceString = 'LEFT'
 
         if len(floorCells) == 2:
-            surfaceDir = floorCells[0].pos - cell.pos
-            if surfaceDir[Y] == 1:
-                surfaceString = 'CENTER'
-            elif surfaceDir[Y] == 0:
-                surfaceString = 'CENTER'
+            surfaceDir = (floorCells[0].pos - cell.pos) + (floorCells[1].pos - cell.pos)
+            if all(surfaceDir ==  np.array([1,1])):
+                surfaceString = 'OUT_UP_LEFT'
+            elif all(surfaceDir ==  np.array([-1,1])):
+                surfaceString = 'OUT_UP_RIGHT'
+            elif all(surfaceDir ==  np.array([-1,-1])):
+                surfaceString = 'OUT_DOWN_RIGHT'
+            elif all(surfaceDir ==  np.array([1,-1])):
+                surfaceString = 'OUT_DOWN_LEFT'
 
         else:
             floorCells = filter(lambda c: not (c.wall or c.hasDoor()), cell.getNeighborhood('LARGE'))

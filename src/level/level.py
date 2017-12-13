@@ -17,7 +17,7 @@ from src.level.room.dome import Dome
 
 from src.grid.electronics import Terminal, Server, MasterSwitch
 from src.object.light import Lamp, DoorLamp
-from src.object.door import Vent, SecDoor
+from src.object.door import Vent, SecDoor, Ladder
 
 from src.render.render import Render
 from src.actor.actor import Player
@@ -92,8 +92,8 @@ class Level(Map):
             return
 
         stats = {'ROOMS': -1, 'VENTS': -1, 'CORRIDORS': -1, 'AREA': -1}
-#        while stats['VENTS'] < 10 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
-        while stats['VENTS'] < 5 or stats['ROOMS'] < 10 or stats['CORRIDORS'] < 3 or stats['AREA'] < 2000:
+        while stats['VENTS'] < 10 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
+#        while stats['VENTS'] < 5 or stats['ROOMS'] < 10 or stats['CORRIDORS'] < 3 or stats['AREA'] < 2000:
 
             self.clear()
             self.generateStart()
@@ -163,10 +163,13 @@ class Level(Map):
 
     def finalize(self):
         self.forbidden = []
-        self.smoothWalls(2)
 
         for room in self.getRooms():
             room.carve(self)
+
+        self.smoothWalls(2)
+
+        for room in self.getRooms():
             room.updateCells(self)
             room.generateContent(self)
 
@@ -188,8 +191,10 @@ class Level(Map):
 
         exRooms = filter(lambda r: r.function is None, self.tier[-1])
         rd.shuffle(exRooms)
-        for i in range(3):
-            exRooms.pop().function = "extraction"
+        for room in exRooms[0:3]:
+#            room = exRooms.pop()
+            room.function = "extraction"
+            room.placeAtWall(self, Ladder())
 
         Render.printImage(self, "gif/levelgen99.bmp")
 

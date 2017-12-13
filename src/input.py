@@ -18,10 +18,10 @@ class Input:
     KEYMAP = coll.OrderedDict([
         (term.TK_ESCAPE, ('toggleQuit', None, "Quit game")),
         (term.TK_SPACE,  ('useItem', 0, "Use item slot")),
-        (term.TK_TAB, ('toggleSlow', None, "Pause Game")),
+#        (term.TK_TAB, ('toggleSlow', None, "Pause Game")),
         (term.TK_P, ('togglePause', None, "Pause Game")),
         (term.TK_T, ('toggleDebug', None, "Enter debug console")),
-        (term.TK_M, ('cycleMap', None, "Cycle Map modes")),
+        (term.TK_TAB, ('cycleMap', None, "Cycle Map modes")),
         ('TEXT_h', ('cycleHelp', None, "Show help window")),
         (term.TK_UP,     ('moveMap', 'UP', "Move map")),
         (term.TK_DOWN,   ('moveMap', 'DOWN', "Move map")),
@@ -79,32 +79,32 @@ class Input:
         self.help = (self.help + 1) % 8
 
     def cycleMap(self, qualifier=None):
-        self.main.render.mapPanel.cycleLayer()
+        self.main.panel['MAP'].cycleLayer()
 
     def playerAttack(self, qualifier=None):
         self.main.player.actions = [{'TYPE': 'ATTACK',
-                                     'DIR': self.main.render.mapPanel.cursorDir,
-                                     'TARGET': self.main.render.mapPanel.cursorPos}]
+                                     'DIR': self.main.panel['MAP'].cursorDir,
+                                     'TARGET': self.main.panel['MAP'].cursorPos}]
 
     def movePlayer(self, direction):
         self.main.player.actions = [
             {'TYPE': 'MOVE', 'DIR': Input.MOVEMAP[direction]}]
-        self.main.render.mapPanel.cursorDir = Input.MOVEMAP[direction]
+        self.main.panel['MAP'].cursorDir = Input.MOVEMAP[direction]
 
     def moveMap(self, direction):
-        self.main.render.mapPanel.moveOffset(3 * Input.MOVEMAP[direction])
+        self.main.panel['MAP'].moveOffset(3 * Input.MOVEMAP[direction])
 
     def useItem(self, index):
         if index < len(self.main.player.inventory):
             self.main.player.actions = [{'TYPE': 'ITEM',
-                                         'INDEX': index + self.main.render.inventoryPanel.inventoryOffset,
-                                         'DIR': self.main.render.mapPanel.cursorDir,
-                                         'TARGET': self.main.render.mapPanel.cursorPos}]
+                                         'INDEX': index + self.main.panel['INVENTORY'].inventoryOffset,
+                                         'DIR': self.main.panel['MAP'].cursorDir,
+                                         'TARGET': self.main.panel['MAP'].cursorPos}]
 
     def dialogChoice(self, index):
         self.main.player.actions = [{'TYPE': 'TALK',
                                      'INDEX': index,
-                                     'DIR': self.main.render.mapPanel.cursorDir,
+                                     'DIR': self.main.panel['MAP'].cursorDir,
                                      'TARGET': self.main.player.ai.mind['TARGET']}]
 
     def handleMouse(self, event=None):

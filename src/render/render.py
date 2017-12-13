@@ -7,7 +7,7 @@ import time as t
 
 from bearlibterminal import terminal as term
 
-from src.render.panel import MapPanel, InfoPanel, InventoryPanel, MessagePanel, Panel
+from src.render.panel import MapPanel, InfoPanel, InventoryPanel, MessagePanel, MenuPanel, ExitPanel
 
 
 class Render:  # a rectangle on the map. used to characterize a room.
@@ -15,9 +15,10 @@ class Render:  # a rectangle on the map. used to characterize a room.
     TILES = 'exp_24x24.png'
     FONT = 'font_12x24.png'
     LOADSCREEN = 'load_1364x768.png'
+    TITLE = 'title.png'
     LOGO = 'graphics/logo.txt'
 
-    SCREEN = np.array([110, 30])  # [WIDTH, HEIGHT]
+    SCREEN = np.array([110, 25])  # [WIDTH, HEIGHT]
     SEPARATOR = (3. / 4. * SCREEN).astype('int')
     MAPINSET = np.array([2, 1])
 
@@ -34,38 +35,32 @@ class Render:  # a rectangle on the map. used to characterize a room.
                  ", size=24x24, spacing=2x1, align=center")
         term.set("0x2000: " + Render.GRAPHICSPATH + Render.LOADSCREEN +
                  ", size=1364x768, align=top-left")
-        term.refresh()
+        term.set("0x3000: " + Render.GRAPHICSPATH + Render.TITLE +
+                 ", size=800x285, align=center")
 
         term.composition(True)
+        term.refresh()
 
-        self.mapPanel = MapPanel(self.main,
-                                 self.MAPINSET, *(self.SEPARATOR - np.array([4, 2])))
-        self.infoPanel = InfoPanel(self.main,
-                                   self.SEPARATOR, *(self.SCREEN - self.SEPARATOR - np.array([2, 1])))
-        self.inventoryPanel = InventoryPanel(self.main,
-                                             [self.SEPARATOR[X], 1], self.SCREEN[X] - self.SEPARATOR[X] - 2, self.SEPARATOR[Y] - 2)
-        self.messagePanel = MessagePanel(self.main, [self.MAPINSET[X], self.SEPARATOR[Y]],
-                                         self.SEPARATOR[X] - 4, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)
-        self.helpPanel = Panel(self.main,
-                               self.MAPINSET, self.SEPARATOR[X] - 3, self.SCREEN[Y] - 2)
+    def getMenuPanel(self, main):
+        return {'MENU': MenuPanel(main, self.MAPINSET, *self.SCREEN - 2*self.MAPINSET)}
 
-        self.main.panel = {'MAP': self.mapPanel,
-                           'INFO': self.infoPanel,
-                           'INVENTORY': self.inventoryPanel,
-                           'MESSAGE': self.messagePanel}
+    def getGamePanels(self, main):
+        return {'MAP': MapPanel(main, self.MAPINSET, *(self.SEPARATOR - np.array([4, 2]))),
+                'INFO': InfoPanel(main, self.SEPARATOR, *(self.SCREEN - self.SEPARATOR - np.array([2, 1]))),
+                'INVENTORY': InventoryPanel(main, [self.SEPARATOR[X], 1], self.SCREEN[X] - self.SEPARATOR[X] - 2, self.SEPARATOR[Y] - 2),
+                'MESSAGE': MessagePanel(main, [self.MAPINSET[X], self.SEPARATOR[Y]], self.SEPARATOR[X] - 4, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)}
 
-        self.renderStart()
+    def getExitPanel(self, main):
+        return {'EXIT': ExitPanel(main, [self.MAPINSET[X], self.SEPARATOR[Y]], self.SEPARATOR[X] - 4, self.SCREEN[Y] - self.SEPARATOR[Y] - 1)}
 
-    def renderStart(self):
+    def renderMenu(self):
         term.bkcolor(term.color_from_argb(255, 25, 25, 25))
         term.clear()
 
-        term.color(term.color_from_argb(255, *COLOR['WHITE']))
-        term.layer(255)
-        term.put(0, 0, 0x2000)
+        self.main.panel['MENU'].render()
         term.refresh()
 
-    def renderAll(self, map):
+    def renderGame(self, map):
         term.bkcolor(term.color_from_argb(255, 25, 25, 25))
         term.clear()
 

@@ -6,7 +6,7 @@ from src.actor.ai import AI
 import itertools as it
 
 
-class Rectangle:  # a rectangle on the map. used to characterize a room or a window
+class Rectangle(object):  # a rectangle on the map. used to characterize a room or a window
     def __init__(self, pos, w, h):
         self.pos = np.array(pos)
         self.size = np.array([w, h])
@@ -32,10 +32,6 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
             positions.append([self.x[MAX] - 1, y])
         return positions
 
-    def drawFrame(self, map, color):
-        for pos in self.border():
-            map.getTile().bg = color
-
     def getPositions(self):
         for x in range(self.x[MIN], self.x[MAX]):
             for y in range(self.y[MIN], self.y[MAX]):
@@ -46,45 +42,63 @@ class Rectangle:  # a rectangle on the map. used to characterize a room or a win
             for y in range(max(0, self.y[MIN]), min(self.y[MAX], map.HEIGHT)):
                 yield map.tile[x][y]
 
-    def getObjects(self, map):
-        for x in range(self.x[MIN], self.x[MAX]):
-            for y in range(self.y[MIN], self.y[MAX]):
-                for obj in map.tile[x][y].object:
-                    yield obj
 
+class Button(Rectangle):
+    def __init__(self, pos, w, h, text='Button', function=None):
+        w = max(len(text), w)
+        Rectangle.__init__(self, pos, w, h)
 
-class Panel(object):
-    def __init__(self, main, pos, w, h, layer=0):
-        self.main = main
-        self.pos = np.array(pos)
-        self.size = np.array([w, h])
-        self.x = [pos[X], pos[X] + w]
-        self.y = [pos[Y], pos[Y] + h]
-        self.center = (self.pos + self.size / 2).round().astype('int')
-        self.layer = layer
         self.cursor = False
+        self.text = text
+        self.handleClick = function
+
+    def printString(self, string, color=COLOR['WHITE']):
+        term.color(term.color_from_argb(255, *color))
+        term.printf(self.pos[X], self.pos[Y], string)
+
+    def render(self):
+        if self.cursor:
+            color = COLOR['GRAY']
+        else:
+            color = COLOR['DARKGRAY']
+
+        term.layer(19)
+        self.printString(len(self.text) * '#', color)
+
+        term.layer(20)
+        self.printString(self.text)
 
     def updateCursor(self, pos):
         self.cursor = self.contains(pos)
+
+    def handleClick(self):
+        pass
+
+
+class Panel(Rectangle):
+    def __init__(self, main, pos, w, h, layer=0):
+        Rectangle.__init__(self, pos, w, h)
+
+        self.main = main
+        self.layer = layer
+        self.cursor = False
+        self.button = []
+
+    def describe(self):
+        return self.__class__.__name__
+
+    def updateCursor(self, pos):
+        self.cursor = self.contains(pos)
+        for button in self.button:
+            button.updateCursor(pos)
 
     def handleScroll(self, offset=0):
         pass
 
     def handleClick(self, event=0):
-        pass
-
-    def contains(self, pos):
-        return pos[X] in range(*self.x) and pos[Y] in range(*self.y)
-
-    def border(self):
-        positions = []
-        for x in range(self.x[MIN], self.x[MAX]):
-            positions.append([x, self.y[MIN]])
-            positions.append([x, self.y[MAX] - 1])
-        for y in range(self.y[MIN], self.y[MAX]):
-            positions.append([self.x[MIN], y])
-            positions.append([self.x[MAX] - 1, y])
-        return positions
+        for button in self.button:
+            if button.cursor:
+                button.handleClick()
 
     def bracket(self):
         positions = []
@@ -119,6 +133,11 @@ class Panel(object):
             for pos in self.bracket():
                 term.put(pos[X], pos[Y], 0x10FA)
 
+        self.printString(np.array([2, -1]), "=== {:} ===".format(self.describe()))
+
+        for button in self.button:
+            button.render()
+
 
 class MapPanel(Panel):
     SCALE = np.array([2, 1])
@@ -149,10 +168,10 @@ class MapPanel(Panel):
         elif self.layer is 'GRID':
             if button is 'LEFT' and len(self.main.player.actions) < 2:
                 self.main.player.agent.actions = [{'TYPE': 'MOVE',
-                                                   'TARGET': self.main.render.mapPanel.cursorPos}]
+                                                   'TARGET': self.cursorPos}]
             elif button is 'RIGHT' and len(self.main.player.actions) < 2:
                 self.main.player.agent.actions = [{'TYPE': 'USE',
-                                                   'TARGET': self.main.render.mapPanel.cursorPos}]
+                                                   'TARGET': self.cursorPos}]
 
     def handleScroll(self, off):
         if term.check(term.TK_SHIFT):
@@ -162,7 +181,10 @@ class MapPanel(Panel):
         self.moveOffset(offset)
 
     def cycleLayer(self):
-        self.layer = self.LAYER.next()
+        nextLayer = self.LAYER.next()
+        if nextLayer is self.layer:
+            nextLayer = self.LAYER.next()
+        self.layer = nextLayer
         self.updateRender()
 
     def updateRender(self):
@@ -199,10 +221,12 @@ class MapPanel(Panel):
         connected = []
         route = []
         if player.agent is not None:
-            connected = [obj.cell.pos for obj in player.agent.grid.object[0].connection]
+            connected = [
+                obj.cell.pos for obj in player.agent.grid.object[0].connection]
             route = player.agent.route
 
-        self.draw(player.cell, self.SCALE * (player.cell.pos - self.mapOffset) + self.pos)
+        self.draw(player.cell, self.SCALE *
+                  (player.cell.pos - self.mapOffset) + self.pos)
 
         for cell in self.camera.getCells(self.map):
             self.draw(cell.grid, self.SCALE *
@@ -230,6 +254,8 @@ class MapPanel(Panel):
             i += 1
 
     def highlight(self, panelPos, color=COLOR['WHITE']):
+        if not self.contains(panelPos):
+            return
         term.layer(3)
         term.color(term.color_from_argb(255, *color))
         term.put(panelPos[X], panelPos[Y], 0x1020)
@@ -253,10 +279,6 @@ class MapPanel(Panel):
         (panelX, panelY) = self.size
         self.camera = Rectangle(self.mapOffset, panelX // 2, panelY)
         self.updateRender()
-
-    # def updateRender(self, map):
-    #     for cell in self.camera.getCells(map):
-    #         cell.updateRender()
 
 
 class InfoPanel(Panel):
@@ -288,14 +310,15 @@ class InfoPanel(Panel):
         for i in range(int(float(self.main.player.cell.light) / MAX_LIGHT * 6)):
             self.printChar(np.array([7 + 2 * i, row]), 0x1007)
 
-        mapPanel = self.main.render.mapPanel
+        mapPanel = self.main.panel['MAP']
 
         row = 3
 
         if self.main.map.contains(mapPanel.cursorPos):
             cursorTile = self.main.map.getTile(mapPanel.cursorPos)
             if cursorTile.room is not None:
-                self.printString(np.array([1, row]), cursorTile.room.describe())
+                self.printString(np.array([1, row]),
+                                 cursorTile.room.describe())
 
                 row = 4
 
@@ -377,3 +400,52 @@ class InventoryPanel(Panel):
     def handleScroll(self, offset):
         self.inventoryOffset += offset
         self.inventoryOffset = max(0, self.inventoryOffset)
+
+
+class MenuPanel(Panel):
+    ANIMATION = it.cycle([0x3000, 0x3001, 0x3002, 0x3003,
+                          0x3004, 0x3005, 0x3006, 0x3007, 0x3008, 0x3009])
+
+    def __init__(self, main, pos, w, h, layer=0):
+        Panel.__init__(self, main, pos, w, h, layer=0)
+
+        self.picture = self.ANIMATION.next()
+        self.frame = 0
+        self.button = [Button(self.pos + np.array([2, 2]), 5, 1, "Click to proceed", self.generate),
+                       Button(self.pos + np.array([2, 4]), 5, 1, "Quit", self.quit)]
+
+    def render(self):
+        self.frame += 1
+        if self.frame % 5 == 0:
+            self.animate()
+        term.layer(1)
+        term.put(self.center[X], self.center[Y], self.picture)
+        super(MenuPanel, self).render()
+
+    def animate(self):
+        self.picture = MenuPanel.ANIMATION.next()
+
+    def generate(self):
+        self.main.initialize()
+        self.main.run()
+
+    def quit(self):
+        self.main.input.quit = True
+
+
+class ExitPanel(Panel):
+    def __init__(self, main, pos, w, h, layer=0):
+        Panel.__init__(self, main, pos, w, h, layer=0)
+
+        self.message = 'Exit'
+        self.button = [Button(self.pos + np.array([2, 3]),
+                              5, 1, "Main Menu", self.reset)]
+
+    def render(self):
+        super(ExitPanel, self).render()
+
+        self.printString(np.array([2, 2]), self.message)
+
+    def reset(self):
+        self.main.reset()
+        self.main.menu()

@@ -13,6 +13,7 @@ import random as rd
 
 from bearlibterminal import terminal as term
 
+
 class Game:
     LIMIT_FPS = 20
     TIC_SEC = 10
@@ -32,28 +33,47 @@ class Game:
         self.lastTic = t.time()
         self.tic = 0
 
+    def reset(self):
+        self.panel = {}
+        self.actor = []
+        self.agent = []
+
+        self.map = Level(self)
+        self.player = Player(None, self)
+        self.render = Render(self)
+        self.input = Input(self)
+
+        self.lastTic = t.time()
+        self.tic = 0
+
     def initialize(self):
         self.actor = [self.player]
-
-        pg.init()
-        self.render.renderStart()
-
-        # self.sound = {'SHOT': pg.mixer.Sound('sounds/shot.wav'),
-        #               'EXPLOSION': pg.mixer.Sound('sounds/explosion.wav'),
-        #               'DOOR': pg.mixer.Sound('sounds/door.wav'),
-        #               'PUNCH': pg.mixer.Sound('sounds/punch.wav'),
-        #               'STEP': pg.mixer.Sound('sounds/step.wav')}
+        self.panel = self.render.getGamePanels(self)
 
         self.map.load(random=True)
 
-        self.render.mapPanel.moveOffset(self.player.cell.pos - (self.render.SEPARATOR // 4))
-        self.render.mapPanel.updateCursor()
+        self.panel['MAP'].moveOffset(self.player.cell.pos - (self.render.SEPARATOR // 4))
+        self.panel['MAP'].updateCursor()
+        self.panel['MAP'].layer = 'MAP'
 
         self.map.updatePhysics()
+        self.run()
 
-    def changeSpeed(self, tics=10):
-        self.TIC_SEC = tics
-        self.TIC_SIZE = 1. / tics
+    def menu(self):
+        self.input.debug = False
+        self.input.quit = False
+
+        self.panel = self.render.getMenuPanel(self)
+
+        while True:
+            if self.input.quit:
+                term.close()
+                sys.exit()
+            if self.input.debug:
+                break
+            if t.time() >= self.FRAME_LENGTH + self.lastTic:
+                self.render.renderMenu()
+                self.input.handleEvents()
 
     def run(self):
         self.input.debug = False
@@ -72,15 +92,14 @@ class Game:
                     for agent in self.agent:
                         agent.act(self.map)
                     self.map.updatePhysics()
-                    self.render.mapPanel.updateRender()
+                    self.panel['MAP'].updateRender()
 
                     self.tic += 1
                     self.lastTic = t.time()
             if t.time() >= self.FRAME_LENGTH + self.lastTic:
-                self.render.renderAll(self.map)
+                self.render.renderGame(self.map)
                 self.input.handleEvents()
 
 
 game = Game()
-game.initialize()
-game.run()
+game.menu()

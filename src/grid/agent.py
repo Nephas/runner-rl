@@ -26,7 +26,7 @@ class Agent(object):
         self.actor.main.agent.remove(self)
         self.actor.agent = None
         self.grid.agent.remove(self)
-        self.actor.main.render.mapPanel.layer = 'MAP'
+        self.actor.main.panel['MAP'].layer = 'MAP'
 
     def moveTo(self, newGrid):
         if newGrid.object == [] or not hasattr(newGrid.object[0], 'connection'):
