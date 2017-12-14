@@ -17,7 +17,7 @@ class Input:
     # [function, qualifier, help string]
     KEYMAP = coll.OrderedDict([
         (term.TK_ESCAPE, ('toggleQuit', None, "Quit game")),
-        (term.TK_SPACE,  ('useItem', 0, "Use item slot")),
+        (term.TK_SPACE,  ('hotkey', '_', "Use item slot")),
 #        (term.TK_TAB, ('toggleSlow', None, "Pause Game")),
         (term.TK_P, ('togglePause', None, "Pause Game")),
         (term.TK_T, ('toggleDebug', None, "Enter debug console")),
@@ -32,10 +32,10 @@ class Input:
         (term.TK_A, ('movePlayer', 'LEFT', "Player Movement")),
         (term.TK_D, ('movePlayer', 'RIGHT', "Player Movement")),
         ('TEXT_r', ('restart', None, "Reload Level")),
-        (term.TK_1, ('useItem', 1, "Answer Dialogue")),
-        (term.TK_2, ('useItem', 2, "Answer Dialogue")),
-        (term.TK_3, ('useItem', 3, "Answer Dialogue")),
-        (term.TK_4, ('useItem', 4, "Answer Dialogue"))])
+        (term.TK_1, ('hotkey', '1', "Answer Dialogue")),
+        (term.TK_2, ('hotkey', '2', "Answer Dialogue")),
+        (term.TK_3, ('hotkey', '3', "Answer Dialogue")),
+        (term.TK_4, ('hotkey', '4', "Answer Dialogue"))])
 
     def __init__(self, main):
         self.main = main
@@ -44,6 +44,8 @@ class Input:
         self.pause = False
         self.slow = False
         self.help = 0
+        self.activePanel = None
+        self.activeButton = None
 
         term.set("input: filter=[keyboard,mouse];")
 
@@ -61,6 +63,19 @@ class Input:
 
     def handleKey(self, event):
         getattr(self, self.KEYMAP[event][0]).__call__(self.KEYMAP[event][1])
+
+    def hotkey(self, qualifier):
+        try:
+            if self.activePanel is self.main.panel['MAP']:
+                button = filter(lambda b: b.key is qualifier, self.main.panel['INVENTORY'].button)[0]
+                self.useItem(button.index)
+
+            if self.activePanel is self.main.panel['INVENTORY']:
+                for button in filter(lambda b: b.key is qualifier, self.main.panel['INVENTORY'].button):
+                    button.key = ''
+                self.activeButton.key = qualifier
+        except Exception:
+            pass
 
     def toggleQuit(self, qualifier=None):
         self.quit = not self.quit

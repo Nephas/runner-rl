@@ -15,7 +15,9 @@ class Object(object):
                 'Guard': 24,
                 'Grenade': 24,
                 'Obstacle': 16,
-                'Player': 32}
+                'Player': 32,
+                'Hydroponics': 36,
+                'Locker': 36}
 
     def __init__(self, cell=None, char=0x100A, color=COLOR['WHITE']):
         self.cell = cell

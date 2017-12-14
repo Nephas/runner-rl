@@ -15,11 +15,12 @@ class Corp:
              'Intel',
              'Exxon']
 
-    SECTORS = ['Aerospace',
-               'Defense',
-               'Nutrition',
-               'Robotics',
-               'Data Services']
+    SECTORS = ['Nutrition']
+              # ['Aerospace',
+              #  'Defense',
+              #  'Nutrition',
+              #  'Robotics',
+              #  'Data Services']
 
 #               'Arcology',
 #               'Ruin'

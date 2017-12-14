@@ -15,18 +15,19 @@ class Desk(Object):
 
         self.block = [True, False, True]
 
-    def describe(self):
-        return "Desk"
-
 
 class Hydroponics(Object):
+    ANIMATION = [0x105C, 0x105C, 0x105D,
+                 0x105D, 0x105E, 0x105E, 0x105F, 0x105F]
+
     def __init__(self, cell=None):
-        Object.__init__(self, cell, color=COLOR['GREEN'])
+        Object.__init__(self, cell, color=COLOR['WHITE'])
 
-        self.block = [False, True, True]
+        self.block = [False, True, False]
+        self.flammable = -1
 
-    def describe(self):
-        return "Hydroponics"
+    def physics(self, map):
+        self.char = self.animation.next()
 
 
 class Container(Object):

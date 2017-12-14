@@ -48,6 +48,7 @@ class Button(Rectangle):
         w = max(len(text), w)
         Rectangle.__init__(self, pos, w, h)
 
+        self.key = ' '
         self.cursor = False
         self.text = text
         self.handleClick = function
@@ -62,11 +63,15 @@ class Button(Rectangle):
         else:
             color = COLOR['DARKGRAY']
 
+        string = '  ' + self.text
+
         term.layer(19)
-        self.printString(len(self.text) * '#', color)
+        self.printString(len(string) * '#', color)
+        self.printString('#')
 
         term.layer(20)
-        self.printString(self.text)
+        self.printString(string)
+        self.printString(self.key, COLOR['BLACK'])
 
     def updateCursor(self, pos):
         self.cursor = self.contains(pos)
@@ -89,8 +94,13 @@ class Panel(Rectangle):
 
     def updateCursor(self, pos):
         self.cursor = self.contains(pos)
-        for button in self.button:
-            button.updateCursor(pos)
+        if self.cursor:
+            self.main.input.activePanel = self
+            for button in self.button:
+                button.updateCursor(pos)
+                if button.cursor:
+                    self.main.input.activeButton = button
+
 
     def handleScroll(self, offset=0):
         pass
@@ -363,10 +373,6 @@ class MessagePanel(Panel):
                     break
                 self.printString(np.array([1, pos]), line)
 
-#            pos += 1
-#            if pos >= self.size[Y] - 1:
-#                break
-
     def handleScroll(self, offset):
         self.messageOffset += offset
         self.messageOffset = max(0, self.messageOffset)
@@ -378,28 +384,21 @@ class InventoryPanel(Panel):
 
         self.player = main.player
         self.inventoryOffset = 0
+        self.inventoryLength = 0
+
+    def updateRender(self):
+        self.button = []
+        for i, item in enumerate(self.player.inventory[self.inventoryOffset:]):
+            self.button.append(Button(self.pos + np.array([2, 2 + i]), 5, 1, item.describe(), item.drop))
+            self.button[i].index = i
 
     def render(self):
         super(InventoryPanel, self).render()
 
-        for i, item in enumerate(self.player.inventory[self.inventoryOffset:]):
-            pos = i + 1
-            if pos >= self.size[Y] - 1:
-                break
-
-            if i == 0:
-                self.printString(np.array([1, pos]),
-                                 'SPACE: ' + item.describe(), item.fg)
-            elif i <= 4:
-                self.printString(
-                    np.array([1, pos]), '    {:}: '.format(i) + item.describe())
-            else:
-                self.printString(np.array([1, pos]),
-                                 '       ' + item.describe())
-
     def handleScroll(self, offset):
         self.inventoryOffset += offset
         self.inventoryOffset = max(0, self.inventoryOffset)
+        self.updateRender()
 
 
 class MenuPanel(Panel):
@@ -419,6 +418,7 @@ class MenuPanel(Panel):
         if self.frame % 5 == 0:
             self.animate()
         term.layer(1)
+        term.color(term.color_from_argb(255, *COLOR['WHITE']))        
         term.put(self.center[X], self.center[Y], self.picture)
         super(MenuPanel, self).render()
 
