@@ -2,6 +2,7 @@
 docs/
 src/*.pyc
 sounds/
+build/
 dist/
 music/
 gif/
@@ -9,3 +10,4 @@ art/
 graphics/
 *.aux
 *.log
+*.spec

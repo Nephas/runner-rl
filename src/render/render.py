@@ -33,8 +33,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
                  Render.FONT + ", size=12x24, codepage=437")
         term.set("0x1000: " + Render.GRAPHICSPATH + Render.TILES +
                  ", size=24x24, spacing=2x1, align=center")
-        term.set("0x2000: " + Render.GRAPHICSPATH + Render.LOADSCREEN +
-                 ", size=1364x768, align=top-left")
+#        term.set("0x2000: " + Render.GRAPHICSPATH + Render.LOADSCREEN +
+#                 ", size=1364x768, align=top-left")
         term.set("0x3000: " + Render.GRAPHICSPATH + Render.TITLE +
                  ", size=800x285, align=center")
 

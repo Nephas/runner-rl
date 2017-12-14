@@ -6,7 +6,6 @@ import random as rd
 import copy as cp
 import itertools as it
 import colorsys as cs
-import hashlib as hl
 
 from src.level.map import Map, Rectangle, Cell
 from src.level.corp import Corp
@@ -16,7 +15,7 @@ from src.level.room.hall import Hall, ServerFarm, GreenHouse, Storage
 from src.level.room.dome import Dome
 
 from src.grid.electronics import Terminal, Server, MasterSwitch
-from src.object.light import Lamp, DoorLamp
+from src.object.lamp import Lamp, DoorLamp
 from src.object.door import Vent, SecDoor, Ladder
 
 from src.render.render import Render
@@ -68,11 +67,10 @@ class Level(Map):
             for room in tier:
                 yield room
 
-    def load(self, seed='Test', random=False, debug=False):
+    def load(self, seed=1234, random=False, debug=False):
         self.clear()
 
         if not random:
-            seed = int(hl.sha1(seed).hexdigest(), 16) % (10 ** 8)
             rd.seed(seed)
             np.random.seed(seed)
 
@@ -311,7 +309,7 @@ class Level(Map):
             shape = rd.choice(shapes)
 
             # number of tries to find a valid child
-            for i in range(100):
+            for i in range(50):
                 direction = rd.choice(directions)
                 alignment = rd.choice([MIN, MAX])
 

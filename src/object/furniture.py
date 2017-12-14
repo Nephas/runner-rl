@@ -30,7 +30,7 @@ class Hydroponics(Object):
 
 
 class Container(Object):
-    def __init__(self, cell=None, char=0x1008, color=COLOR['WHITE'], content=None):
+    def __init__(self, cell=None, char=0x1017, color=COLOR['WHITE'], content=None):
         Object.__init__(self, cell, char, color)
 
         self.content = content

@@ -1,7 +1,7 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.grid.server import Electronics
+from src.grid.electronics import Electronics
 from src.object.item import Key
 from src.effect.effect import Fuel, Fog
 
