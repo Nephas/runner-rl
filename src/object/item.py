@@ -200,7 +200,6 @@ class Grenade(Explosive):
     def __init__(self, cell=None, carrier=None):
         Explosive.__init__(self, cell, carrier)
 
-        self.char = 235
         self.path = []
 
     def describe(self):
@@ -257,7 +256,7 @@ class Shotgun(Gun):
 
 class Key(Item):
     def __init__(self, cell=None, carrier=None, tier=0):
-        Item.__init__(self, cell, carrier)
+        Item.__init__(self, cell, carrier, char=0x102A)
 
         self.tier = tier
 

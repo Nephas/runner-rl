@@ -70,7 +70,7 @@ class Actor(Object):
     def interactWith(self, map, dir, type=None):
         tile = map.getTile(self.cell.pos + dir)
         if type is 'ATTACK':
-            tile.addEffect(Effect(char='X', time=2))
+            tile.addEffect(Effect(char=0x1025, time=1))
         if len(tile.object) > 0:
             return tile.object[0].interact(self, dir, type)
         return 0

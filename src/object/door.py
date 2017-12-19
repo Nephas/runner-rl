@@ -110,10 +110,11 @@ class Door(Electronics):
         if type is 'ATTACK':
             self.destroy()
             return 5
-        if self.closed:
-            self.open(actor)
-        else:
-            self.close(actor)
+        elif type is 'USE':
+            if self.closed:
+                self.open(actor)
+            else:
+                self.close(actor)
         return 3
 
     def describe(self):

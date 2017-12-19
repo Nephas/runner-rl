@@ -187,11 +187,21 @@ class AI:
 
     @staticmethod
     def pathToActions(path, target, interact=False):
-        actions = [{'TYPE': 'MOVE', 'DIR': path[i] - path[i - 1]}
-                   for i in range(1, len(path))]
+        if not interact:
+            actions = [{'TYPE': 'MOVE', 'DIR': path[i] - path[i - 1]}
+                       for i in range(1, len(path))]
+        elif interact:
+            actions = []
+            for i in range(1, len(path)):
+                if all(path[i] == target):
+                    actions.append({'TYPE': 'USE', 'DIR': path[i] - path[i - 1]})
+                    break
+                actions.append({'TYPE': 'MOVE', 'DIR': path[i] - path[i - 1]})
 
-        if interact:
-            actions.append({'TYPE': 'USE', 'DIR': target - path[-1]})
+#            path.pop()
+            # actions = [{'TYPE': 'MOVE', 'DIR': path[i] - path[i - 1]}
+            #             for i in range(1, len(path) - 1)]
+            # actions.append({'TYPE': 'USE', 'DIR': target - path[-2]})
         return actions
 
 
