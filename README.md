@@ -4,8 +4,11 @@
 
 *a Cyberpunk Roguelike of stealth, hacking and evil megacorps*
 
-There is a [Design Document](https://github.com/Nephas/runner-rl/blob/master/docs/design.pdf) to 
-outline the creative vision.
+Important Materials:
+
+* [Design Document](https://github.com/Nephas/runner-rl/blob/master/docs/design.pdf)
+* [Fiction Teaser](https://github.com/Nephas/runner-rl/blob/master/docs/shortstory1.pdf)
+* [Roadmap](https://github.com/Nephas/runner-rl/blob/master/TODO.md)
 
 At the moment there is mostly a 'physics engine' and a level generator:
 
