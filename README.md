@@ -10,6 +10,13 @@ Important Materials:
 * [Fiction Teaser](https://github.com/Nephas/runner-rl/blob/master/docs/shortstory1.pdf)
 * [Roadmap](https://github.com/Nephas/runner-rl/blob/master/TODO.md)
 
+Pre-pre-alpha, very not stable:
+No Balancing, no win state, random crashes. Consider it more of a tech demo.
+
+[Recent Build - linux 64bit](https://www.dropbox.com/sh/j2y4j3cbhl8xmsk/AAAhrOxCWBeJh5O1b-hxDkALa?dl=0&preview=linux_64.tar)
+
+
+
 At the moment there is mostly a 'physics engine' and a level generator:
 
 Level generation:
