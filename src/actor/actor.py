@@ -9,6 +9,7 @@ from src.actor.person import Person
 from src.actor.conversation import Conversation
 from src.actor.body import Body
 
+import numpy as np
 import random as rd
 
 

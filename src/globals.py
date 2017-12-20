@@ -1,6 +1,3 @@
-import numpy as np
-import time as t
-
 X = 0
 Y = 1
 
@@ -25,10 +22,6 @@ HEIGHT = 1
 
 MAX_LIGHT = 16
 BASE_LIGHT = 2
-
-
-def arr(*args):
-    return np.array(args)
 
 COLOR = {'BLACK': (0, 0, 0),
          'WHITE': (255, 255, 255),

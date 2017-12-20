@@ -4,8 +4,8 @@ from src.object.object import Object
 from src.effect.effect import Fog, Fluid, Fire, Fuel, Shot, Flash, Slash
 from src.actor.body import SlowMo
 
-import pygame as pg
 import random as rd
+import numpy as np
 
 
 class Item(Object):

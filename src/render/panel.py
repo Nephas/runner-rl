@@ -3,6 +3,7 @@ from bearlibterminal import terminal as term
 from src.globals import *
 from src.actor.ai import AI
 
+import numpy as np
 import itertools as it
 
 
@@ -418,7 +419,7 @@ class MenuPanel(Panel):
         if self.frame % 5 == 0:
             self.animate()
         term.layer(1)
-        term.color(term.color_from_argb(255, *COLOR['WHITE']))        
+        term.color(term.color_from_argb(255, *COLOR['WHITE']))
         term.put(self.center[X], self.center[Y], self.picture)
         super(MenuPanel, self).render()
 

@@ -1,5 +1,6 @@
 from src.globals import *
 
+import numpy as np
 import random as rd
 import copy as cp
 import itertools as it

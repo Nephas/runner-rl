@@ -1,6 +1,7 @@
 from src.globals import *
 
 import random as rd
+import numpy as np
 
 from src.render.geometry import Light
 

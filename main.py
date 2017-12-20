@@ -7,7 +7,6 @@ from src.render.render import Render
 from src.actor.actor import Player
 
 import sys
-import pygame as pg
 import time as t
 import random as rd
 

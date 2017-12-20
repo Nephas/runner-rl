@@ -2,6 +2,8 @@ from src.globals import *
 
 from src.grid.grid import Wire
 
+import numpy as np
+
 
 class Agent(object):
     def __init__(self, actor=None, cell=None, char=0x1040, color=COLOR['WHITE']):

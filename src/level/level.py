@@ -83,6 +83,8 @@ class Level(Map):
         self.generate(debug)
 
     def generate(self, debug=False):
+        outpath = "graphics/gif/"
+
         if debug:
             self.clear()
             self.generateStart()
@@ -90,7 +92,7 @@ class Level(Map):
             return
 
         stats = {'ROOMS': -1, 'VENTS': -1, 'CORRIDORS': -1, 'AREA': -1}
-        while stats['VENTS'] < 10 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
+        while stats['VENTS'] < 5 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
 #        while stats['VENTS'] < 5 or stats['ROOMS'] < 10 or stats['CORRIDORS'] < 3 or stats['AREA'] < 2000:
 
             self.clear()
@@ -102,6 +104,7 @@ class Level(Map):
             print(stats)
 
         self.finalize()
+        Render.printImage(self, outpath + "levelgen99.bmp")
 
     def generateStart(self):
         self.tier = [[]]
@@ -122,16 +125,18 @@ class Level(Map):
     def generateRooms(self):
         """Propagate every single room according to the N_CHILD and ROOM_SIZE specifications."""
         # recursively spread room
-        Render.printImage(self, "gif/levelgen{:02}.bmp".format(0))
+        outpath = "graphics/gif/"
+
+        Render.printImage(self, outpath + "levelgen{:02}.bmp".format(0))
 
         for i in range(1, len(self.corp.struct)):
-            Render.printImage(self, "gif/levelgen{:02}.bmp".format(i))
+            Render.printImage(self, outpath + "levelgen{:02}.bmp".format(i))
 
             self.tier.append([])
             for room in self.tier[i - 1]:
                 self.propagateRoom(room, i)
 
-        Render.printImage(self, "gif/levelgen90.bmp")
+        Render.printImage(self, outpath + "levelgen90.bmp")
 
         # remove deadends
         for tier in reversed(self.tier):
@@ -139,7 +144,7 @@ class Level(Map):
                 if room.__class__.__name__ is 'Corridor' and room.children == []:
                     room.fill(self)
                     tier.remove(room)
-        Render.printImage(self, "gif/levelgen91.bmp")
+        Render.printImage(self, outpath + "levelgen91.bmp")
 
     def generateVents(self):
         for pair in it.combinations(self.tier[-1] + self.tier[-2], 2):
@@ -190,11 +195,8 @@ class Level(Map):
         exRooms = filter(lambda r: r.function is None, self.tier[-1])
         rd.shuffle(exRooms)
         for room in exRooms[0:3]:
-#            room = exRooms.pop()
             room.function = "extraction"
             room.placeAtWall(self, Ladder())
-
-        Render.printImage(self, "gif/levelgen99.bmp")
 
     def smoothWalls(self, times=2):
         for i in range(times):
