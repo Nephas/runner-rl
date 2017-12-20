@@ -13,7 +13,7 @@ Important Materials:
 Pre-pre-alpha, very not stable:
 No Balancing, no win state, random crashes. Consider it more of a tech demo.
 
-[Recent Build](https://www.dropbox.com/sh/j2y4j3cbhl8xmsk/AAAhrOxCWBeJh5O1b-hxDkALa?dl=0)
+[Recent Build - linux 64bit](https://www.dropbox.com/sh/j2y4j3cbhl8xmsk/AAAhrOxCWBeJh5O1b-hxDkALa?dl=0&preview=linux_64.tar)
 
 
 
