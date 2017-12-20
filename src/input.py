@@ -17,7 +17,8 @@ class Input:
     # [function, qualifier, help string]
     KEYMAP = coll.OrderedDict([
         (term.TK_ESCAPE, ('toggleQuit', None, "Quit game")),
-        (term.TK_SPACE,  ('hotkey', '_', "Use item slot")),
+        (term.TK_SPACE,  ('hotkey', 'R', "Use item slot")),
+        (term.TK_CONTROL,  ('hotkey', 'L', "Use item slot")),
 #        (term.TK_TAB, ('toggleSlow', None, "Pause Game")),
         (term.TK_P, ('togglePause', None, "Pause Game")),
         (term.TK_T, ('toggleDebug', None, "Enter debug console")),
@@ -65,17 +66,22 @@ class Input:
         getattr(self, self.KEYMAP[event][0]).__call__(self.KEYMAP[event][1])
 
     def hotkey(self, qualifier):
-        try:
-            if self.activePanel is self.main.panel['MAP']:
-                button = filter(lambda b: b.key is qualifier, self.main.panel['INVENTORY'].button)[0]
-                self.useItem(button.index)
+        if self.activePanel is self.main.panel['MAP']:
+            if qualifier in ['L','R']:
+                index = self.main.player.inventory.index(self.main.panel['INVENTORY'].hand[qualifier])
+            else:
+                index = self.main.player.inventory.index(self.main.panel['INVENTORY'].belt[qualifier])
+#                self.main.player.cooldown += 3
+            self.useItem(index)
 
-            if self.activePanel is self.main.panel['INVENTORY']:
-                for button in filter(lambda b: b.key is qualifier, self.main.panel['INVENTORY'].button):
-                    button.key = ''
-                self.activeButton.key = qualifier
-        except Exception:
-            pass
+        if self.activePanel is self.main.panel['INVENTORY']:
+            for button in filter(lambda b: b.key is qualifier, self.main.panel['INVENTORY'].button):
+                button.key = ''
+            if qualifier in ['L','R']:
+                self.main.panel['INVENTORY'].hand[qualifier] = self.activeButton.link
+            else:
+                self.main.panel['INVENTORY'].belt[qualifier] = self.activeButton.link
+        self.main.panel['INVENTORY'].updateRender()
 
     def toggleQuit(self, qualifier=None):
         self.quit = not self.quit
@@ -112,7 +118,7 @@ class Input:
     def useItem(self, index):
         if index < len(self.main.player.inventory):
             self.main.player.actions = [{'TYPE': 'ITEM',
-                                         'INDEX': index + self.main.panel['INVENTORY'].inventoryOffset,
+                                         'INDEX': index,
                                          'DIR': self.main.panel['MAP'].cursorDir,
                                          'TARGET': self.main.panel['MAP'].cursorPos}]
 

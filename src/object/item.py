@@ -9,7 +9,7 @@ import numpy as np
 
 
 class Item(Object):
-    def __init__(self, cell=None, carrier=None, char=0x1024, color=COLOR['WHITE']):
+    def __init__(self, cell=None, carrier=None, char=0x102A, color=COLOR['WHITE']):
         Object.__init__(self, cell, char=char, color=color)
 
         self.carrier = carrier
@@ -18,6 +18,9 @@ class Item(Object):
         # Gui.pushMessage('You pickup ' + self.describe(), self.fg)
         self.take(actor)
         return 1
+
+    def get(self):
+        return self
 
     def destroy(self):
         pass

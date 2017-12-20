@@ -5,6 +5,7 @@ from src.actor.ai import AI
 
 import numpy as np
 import itertools as it
+import collections as coll
 
 
 class Rectangle(object):  # a rectangle on the map. used to characterize a room or a window
@@ -50,6 +51,7 @@ class Button(Rectangle):
         Rectangle.__init__(self, pos, w, h)
 
         self.key = ' '
+        self.link = None
         self.cursor = False
         self.text = text
         self.handleClick = function
@@ -102,7 +104,6 @@ class Panel(Rectangle):
                 if button.cursor:
                     self.main.input.activeButton = button
 
-
     def handleScroll(self, offset=0):
         pass
 
@@ -144,7 +145,8 @@ class Panel(Rectangle):
             for pos in self.bracket():
                 term.put(pos[X], pos[Y], 0x10FA)
 
-        self.printString(np.array([2, -1]), "=== {:} ===".format(self.describe()))
+        self.printString(np.array([2, -1]),
+                         "=== {:} ===".format(self.describe()))
 
         for button in self.button:
             button.render()
@@ -384,17 +386,55 @@ class InventoryPanel(Panel):
         Panel.__init__(self, main, pos, w, h, layer=0)
 
         self.player = main.player
+        self.hand = coll.OrderedDict([('L', None), ('R', None)])
+        self.belt = coll.OrderedDict([('1', None), ('2', None), ('3', None), ('4', None)])
+
         self.inventoryOffset = 0
         self.inventoryLength = 0
 
     def updateRender(self):
         self.button = []
+        self.player.inventory = sorted(self.player.inventory, key=lambda i: i.describe())
+
+        for i, key in enumerate(self.hand):
+            if not self.hand[key] in self.player.inventory:
+                self.hand[key] = None
+
+            item = self.hand[key]
+            if item is not None:
+                button = Button(self.pos + np.array([2, 1 + 2*i]), 5, 1, item.describe(), item.drop)
+                button.link = item
+                button.key = key
+                self.button.append(button)
+
+        for i, key in enumerate(self.belt):
+            if not self.belt[key] in self.player.inventory:
+                self.belt[key] = None
+
+            item = self.belt[key]
+            if item is not None:
+                button = Button(self.pos + np.array([2, 6 + i]), 5, 1, item.describe(), item.drop)
+                button.link = item
+                button.key = key
+                self.button.append(button)
+
         for i, item in enumerate(self.player.inventory[self.inventoryOffset:]):
-            self.button.append(Button(self.pos + np.array([2, 2 + i]), 5, 1, item.describe(), item.drop))
-            self.button[i].index = i
+            button = Button(self.pos + np.array([self.size[X] // 2, 1 + i]), 5, 1, item.describe(), item.drop)
+            button.link = item
+            button.key = '$'
+            self.button.append(button)
 
     def render(self):
         super(InventoryPanel, self).render()
+
+        for i, key in enumerate(self.hand):
+            item = self.hand[key]
+            if item is not None:
+                self.printChar(np.array([2, 2 + 2*i]), item.char)
+
+    def handleClick(self, event=0):
+        super(InventoryPanel, self).handleClick(event)
+        self.updateRender()
 
     def handleScroll(self, offset):
         self.inventoryOffset += offset
