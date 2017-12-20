@@ -11,10 +11,11 @@ Important Materials:
 * [Roadmap](https://github.com/Nephas/runner-rl/blob/master/TODO.md)
 
 Recent Build (very not stable, pre-pre-alpha!):
+No Balancing, no win state, random crashes. Consider it more of a tech demo.
 
 [64-bit Linux](https://www.dropbox.com/sh/nxviud3lxibe1nj/AABEGyl8CxMD-mHFhEhmtIR6a?dl=0)
 
-No Balancing, no win state, random crashes. Consider it more of a tech demo.
+
 
 At the moment there is mostly a 'physics engine' and a level generator:
 
