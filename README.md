@@ -10,10 +10,10 @@ Important Materials:
 * [Fiction Teaser](https://github.com/Nephas/runner-rl/blob/master/docs/shortstory1.pdf)
 * [Roadmap](https://github.com/Nephas/runner-rl/blob/master/TODO.md)
 
-Recent Build (very not stable, pre-pre-alpha!):
+Pre-pre-alpha, very not stable:
 No Balancing, no win state, random crashes. Consider it more of a tech demo.
 
-[64-bit Linux](https://www.dropbox.com/sh/fkk2fahqyxjlh7a/AADbf-gsgUw_8ISrGBA8Lgzma?dl=0)
+[Recent Build](https://www.dropbox.com/sh/j2y4j3cbhl8xmsk/AAAhrOxCWBeJh5O1b-hxDkALa?dl=0)
 
 
 
