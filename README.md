@@ -39,9 +39,18 @@ Other features implemented so far:
 * simple world interactions (door opening, pushing)
 * light sources
 * simple physics
+* an interactive computer network
+* remote steering of level objects
+* inventory
 * mouse movement and panels
 * basic AI behaviour
 * dialogue tree system
+
+What's missing so far:
+
+* level balancing
+* dialogue and story
+* wound system
 
 **Teaser**
 
