@@ -46,11 +46,12 @@ Other features implemented so far:
 * basic AI behaviour
 * dialogue tree system
 
-What's missing so far:
+What's definitely missing:
 
 * level balancing
 * dialogue and story
 * wound system
+* tons of polish
 
 **Teaser**
 
