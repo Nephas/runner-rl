@@ -29,7 +29,7 @@ Levels are scattered with interconnected Servers and Terminals which will later 
 with the level objects.
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/levelgen.gif" width="500"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/presentation/levelgen.gif" width="500"/>
 </p>
 
 Other features implemented so far:
@@ -46,7 +46,7 @@ Other features implemented so far:
 **Teaser**
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/demo.gif" width="900"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/presentation/screen.png" width="900"/>
 </p>
 
 Light and shadows are completely dynamic and interact with changes in the environment like 
