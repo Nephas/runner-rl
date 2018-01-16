@@ -55,7 +55,6 @@ class Render:  # a rectangle on the map. used to characterize a room.
     def renderMenu(self):
         term.bkcolor(term.color_from_argb(255, 25, 25, 25))
         term.clear()
-
         self.main.panel['MENU'].render()
         term.refresh()
 

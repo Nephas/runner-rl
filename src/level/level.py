@@ -26,7 +26,7 @@ from src.actor.npc import Drone
 
 
 class Level(Map):
-    SHAPE = {'CORNER': [Rectangle([Map.WIDTH // 3, Map.HEIGHT // 3], 2 * Map.WIDTH // 3, 2 * Map.HEIGHT / 3)],
+    SHAPE = {'CORNER': [Rectangle([Map.WIDTH // 2, Map.HEIGHT // 2], Map.WIDTH // 2, Map.HEIGHT / 2)],
              'DUAL': [Rectangle([0, 0], Map.WIDTH // 3, Map.HEIGHT // 3),
                       Rectangle([2 * Map.WIDTH // 3, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3)],
              'CROSS': [Rectangle([2 * Map.WIDTH // 3, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3),
@@ -97,7 +97,7 @@ class Level(Map):
             return
 
         stats = {'ROOMS': -1, 'VENTS': -1, 'CORRIDORS': -1, 'AREA': -1}
-#        while stats['VENTS'] < 5 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
+#        while stats['VENTS'] < 8 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 4 or stats['AREA'] < 4000:
         while stats['VENTS'] < 5 or stats['ROOMS'] < 10 or stats['CORRIDORS'] < 3 or stats['AREA'] < 2000:
 
             self.clear()
@@ -154,13 +154,6 @@ class Level(Map):
                     tier.remove(room)
         Level.printImage(self, outpath + "levelgen91.bmp")
 
-    def generateVents(self):
-        for pair in it.combinations(self.tier[-1] + self.tier[-2], 2):
-            if pair[0] not in pair[1].children and pair[1] not in pair[0].children:
-                if np.linalg.norm(pair[0].center - pair[1].center) < Map.WIDTH / 3:
-                    if not self.carveVent(pair[0], pair[1], True):
-                        self.carveVent(pair[0], pair[1], False)
-
     def countMetrics(self):
         stats = {'ROOMS': 0, 'VENTS': 0, 'CORRIDORS': 0, 'AREA': 0}
         stats['VENTS'] = len(self.getAll('Vent')) / 2
@@ -171,6 +164,13 @@ class Level(Map):
                 if room.__class__.__name__ is 'Corridor':
                     stats['CORRIDORS'] += 1
         return stats
+
+    def generateVents(self):
+        for pair in it.combinations(self.tier[-1] + self.tier[-2], 2):
+            if pair[0] not in pair[1].children and pair[1] not in pair[0].children:
+                if np.linalg.norm(pair[0].center - pair[1].center) < Map.WIDTH / 3:
+                    if not self.carveVent(pair[0], pair[1], True):
+                        self.carveVent(pair[0], pair[1], False)
 
     def finalize(self):
         self.forbidden = []
@@ -381,7 +381,7 @@ class Level(Map):
         while tier != 0:
             reachable = Level.reachableRooms(room, keys=keys)
             room = filter(lambda r: r not in previousReachable, reachable)[-1]
-            room.scatter(self, Key(tier=tier - 1))
+            room.scatter(self, Key(tier=tier - 1, color=self.palette[tier - 1]))
             tier -= 1
             keys.append(tier)
             previousReachable = reachable

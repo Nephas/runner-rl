@@ -229,6 +229,14 @@ class MapPanel(Panel):
             except:
                 pass
 
+        for actor in self.main.player.ai.mind['AWARE']:
+            try:
+                panelPos = self.SCALE * (actor.cell.pos - self.mapOffset) + self.pos
+                self.highlight(panelPos, actor.ai.color)
+            except:
+                pass
+
+
     def renderGrid(self):
         player = self.main.player
         connected = []
@@ -451,7 +459,7 @@ class MenuPanel(Panel):
 
         self.picture = self.ANIMATION.next()
         self.frame = 0
-        self.button = [Button(self.pos + np.array([2, 2]), 5, 1, "Click to proceed", self.generate),
+        self.button = [Button(self.pos + np.array([2, 2]), 5, 1, "Start", self.generate),
                        Button(self.pos + np.array([2, 4]), 5, 1, "Quit", self.quit)]
 
     def render(self):

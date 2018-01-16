@@ -32,9 +32,11 @@ class Status:
     def stack(self, other):
         self.amount = min(16, self.amount + other.amount)
 
+    def describe(self):
+        return self.__class__.__name__
 
 class SlowMo(Status):
-    def __init__(self, actor, amount=20):
+    def __init__(self, actor, amount=30):
         Status.__init__(self, actor)
         self.amount = amount
 

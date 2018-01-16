@@ -4,12 +4,13 @@ from src.object.object import Object
 from src.effect.effect import Fog, Fluid, Fire, Fuel, Shot, Flash, Slash
 from src.actor.body import SlowMo
 
+import copy as cp
 import random as rd
 import numpy as np
 
 
 class Item(Object):
-    def __init__(self, cell=None, carrier=None, char=0x102A, color=COLOR['WHITE']):
+    def __init__(self, cell=None, carrier=None, char=0x1021, color=COLOR['WHITE']):
         Object.__init__(self, cell, char=char, color=color)
 
         self.carrier = carrier
@@ -53,7 +54,7 @@ class Item(Object):
 
 class PlotDevice(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier, color=COLOR['RED'])
+        Item.__init__(self, cell, carrier, char=0x102B)
 
     def take(self, actor):
         # Gui.pushMessage('You got it! Now to the extraction point!')
@@ -258,8 +259,8 @@ class Shotgun(Gun):
 
 
 class Key(Item):
-    def __init__(self, cell=None, carrier=None, tier=0):
-        Item.__init__(self, cell, carrier, char=0x102A)
+    def __init__(self, cell=None, carrier=None, tier=0, color=COLOR['WHITE']):
+        Item.__init__(self, cell, carrier, char=0x102A, color=color)
 
         self.tier = tier
 
@@ -276,14 +277,14 @@ class Injector(Item):
         Item.__init__(self, cell, carrier, char=0x103A)
 
         self.amount = 3
+        self.content = SlowMo(self.carrier)
 
     def describe(self):
-        return "Drug ({:})".format(self.amount)
+        return self.content.describe() + ' ({:})'.format(self.amount)
 
     def use(self, action=None):
         if self.amount > 0:
-            self.carrier.body.addStatus(SlowMo(self.carrier))
-            # Gui.pushMessage('Use this key to open doors of level {:}.'.format(self.tier))
+            self.carrier.body.addStatus(cp.copy(self.content))
             self.amount -= 1
             return 1
         else:

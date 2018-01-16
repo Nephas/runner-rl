@@ -29,21 +29,15 @@ class AI:
     def lookAround(self, map):
         self.mind['AWARE'] = []
         self.updateRoom(map)
-        actors = []
 
+        rooms = [self.mind['ROOM']]
         if self.mind['ROOM'] is not None:
-            for cell in self.mind['ROOM'].getCells(map):
-                if cell.light > BASE_LIGHT:
-                    actors += filter(lambda obj: hasattr(obj, 'ai'), cell.object)
+            rooms += [r['ROOM'] for r in self.mind['ROOM'].connection]
 
-
-        for obj in actors:
-            if self.hasLos(map, self.actor.cell.pos, obj.cell.pos):
-                self.mind['AWARE'] += [obj]
-
-        for cell in self.actor.cell.getNeighborhood('LARGE'):
-            self.mind['AWARE'] += filter(lambda obj: hasattr(obj, 'ai')
-                                         and not obj in self.mind['AWARE'], cell.object)
+        for actor in self.actor.main.actor:
+            cell = actor.cell
+            if cell.room in rooms and cell.light > BASE_LIGHT and AI.hasLos(map, self.actor.cell.pos, cell.pos):
+                self.mind['AWARE'].append(actor)
 
     def makeEnemy(self, actor):
         if actor in self.mind['FRIEND']:
