@@ -110,8 +110,7 @@ class Player(Actor):
 
 #        self.fg = COLOR[]# [225, 150, 50]
         self.inventory = [Knife(carrier=self), Canister(carrier=self), Grenade(carrier=self),
-                          Lighter(carrier=self), Key(carrier=self,
-                                                     tier=4), Shotgun(carrier=self),
+                          Lighter(carrier=self), Shotgun(carrier=self),
                           Explosive(carrier=self), Injector(carrier=self)]
 
         self.agent = None

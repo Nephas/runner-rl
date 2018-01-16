@@ -4,11 +4,6 @@ import math as m
 import numpy as np
 import random as rd
 import copy as cp
-import itertools as it
-
-from src.object.furniture import Container, Barrel, Desk
-from src.object.door import Vent, SecDoor, AutoDoor
-from src.object.item import Item, Key, PlotDevice
 
 from src.level.map import Rectangle
 
@@ -21,6 +16,8 @@ class Room(Rectangle):
         self.parent = parent
         self.children = []
         self.color = color
+
+        self.connection = []
 
     def carve(self, map):
         self.updateCells(map)
@@ -101,9 +98,20 @@ class Room(Rectangle):
         return count
 
     def describe(self):
+        if self.function is not None:
+            return self.__class__.__name__ + ' ({:})'.format(self.function)
         return self.__class__.__name__
+
+    def connect(self, room, key=None):
+        self.connection.append({'ROOM': room, 'KEY': key})
+        room.connection.append({'ROOM': self, 'KEY': key})
 
     def updateCells(self, map):
         for cell in self.getCells(map):
             cell.room = self
             cell.stack[0] = cell.FLOOR
+
+    def printTree(self, indent=0):
+        print(' ' * self.tier + 'Tier {:}: {:}'.format(self.tier, self.describe()))
+        for room in self.children:
+            room.printTree()

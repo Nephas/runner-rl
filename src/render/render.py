@@ -1,6 +1,5 @@
 from src.globals import *
 
-from PIL import Image
 import numpy as np
 import copy as cp
 import time as t
@@ -76,56 +75,3 @@ class Render:  # a rectangle on the map. used to characterize a room.
             return False
         else:
             return True
-
-    @staticmethod
-    def printImage(map, fileName):
-        # create a new black image
-        img = Image.new('RGB', [3 * map.WIDTH, 3 * map.HEIGHT], "black")
-        pixels = img.load()  # create the pixel map
-        for x in range(map.WIDTH):    # for every pixel:
-            for y in range(map.HEIGHT):
-                tile = [[i, j] for i in range(3 * x, 3 * x + 3)
-                        for j in range(3 * y, 3 * y + 3)]
-
-                if map.tile[x][y].wall is False and map.tile[x][y].room is not None:
-                    # set the colour accordingly
-                    for p in tile:
-                        pixels[p[X], p[Y]] = tuple(
-                            map.palette[map.tile[x][y].room.tier])
-                elif map.tile[x][y].wall is True:
-                    for p in tile:
-                        # set the colour accordingly
-                        pixels[p[X], p[Y]] = COLOR['DARKGRAY']
-                elif map.tile[x][y].wall is None:
-                    for p in tile:
-                        # set the colour accordingly
-                        pixels[p[X], p[Y]] = COLOR['BLACK']
-
-                if map.tile[x][y].grid.wire:
-                    # set the colour accordingly
-                    pixels[3 * x + 1, 3 * y +
-                           1] = tuple(map.corp.complement[0])
-                elif map.tile[x][y].grid.object != []:
-                    for p in tile:
-                        # set the colour accordingly
-                        pixels[p[X], p[Y]] = tuple(
-                            (0.5 * map.corp.complement[0]).astype('int'))
-
-        for room in map.tier[-1]:
-            if room.function is not None:
-                for pos in room.border():
-                    if map.getTile(pos).wall:
-                        if room.function is "start":
-                            for i in range(3):
-                                pixels[3 * pos[X] + i, 3 *
-                                       pos[Y] + i] = COLOR['RED']
-                        elif room.function is "extraction":
-                            for i in range(3):
-                                pixels[3 * pos[X] + i, 3 *
-                                       pos[Y] + i] = COLOR['BLUE']
-
-        for lamp in map.getAll('Lamp'):
-            pixels[3 * lamp.cell.pos[X] + 1, 3 *
-                   lamp.cell.pos[Y] + 1] = COLOR['WHITE']
-
-        img.save(fileName)

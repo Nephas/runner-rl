@@ -52,15 +52,18 @@ class Input:
 
     def handleEvents(self):
         while term.has_input():
-            event = term.read()
-            if event in self.KEYMAP:
-                self.handleKey(event)
-            elif event is term.TK_MOUSE_MOVE:
-                self.handleMouse(event)
-            elif event in [term.TK_MOUSE_LEFT, term.TK_MOUSE_RIGHT]:
-                self.handleClick(event)
-            elif event in [term.TK_MOUSE_SCROLL]:
-                self.handleScroll(event)
+            try:
+                event = term.read()
+                if event in self.KEYMAP:
+                    self.handleKey(event)
+                elif event is term.TK_MOUSE_MOVE:
+                    self.handleMouse(event)
+                elif event in [term.TK_MOUSE_LEFT, term.TK_MOUSE_RIGHT]:
+                    self.handleClick(event)
+                elif event in [term.TK_MOUSE_SCROLL]:
+                    self.handleScroll(event)
+            except Exception:
+                print("Input error caused by event: " + str(event))
 
     def handleKey(self, event):
         getattr(self, self.KEYMAP[event][0]).__call__(self.KEYMAP[event][1])

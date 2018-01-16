@@ -149,7 +149,7 @@ class Explosive(Item):
 
 class Gun(Item):
     def __init__(self, cell=None, carrier=None):
-        Item.__init__(self, cell, carrier)
+        Item.__init__(self, cell, carrier, char=0x103B)
 
         self.magazine = 12
 
@@ -273,7 +273,7 @@ class Key(Item):
 
 class Injector(Item):
     def __init__(self, cell=None, carrier=None, tier=0):
-        Item.__init__(self, cell, carrier)
+        Item.__init__(self, cell, carrier, char=0x103A)
 
         self.amount = 3
 

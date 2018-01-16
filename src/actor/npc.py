@@ -26,8 +26,7 @@ class Guard(NPC):
         NPC.__init__(self, cell, main, 0x1033)
 
         self.ai = Idle(self)
-        self.inventory = [Key(carrier=self, tier=3), Key(
-            carrier=self, tier=4), Gun(carrier=self)]
+        self.inventory = [Gun(carrier=self)]
 
 
 class Worker(NPC):
