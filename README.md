@@ -29,7 +29,7 @@ Levels are scattered with interconnected Servers and Terminals which will later 
 with the level objects.
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/levelgen.gif" width="500"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/presentation/levelgen.gif" width="500"/>
 </p>
 
 Other features implemented so far:
@@ -39,14 +39,24 @@ Other features implemented so far:
 * simple world interactions (door opening, pushing)
 * light sources
 * simple physics
+* an interactive computer network
+* remote steering of level objects
+* inventory
 * mouse movement and panels
 * basic AI behaviour
 * dialogue tree system
 
+What's definitely missing:
+
+* level balancing
+* dialogue and story
+* wound system
+* tons of polish
+
 **Teaser**
 
 <p align="left">
-  <img src="https://github.com/Nephas/runner-rl/blob/master/gif/demo.gif" width="900"/>
+  <img src="https://github.com/Nephas/runner-rl/blob/master/presentation/screen.png" width="900"/>
 </p>
 
 Light and shadows are completely dynamic and interact with changes in the environment like 
