@@ -438,7 +438,7 @@ class InventoryPanel(Panel):
         for i, key in enumerate(self.hand):
             item = self.hand[key]
             if item is not None:
-                self.printChar(np.array([2, 2 + 2*i]), item.char)
+                self.printChar(np.array([2, 2 + 2*i]), item.icon)
 
     def handleClick(self, event=0):
         super(InventoryPanel, self).handleClick(event)

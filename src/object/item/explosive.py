@@ -70,6 +70,7 @@ class Grenade(Explosive):
         super(Grenade, self).physics(map)
 
     def use(self, action):
+        super(self.__class__, self).use()        
         self.counter = 10
         self.throw(self.carrier.cell.pos, action['TARGET'])
         return 5

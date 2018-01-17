@@ -75,7 +75,7 @@ class Object(object):
 
 
 class Debris(Object):
-    CHAR = [0x1070,0x1071,0x1072,0x1073]
+    CHAR = [0x1070, 0x1071, 0x1072, 0x1073]
 
     def __init__(self, cell=None, obj=None):
         Object.__init__(self, cell, char=rd.choice(Debris.CHAR), color=COLOR['WHITE'])

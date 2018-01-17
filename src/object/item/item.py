@@ -6,13 +6,21 @@ from src.effect.effect import Fog, Fluid, Fire, Fuel, Shot, Flash, Slash
 import copy as cp
 import random as rd
 import numpy as np
+import itertools as it
 
 
 class Item(Object):
-    def __init__(self, cell=None, carrier=None, char=0x1021, color=COLOR['WHITE']):
+    ANIMATION = [0x2000, 0x2010, 0x2020, 0x2030]
+
+    def __init__(self, cell=None, carrier=None, char=0x1021, icon=0x2000, color=COLOR['WHITE']):
         Object.__init__(self, cell, char=char, color=color)
 
         self.carrier = carrier
+        self.icon = icon
+        self.frame = 0
+
+        if hasattr(self.__class__, 'ANIMATION'):
+            self.animation = it.cycle(self.__class__.ANIMATION)
 
     def interact(self, actor=None, dir=None, type=None):
         # Gui.pushMessage('You pickup ' + self.describe(), self.fg)
@@ -47,8 +55,14 @@ class Item(Object):
             self.carrier = None
 
     def use(self, action=None):
+        self.frame = len(self.ANIMATION)
         # Gui.pushMessage('This Item has no use')
         return 0
+
+    def physics(self, map):
+        if self.frame > 0:
+            self.icon = self.animation.next()
+            self.frame -= 1
 
     def describe(self):
         return 'generic item'

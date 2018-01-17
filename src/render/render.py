@@ -12,6 +12,7 @@ from src.render.panel import MapPanel, InfoPanel, InventoryPanel, MessagePanel, 
 class Render:  # a rectangle on the map. used to characterize a room.
     GRAPHICSPATH = './graphics/'
     TILES = 'exp_24x24.png'
+    ITEMS = 'item_48x24.png'
     FONT = 'font_12x24.png'
     LOADSCREEN = 'load_1364x768.png'
     TITLE = 'title.png'
@@ -32,6 +33,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
                  Render.FONT + ", size=12x24, codepage=437")
         term.set("0x1000: " + Render.GRAPHICSPATH + Render.TILES +
                  ", size=24x24, spacing=2x1, align=center")
+        term.set("0x2000: " + Render.GRAPHICSPATH + Render.ITEMS +
+                 ", size=48x24, spacing=4x1, align=center")
         term.set("0x3000: " + Render.GRAPHICSPATH + Render.TITLE +
                  ", size=800x285, align=center")
 

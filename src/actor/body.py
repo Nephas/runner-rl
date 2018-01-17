@@ -35,12 +35,19 @@ class Status:
     def describe(self):
         return self.__class__.__name__
 
+
 class SlowMo(Status):
-    def __init__(self, actor, amount=30):
+    def __init__(self, actor, amount=100):
         Status.__init__(self, actor)
+
+        self.latency = 5
         self.amount = amount
 
     def physics(self, map):
+        if self.latency > 0:
+            self.latency -= 1
+            return
+
         if self.amount > 0:
             self.actor.main.input.pause = True
             self.amount -= 1

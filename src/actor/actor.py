@@ -103,6 +103,8 @@ class Actor(Object):
 
     def physics(self, map):
         self.body.physics(map)
+        for obj in self.inventory:
+            obj.physics(map)
 
 
 class Player(Actor):

@@ -7,8 +7,10 @@ import numpy as np
 
 
 class Gun(Item):
+    ANIMATION = [0x2001, 0x2011, 0x2021, 0x2031]
+
     def __init__(self, cell=None, carrier=None, char=0x103B):
-        Item.__init__(self, cell, carrier, char=char)
+        Item.__init__(self, cell, carrier, char=char, icon=0x2001)
 
         self.magazine = 6
 
@@ -30,6 +32,8 @@ class Gun(Item):
 
         self.shoot(self.carrier.cell.pos, action['TARGET'])
         self.magazine -= 1
+
+        super(self.__class__, self).use()
         return 5
 
     @staticmethod
@@ -54,6 +58,7 @@ class Knife(Item):
         cell.addEffect(Slash(cell))
 
     def use(self, action):
+        super(self.__class__, self).use()
         self.slash(action['DIR'])
         return 5
 
