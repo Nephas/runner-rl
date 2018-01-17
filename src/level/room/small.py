@@ -11,7 +11,7 @@ from src.level.room.room import Room
 from src.object.furniture import Container, Barrel, Desk, Hydroponics, Locker
 from src.grid.electronics import Terminal, Server, MasterSwitch, Rack, Camera
 from src.object.lamp import Lamp, FlickerLamp, SpotLight
-from src.object.item import Item, Key, PlotDevice
+from src.object.item.item import Key, PlotDevice
 from src.object.door import Outlet
 
 from src.actor.npc import Guard, Worker, Drone

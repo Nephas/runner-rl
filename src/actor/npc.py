@@ -1,7 +1,8 @@
 import random as rd
 
 from src.object.object import Object
-from src.object.item import Item, Key, FogCloak, Canister, Lighter, Explosive, Gun
+from src.object.item.item import Key
+from src.object.item.weapon import Gun, Shotgun
 from src.effect.effect import Effect, Fuel
 
 from src.actor.ai import AI, Idle, Follow
@@ -31,7 +32,7 @@ class Guard(NPC):
 
 class Worker(NPC):
     def __init__(self, cell=None, main=None, owner=None):
-        NPC.__init__(self, cell, main, 0x1032)
+        NPC.__init__(self, cell, main, rd.choice([0x1030, 0x1031, 0x1032]))
 
         self.ai = Idle(self)
         self.inventory = [Key(carrier=self, tier=5)]

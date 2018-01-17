@@ -19,7 +19,7 @@ from src.level.room.dome import Dome
 from src.grid.electronics import Terminal, Server, MasterSwitch
 from src.object.lamp import Lamp, DoorLamp
 from src.object.door import Vent, SecDoor, Ladder
-from src.object.item import Key
+from src.object.item.item import Key
 
 from src.actor.actor import Player
 from src.actor.npc import Drone

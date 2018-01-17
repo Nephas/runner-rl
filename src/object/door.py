@@ -2,7 +2,7 @@ from src.globals import *
 
 from src.object.object import Object
 from src.grid.electronics import Electronics
-from src.object.item import Key
+from src.object.item.item import Key
 from src.effect.effect import Fuel, Fog
 
 import random as rd
@@ -92,7 +92,7 @@ class Door(Electronics):
 
     def authorize(self, actor):
         for item in actor.inventory:
-            if isinstance(item, Key) and item.tier == self.tier:
+            if item.__class__.__name__ is 'Key' and item.tier == self.tier:
                 return True
         return False
 

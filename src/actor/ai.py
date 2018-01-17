@@ -55,6 +55,9 @@ class AI:
     def switchState(self, aiState):
         self.actor.ai = aiState(self.actor, self.mind)
 
+    def stun(self, duration=100):
+        self.actor.ai = Stunned(self.actor, self.mind, duration)
+
     def describe(self):
         return " (" + self.__class__.__name__ + ") "
 
@@ -226,10 +229,10 @@ class Idle(AI):
 
 
 class Stunned(AI):
-    def __init__(self, actor, mind=None):
+    def __init__(self, actor, mind=None, duration=100):
         AI.__init__(self, actor, mind, COLOR['YELLOW'])
 
-        self.counter = 10
+        self.counter = duration
 
     def decide(self, map):
         self.actor.actions = []

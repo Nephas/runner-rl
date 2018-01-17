@@ -4,6 +4,8 @@ import random as rd
 import numpy as np
 
 from src.render.geometry import Light
+#from src.grid.electronics import Electronics
+#from src.actor.actor import actor
 
 
 class Effect(object):
@@ -100,6 +102,26 @@ class Fire(Effect):
             obj.destroy()
 
 
+class EMP(Effect):
+    def __init__(self, cell=None, amount=1, color=COLOR['GRAY']):
+        Effect.__init__(self, cell, char=0x1006, color=color)
+
+        self.amount = amount
+
+    def describe(self):
+        return 'EMP'
+
+    def physics(self, map):
+        if self.amount <= 0:
+            self.cease()
+        self.amount -= 1
+        for obj in self.cell.object:
+            if hasattr(obj, 'on'):
+                obj.destroy()
+            if hasattr(obj, 'ai'):
+                obj.ai.stun()
+
+
 class Shot(Effect):
     def __init__(self, cell=None, char=0x10FA, amount=1, color=COLOR['GRAY']):
         Effect.__init__(self, cell, char, color=color)
@@ -118,13 +140,13 @@ class Shot(Effect):
 
 
 class Slash(Effect):
-    def __init__(self, cell=None, char=0x102F, amount=1, color=COLOR['BLOOD']):
+    def __init__(self, cell=None, char=0x1025, amount=1, color=COLOR['BLOOD']):
         Effect.__init__(self, cell, char, color=color)
 
         self.amount = amount
 
     def describe(self):
-        return 'Shot'
+        return 'Slash'
 
     def physics(self, map):
         if self.amount <= 0:
@@ -176,6 +198,7 @@ class GrayGoo(Effect):
 
     def describe(self):
         return 'Fuel'
+
 
 class Fuel(Fluid):
     BASE_COLOR = np.array(COLOR['PURPLE'])
