@@ -33,7 +33,7 @@ class Gun(Item):
         self.shoot(self.carrier.cell.pos, action['TARGET'])
         self.magazine -= 1
 
-        super(self.__class__, self).use()
+        super(Gun, self).use()
         return 5
 
     @staticmethod

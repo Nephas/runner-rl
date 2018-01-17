@@ -6,7 +6,12 @@ import time as t
 
 from bearlibterminal import terminal as term
 
-from src.render.panel import MapPanel, InfoPanel, InventoryPanel, MessagePanel, MenuPanel, ExitPanel
+from src.render.panel.map import MapPanel
+from src.render.panel.info import InfoPanel
+from src.render.panel.inventory import InventoryPanel
+from src.render.panel.message import MessagePanel
+from src.render.panel.menu import MenuPanel
+from src.render.panel.exit import ExitPanel
 
 
 class Render:  # a rectangle on the map. used to characterize a room.
@@ -18,8 +23,8 @@ class Render:  # a rectangle on the map. used to characterize a room.
     TITLE = 'title.png'
     LOGO = 'graphics/logo.txt'
 
-    SCREEN = np.array([110, 25])  # [WIDTH, HEIGHT]
-    SEPARATOR = (3. / 4. * SCREEN).astype('int')
+    SCREEN = np.array([110, 28])  # [WIDTH, HEIGHT]
+    SEPARATOR = (5. / 8. * SCREEN).astype('int')
     MAPINSET = np.array([2, 1])
 
     def __init__(self, main):
