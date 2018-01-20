@@ -417,28 +417,27 @@ class Level(Map):
                         for j in range(3 * y, 3 * y + 3)]
 
                 if map.tile[x][y].wall is False and map.tile[x][y].room is not None:
-                    # set the colour accordingly
                     for p in tile:
                         pixels[p[X], p[Y]] = tuple(
                             map.palette[map.tile[x][y].room.tier])
                 elif map.tile[x][y].wall is True:
                     for p in tile:
-                        # set the colour accordingly
                         pixels[p[X], p[Y]] = COLOR['DARKGRAY']
                 elif map.tile[x][y].wall is None:
                     for p in tile:
-                        # set the colour accordingly
                         pixels[p[X], p[Y]] = COLOR['BLACK']
 
                 if map.tile[x][y].grid.wire:
-                    # set the colour accordingly
                     pixels[3 * x + 1, 3 * y +
                            1] = tuple(map.corp.complement[0])
                 elif map.tile[x][y].grid.object != []:
                     for p in tile:
-                        # set the colour accordingly
                         pixels[p[X], p[Y]] = tuple(
                             (0.5 * map.corp.complement[0]).astype('int'))
+
+                if map.tile[x][y].getClass(['Key']) != []:
+                    for p in tile:
+                        pixels[p[X], p[Y]] = tuple(COLOR['GREEN'])
 
         for room in map.tier[-1]:
             if room.function is not None:
