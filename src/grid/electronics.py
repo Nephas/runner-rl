@@ -5,7 +5,7 @@ import random as rd
 from src.grid.agent import Agent
 from src.grid.grid import Wire
 from src.object.object import Object
-from src.object.item import Key
+from src.object.item.item import Key
 from src.render.render import Render
 
 

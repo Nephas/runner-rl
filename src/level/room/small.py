@@ -11,7 +11,7 @@ from src.level.room.room import Room
 from src.object.furniture import Container, Barrel, Desk, Hydroponics, Locker
 from src.grid.electronics import Terminal, Server, MasterSwitch, Rack, Camera
 from src.object.lamp import Lamp, FlickerLamp, SpotLight
-from src.object.item import Item, Key, PlotDevice
+from src.object.item.item import Key, PlotDevice
 from src.object.door import Outlet
 
 from src.actor.npc import Guard, Worker, Drone
@@ -96,7 +96,6 @@ class Office(Room):
             pass
 
         Worker(map.getTile(self.randomSpot(2)), map.main)
-        self.scatter(map, Key(tier=rd.randint(3, 5)), rd.randint(0, 1))
         self.scatter(map, Lamp(), margin=2)
 
 

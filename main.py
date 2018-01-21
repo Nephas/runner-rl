@@ -86,9 +86,9 @@ class Game:
                 break
             if (self.input.pause and self.player.actions != []) or not self.input.pause:
                 if t.time() >= self.TIC_SIZE + self.lastTic:
-                    for actor in self.actor:
+                    for actor in reversed(self.actor):
                         actor.act(self.map)
-                    for agent in self.agent:
+                    for agent in reversed(self.agent):
                         agent.act(self.map)
                     self.map.updatePhysics()
                     self.panel['MAP'].updateRender()

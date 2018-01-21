@@ -1,7 +1,10 @@
 from src.globals import *
 
 from src.object.object import Object
-from src.object.item import Item, Key, Knife, FogCloak, Canister, Lighter, Explosive, Gun, Injector, Shotgun, Grenade
+from src.object.item.item import Key, FogCloak, Canister, Lighter
+from src.object.item.weapon import Knife, Gun, Shotgun, Taser
+from src.object.item.injector import Injector
+from src.object.item.explosive import Explosive, Grenade, EMPGrenade
 from src.effect.effect import Effect, Blood
 
 from src.actor.ai import AI, Idle, Follow
@@ -100,20 +103,18 @@ class Actor(Object):
 
     def physics(self, map):
         self.body.physics(map)
+        for obj in self.inventory:
+            obj.physics(map)
 
 
 class Player(Actor):
     ANIMATION = [0x1042, 0x1042]
 
     def __init__(self, cell=None, main=None):
-        Actor.__init__(self, cell, main, char=0x1031)
+        Actor.__init__(self, cell, main, char=0x1042)
 
-#        self.fg = COLOR[]# [225, 150, 50]
-        self.inventory = [Knife(carrier=self), Canister(carrier=self), Grenade(carrier=self),
-                          Lighter(carrier=self), Key(carrier=self,
-                                                     tier=4), Shotgun(carrier=self),
-                          Explosive(carrier=self), Injector(carrier=self)]
-
+        self.inventory = [Knife(carrier=self), Canister(carrier=self), EMPGrenade(carrier=self), Key(carrier=self, tier=5),
+                          Lighter(carrier=self), Explosive(carrier=self), Injector(carrier=self), Taser(carrier=self)]
         self.agent = None
 
     def moveDir(self, dir):
@@ -129,8 +130,12 @@ class Player(Actor):
         if self.agent is not None:
             self.agent.castFov(map)
 
-    def physics(self, map):
-        self.char = self.animation.next()
+    def act(self, tileMap=None):
+        super(Player, self).act(tileMap)
+        self.ai.lookAround(tileMap)
+
+#    def physics(self, map):
+#        self.char = self.animation.next()
 
     def describe(self):
         return "You"

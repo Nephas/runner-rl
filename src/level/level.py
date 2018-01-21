@@ -1,5 +1,7 @@
 from src.globals import *
 
+from PIL import Image
+
 import math as m
 import numpy as np
 import random as rd
@@ -17,14 +19,14 @@ from src.level.room.dome import Dome
 from src.grid.electronics import Terminal, Server, MasterSwitch
 from src.object.lamp import Lamp, DoorLamp
 from src.object.door import Vent, SecDoor, Ladder
+from src.object.item.item import Key
 
-from src.render.render import Render
 from src.actor.actor import Player
 from src.actor.npc import Drone
 
 
 class Level(Map):
-    SHAPE = {'CORNER': [Rectangle([Map.WIDTH // 3, Map.HEIGHT // 3], 2 * Map.WIDTH // 3, 2 * Map.HEIGHT / 3)],
+    SHAPE = {'CORNER': [Rectangle([Map.WIDTH // 2, Map.HEIGHT // 2], Map.WIDTH // 2, Map.HEIGHT / 2)],
              'DUAL': [Rectangle([0, 0], Map.WIDTH // 3, Map.HEIGHT // 3),
                       Rectangle([2 * Map.WIDTH // 3, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3)],
              'CROSS': [Rectangle([2 * Map.WIDTH // 3, 2 * Map.HEIGHT // 3], Map.WIDTH // 3, Map.HEIGHT // 3),
@@ -41,6 +43,9 @@ class Level(Map):
         self.corp = None
         self.palette = []
         self.complement = []
+
+        self.start = None
+        self.goal = None
 
     def contains(self, target):
         """Returns whether the target is fully contained inside the map, excluding the forbidden regions.
@@ -87,16 +92,16 @@ class Level(Map):
 
         if debug:
             self.clear()
-            self.generateStart()
+            self.generateRoot()
             self.getTile(self.tier[0][0].center).addObject(self.main.player)
             return
 
         stats = {'ROOMS': -1, 'VENTS': -1, 'CORRIDORS': -1, 'AREA': -1}
-#        while stats['VENTS'] < 5 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 5 or stats['AREA'] < 4000:
+#        while stats['VENTS'] < 8 or stats['ROOMS'] < 20 or stats['CORRIDORS'] < 4 or stats['AREA'] < 4000:
         while stats['VENTS'] < 5 or stats['ROOMS'] < 10 or stats['CORRIDORS'] < 3 or stats['AREA'] < 2000:
 
             self.clear()
-            self.generateStart()
+            self.generateRoot()
             self.generateRooms()
             self.generateVents()
 
@@ -104,9 +109,11 @@ class Level(Map):
             print(stats)
 
         self.finalize()
-        Render.printImage(self, outpath + "levelgen99.bmp")
+        self.placeKeys()
+        self.tier[0][0].printTree()
+        Level.printImage(self, outpath + "levelgen99.bmp")
 
-    def generateStart(self):
+    def generateRoot(self):
         self.tier = [[]]
 
         w = rd.randint(*self.corp.struct[0]['SIZES'])
@@ -116,10 +123,11 @@ class Level(Map):
         while True:
             pos = [rd.randint(margin, Map.WIDTH - w - margin),
                    rd.randint(margin, Map.HEIGHT - h - margin)]
-            start = Vault(pos, w, h, 0, None)
-            if self.contains(start):
-                self.tier[0].append(start)
-                start.carve(self)
+            root = Vault(pos, w, h, 0, None)
+            if self.contains(root):
+                self.tier[0].append(root)
+                root.carve(self)
+                self.goal = root
                 break
 
     def generateRooms(self):
@@ -127,16 +135,16 @@ class Level(Map):
         # recursively spread room
         outpath = "graphics/gif/"
 
-        Render.printImage(self, outpath + "levelgen{:02}.bmp".format(0))
+        Level.printImage(self, outpath + "levelgen{:02}.bmp".format(0))
 
         for i in range(1, len(self.corp.struct)):
-            Render.printImage(self, outpath + "levelgen{:02}.bmp".format(i))
+            Level.printImage(self, outpath + "levelgen{:02}.bmp".format(i))
 
             self.tier.append([])
             for room in self.tier[i - 1]:
                 self.propagateRoom(room, i)
 
-        Render.printImage(self, outpath + "levelgen90.bmp")
+        Level.printImage(self, outpath + "levelgen90.bmp")
 
         # remove deadends
         for tier in reversed(self.tier):
@@ -144,14 +152,7 @@ class Level(Map):
                 if room.__class__.__name__ is 'Corridor' and room.children == []:
                     room.fill(self)
                     tier.remove(room)
-        Render.printImage(self, outpath + "levelgen91.bmp")
-
-    def generateVents(self):
-        for pair in it.combinations(self.tier[-1] + self.tier[-2], 2):
-            if pair[0] not in pair[1].children and pair[1] not in pair[0].children:
-                if np.linalg.norm(pair[0].center - pair[1].center) < Map.WIDTH / 3:
-                    if not self.carveVent(pair[0], pair[1], True):
-                        self.carveVent(pair[0], pair[1], False)
+        Level.printImage(self, outpath + "levelgen91.bmp")
 
     def countMetrics(self):
         stats = {'ROOMS': 0, 'VENTS': 0, 'CORRIDORS': 0, 'AREA': 0}
@@ -163,6 +164,13 @@ class Level(Map):
                 if room.__class__.__name__ is 'Corridor':
                     stats['CORRIDORS'] += 1
         return stats
+
+    def generateVents(self):
+        for pair in it.combinations(self.tier[-1] + self.tier[-2], 2):
+            if pair[0] not in pair[1].children and pair[1] not in pair[0].children:
+                if np.linalg.norm(pair[0].center - pair[1].center) < Map.WIDTH / 3:
+                    if not self.carveVent(pair[0], pair[1], True):
+                        self.carveVent(pair[0], pair[1], False)
 
     def finalize(self):
         self.forbidden = []
@@ -180,16 +188,16 @@ class Level(Map):
         self.createGrid()
 
         # set start and extraction rooms
-        start = rd.choice(self.tier[-1])
-        start.function = "start"
+        self.start = rd.choice(self.tier[-1])
+        self.start.function = "start"
 
-        self.getTile(start.center).addObject(self.main.player)
+        self.getTile(self.start.center).addObject(self.main.player)
 
         for actor in self.main.actor:
             if actor.__class__.__name__ is 'Guard':
                 actor.ai.makeEnemy(self.main.player)
 
-        drone = Drone(self.getTile(start.randomSpot()), self.main, self.main.player)
+        drone = Drone(self.getTile(self.start.randomSpot()), self.main, self.main.player)
         drone.ai.makeFriend(self.main.player)
 
         exRooms = filter(lambda r: r.function is None, self.tier[-1])
@@ -226,7 +234,6 @@ class Level(Map):
         for server in self.getAll('Server'):
             server.connectRoom(self)
 
-
     def carveDoorway(self, room1, room2, tunnelTier=-1, horizontal=True):
         positions = self.getConnection(room1.center, room2.center, horizontal)
 
@@ -256,6 +263,7 @@ class Level(Map):
                             cell.addObject(Lamp())
                             break
 
+        room1.connect(room2, tunnelTier)
         term.connect(self, door)
         return True
 
@@ -297,6 +305,8 @@ class Level(Map):
             for cell in self.getTile(pos).getNeighborhood('LARGE'):
                 if cell.wall is None:
                     cell.makeWall()
+
+        room1.connect(room2, None)
         return True
 
     def propagateRoom(self, room, tier):
@@ -361,6 +371,92 @@ class Level(Map):
                     self.carveDoorway(nextRoom, room, room.tier,
                                       rect.size[Y] < room.size[Y])
         return room.children
+
+    def placeKeys(self):
+        keys = [None]
+        tier = len(self.tier) - 1
+        room = self.start
+        previousReachable = []
+
+        while tier != 0:
+            reachable = Level.reachableRooms(room, keys=keys)
+            room = filter(lambda r: r not in previousReachable, reachable)[-1]
+            room.scatter(self, Key(tier=tier - 1, color=self.palette[tier - 1]))
+            tier -= 1
+            keys.append(tier)
+            previousReachable = reachable
+
+    @staticmethod
+    def reachableRooms(room, keys=[None]):
+        connectedRooms = []
+        distances = []
+        dist = 0
+        newRooms = [room]
+
+        while newRooms != []:
+            connectedRooms += newRooms
+            distances += [dist] * len(newRooms)
+            dist += 1
+            newRooms = []
+            for room in connectedRooms:
+                for connection in room.connection:
+                    if connection['ROOM'] not in connectedRooms and connection['KEY'] in keys:
+                        if connection['ROOM'] not in newRooms:
+                            newRooms.append(connection['ROOM'])
+
+        return connectedRooms
+
+    @staticmethod
+    def printImage(map, fileName):
+        # create a new black image
+        img = Image.new('RGB', [3 * map.WIDTH, 3 * map.HEIGHT], "black")
+        pixels = img.load()  # create the pixel map
+        for x in range(map.WIDTH):    # for every pixel:
+            for y in range(map.HEIGHT):
+                tile = [[i, j] for i in range(3 * x, 3 * x + 3)
+                        for j in range(3 * y, 3 * y + 3)]
+
+                if map.tile[x][y].wall is False and map.tile[x][y].room is not None:
+                    for p in tile:
+                        pixels[p[X], p[Y]] = tuple(
+                            map.palette[map.tile[x][y].room.tier])
+                elif map.tile[x][y].wall is True:
+                    for p in tile:
+                        pixels[p[X], p[Y]] = COLOR['DARKGRAY']
+                elif map.tile[x][y].wall is None:
+                    for p in tile:
+                        pixels[p[X], p[Y]] = COLOR['BLACK']
+
+                if map.tile[x][y].grid.wire:
+                    pixels[3 * x + 1, 3 * y +
+                           1] = tuple(map.corp.complement[0])
+                elif map.tile[x][y].grid.object != []:
+                    for p in tile:
+                        pixels[p[X], p[Y]] = tuple(
+                            (0.5 * map.corp.complement[0]).astype('int'))
+
+                if map.tile[x][y].getClass(['Key']) != []:
+                    for p in tile:
+                        pixels[p[X], p[Y]] = tuple(COLOR['GREEN'])
+
+        for room in map.tier[-1]:
+            if room.function is not None:
+                for pos in room.border():
+                    if map.getTile(pos).wall:
+                        if room.function is "start":
+                            for i in range(3):
+                                pixels[3 * pos[X] + i, 3 *
+                                       pos[Y] + i] = COLOR['RED']
+                        elif room.function is "extraction":
+                            for i in range(3):
+                                pixels[3 * pos[X] + i, 3 *
+                                       pos[Y] + i] = COLOR['BLUE']
+
+        for lamp in map.getAll('Lamp'):
+            pixels[3 * lamp.cell.pos[X] + 1, 3 *
+                   lamp.cell.pos[Y] + 1] = COLOR['WHITE']
+
+        img.save(fileName)
 
     @staticmethod
     def getOffset(room, direction, alignment, w, h):
