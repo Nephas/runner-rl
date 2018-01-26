@@ -75,7 +75,7 @@ class MapPanel(Panel):
 
     def renderMap(self):
         for cell in self.camera.getCells(self.map):
-            self.draw(cell, self.SCALE *
+            self.drawCell(cell, self.SCALE *
                       (cell.pos - self.mapOffset) + self.pos)
 
         for mapPos in [self.main.player.cell.pos + self.cursorDir, self.cursorPos]:
@@ -102,11 +102,11 @@ class MapPanel(Panel):
                 obj.cell.pos for obj in player.agent.grid.object[0].connection]
             route = player.agent.route
 
-        self.draw(player.cell, self.SCALE *
+        self.drawCell(player.cell, self.SCALE *
                   (player.cell.pos - self.mapOffset) + self.pos)
 
         for cell in self.camera.getCells(self.map):
-            self.draw(cell.grid, self.SCALE *
+            self.drawCell(cell.grid, self.SCALE *
                       (cell.pos - self.mapOffset) + self.pos)
 
         for mapPos in [self.cursorPos] + connected:
@@ -121,13 +121,15 @@ class MapPanel(Panel):
             panelPos = self.SCALE * (grid.cell.pos - self.mapOffset) + self.pos
             self.highlight(panelPos)
 
-    def draw(self, cell, panelPos):
+    def drawCell(self, cell, panelPos):
         i = 0
         for color, tile in zip(cell.color, cell.stack):
-            if tile is not None:
-                term.layer(i)
-                term.color(term.color_from_argb(255, *color))
+            term.layer(i)
+            term.color(term.color_from_argb(255, *color))
+            if type(tile) is int:
                 term.put(panelPos[X], panelPos[Y], tile)
+            elif type(tile) is str:
+                term.printf(panelPos[X], panelPos[Y], tile)
             i += 1
 
     def highlight(self, panelPos, color=COLOR['WHITE']):

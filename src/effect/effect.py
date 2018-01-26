@@ -269,3 +269,25 @@ class Flash(Effect):
         self.amount -= 1
 
         Light.cast(map, self.cell.pos, self.brightness)
+
+
+class Holotext(Effect):
+    def __init__(self, cell=None, text='Holo', length=8, color=COLOR['WHITE']):
+        Effect.__init__(self, cell, color=color)
+
+        self.amount = 1
+        self.text = text
+        self.length = length
+        self.char = text
+        self.offset = 0
+
+    def physics(self, map):
+        self.offset = (self.offset + 1) % len(self.text)
+        self.char = (2*self.text)[self.offset:self.offset + self.length]
+
+        if self.amount <= 0:
+            self.cease()
+        self.amount -= 1
+
+    def stack(self, other):
+        self.amount = min(16, self.amount + other.amount)

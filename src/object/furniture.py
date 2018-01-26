@@ -5,7 +5,7 @@ import numpy as np
 import copy as cp
 import itertools as it
 
-from src.effect.effect import Fuel
+from src.effect.effect import Fuel, Holotext
 from src.object.object import Object, Debris
 
 
@@ -102,3 +102,20 @@ class Barrel(Container):
         self.cell.object.remove(self)
         self.cell.addEffect(self.content)
         Debris(self.cell, self)
+
+
+class Projector(Object):
+    ANIMATION = [0x100C, 0x100D, 0x100E, 0x100F]
+
+    def __init__(self, cell=None):
+        Object.__init__(self, cell)
+
+        self.text = "+ Is your 3D Printer poisoning you? +"
+        self.block = [True, True, True]
+        self.holoCell = None
+
+    def physics(self, map):
+        if self.holoCell is None:
+            self.holoCell = self.cell.map.getTile(self.cell.pos + np.array([1, 0]))
+        self.holoCell.addEffect(Holotext(self.holoCell, self.text, color=COLOR['GREEN']))
+        self.char = self.animation.next()

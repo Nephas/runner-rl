@@ -8,7 +8,7 @@ import itertools as it
 
 from src.level.room.room import Room
 
-from src.object.furniture import Container, Barrel, Desk, Hydroponics, Locker
+from src.object.furniture import Container, Barrel, Desk, Hydroponics, Locker, Projector
 from src.grid.electronics import Terminal, Server, MasterSwitch, Rack, Camera
 from src.object.lamp import Lamp, FlickerLamp, SpotLight
 from src.object.item.item import Key, PlotDevice
@@ -26,6 +26,7 @@ class Corridor(Room):
 
         self.placeAtWall(map, Locker())
         self.placeAtWall(map, Server())
+        self.placeAtWall(map, Projector())
 
         map.getTile(self.center).addObject(Lamp())
         self.scatter(map, Camera(), margin=2)
@@ -75,6 +76,7 @@ class Gallery(Room):
             for y in range(self.y[MIN] + 4, self.y[MAX] - 4):
                 map.tile[x][y].makeWall()
 
+
 class Office(Room):
     def __init__(self, pos, w, h, tier, parent):
         Room.__init__(self, pos, w, h, tier, parent)
@@ -116,6 +118,7 @@ class Lab(Room):
                 cell.addObject(cp.deepcopy(Desk()))
 
         Worker(map.getTile(self.randomSpot(2)), map.main)
+        self.scatter(map, Lamp(), margin=2)
         self.scatter(map, Lamp(), margin=2)
 
 
