@@ -7,6 +7,7 @@ import itertools as it
 
 from src.effect.effect import Fuel, Holotext
 from src.object.object import Object, Debris
+from src.text.news import News
 
 
 class Desk(Object):
@@ -110,7 +111,7 @@ class Projector(Object):
     def __init__(self, cell=None):
         Object.__init__(self, cell)
 
-        self.text = "+ Is your 3D Printer poisoning you? +"
+        self.text = News.continuousBlurb('NORMAL')
         self.block = [True, True, True]
         self.holoCell = None
 

@@ -49,7 +49,8 @@ class InfoPanel(Panel):
 
             if mapPanel.layer is 'MAP' and cursorTile.vision[LOS]:
                 for i, obj in enumerate(cursorTile.object + cursorTile.effect):
-                    self.printChar(np.array([1, row + i]), obj.char)
+                    if type(obj.char) is int:
+                        self.printChar(np.array([1, row + i]), obj.char)
                     self.printString(
                         np.array([4, row + i]), obj.describe())
             elif mapPanel.layer is 'GRID' and cursorTile.grid.vision[EXP]:

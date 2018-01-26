@@ -282,8 +282,9 @@ class Holotext(Effect):
         self.offset = 0
 
     def physics(self, map):
-        self.offset = (self.offset + 1) % len(self.text)
-        self.char = (2*self.text)[self.offset:self.offset + self.length]
+        if self.cell.map.main.tic % 2 == 0:
+            self.offset = (self.offset + 1) % len(self.text)
+            self.char = (2*self.text)[self.offset:self.offset + self.length]
 
         if self.amount <= 0:
             self.cease()
